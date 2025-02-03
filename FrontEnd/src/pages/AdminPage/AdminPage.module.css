@@ -1,0 +1,5 @@
+.admin_block {
+    width: var(--block-size__admin-panel);
+    display: flex;
+    flex-direction: row;
+}

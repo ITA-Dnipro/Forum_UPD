@@ -1,0 +1,15 @@
+.description__section {
+    display: flex;
+    align-items: flex-start;
+    width: 400px;
+    height: 40px;
+    gap: 12px;
+    padding-left: 24px;
+}
+
+.description-head {
+    font-family: var(--font-main);
+    font-weight: 700;
+    font-size: 32px;
+    color: var(--edit-page-head-color);
+}

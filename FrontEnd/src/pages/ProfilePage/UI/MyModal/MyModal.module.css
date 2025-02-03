@@ -1,0 +1,29 @@
+.myModal {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    right: 0;
+    left: 0;
+    width: var(--main-block-size);
+    display: none;
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+.myModal__content {
+    background-color: var(--main-white);
+    width: 345px;
+    border-radius: 6px;
+}
+
+.myModal.active {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 2;
+}
+
+@media only screen and (min-width: 768px) {
+    .myModal__content {
+        width: 572px;
+    }
+}

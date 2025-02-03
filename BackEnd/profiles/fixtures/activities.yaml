@@ -1,0 +1,20 @@
+- model: profiles.activity
+  pk: 1
+  fields:
+    name: Виробник
+- model: profiles.activity
+  pk: 2
+  fields:
+    name: Імпортер
+- model: profiles.activity
+  pk: 3
+  fields:
+    name: Роздрібна мережа
+- model: profiles.activity
+  pk: 4
+  fields:
+    name: HORECA
+- model: profiles.activity
+  pk: 5
+  fields:
+    name: Інші послуги

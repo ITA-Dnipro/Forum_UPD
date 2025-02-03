@@ -1,0 +1,12 @@
+.container {
+    display: flex;
+    flex-direction: column;
+    padding-top: 32px;
+    background-color: var(--light-seashell-background);
+}
+
+@media only screen and (min-width: 1200px) {
+    .container {
+        padding-left: 70px;
+    }
+}
