@@ -1,6 +1,15 @@
 version: '3.9'
 
 services:
+  redis:
+    image: redis:7
+    container_name: redis
+    restart: always
+    ports:
+      - "6379:6379"
+    networks:
+      - forum_network
+      
   api-dev:
     build: ./BackEnd
     container_name: api-dev
@@ -46,11 +55,13 @@ services:
       - REACT_APP_PUBLIC_URL=${REACT_APP_PUBLIC_URL}
       - REACT_APP_RECAPTCHA_V2_SITE_KEY=${REACT_APP_RECAPTCHA_V2_SITE_KEY}
     ports:
-      - 3000:80
+      - 8080:80
     build:
       context: ./FrontEnd
       target: production
       args:
+        - REACT_APP_BASE_API_URL=${REACT_APP_BASE_API_URL}
+        - REACT_APP_PUBLIC_URL=${REACT_APP_PUBLIC_URL}
         - REACT_APP_RECAPTCHA_V2_SITE_KEY=${REACT_APP_RECAPTCHA_V2_SITE_KEY}
     networks:
       - forum_network
@@ -118,6 +129,7 @@ services:
       - RECAPTCHA_URL=${RECAPTCHA_URL}
     networks:
       - forum_network
+      
 networks:
   forum_network:
 

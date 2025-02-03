@@ -38,20 +38,24 @@ export default function ProfileListPage({ isAuthorized, isSaved }) {
   const [filters, setFilters] = useState([]);
   const [currentPage, setCurrentPage] = useState(pageNumber);
   const [pageSize, setPageSize] = useState(PAGE_SIZE.mobile);
-  const [activeTab, setActiveTab] = useState(searchParams.get('companyType') || 'all');
-  const [activeBtn, setActiveBtn] = useState(searchParams.get('activity') || 'all');
+  const [activeTab, setActiveTab] = useState(
+    searchParams.get('companyType') || 'all',
+  );
+  const [activeBtn, setActiveBtn] = useState(
+    searchParams.get('activity') || 'all',
+  );
 
   const windowWidth = useWindowWidth();
-  const linkText = windowWidth >= SCREEN_WIDTH.tablet ? 'Усі підприємства' : 'Усі';
+  const linkText =
+    windowWidth >= SCREEN_WIDTH.tablet ? 'Усі підприємства' : 'Усі';
 
   useEffect(() => {
     definePageSize(windowWidth, setPageSize);
   }, [windowWidth]);
 
   const [url, setUrl] = useState(
-    `${process.env.REACT_APP_BASE_API_URL}/api/profiles/?ordering=name&page_size=${pageSize}&page=${currentPage}`
+    `${process.env.REACT_APP_BASE_API_URL}/api/profiles/?ordering=name&page_size=${pageSize}&page=${currentPage}`,
   );
-
 
   const companyTypeMap = {
     '': '',
@@ -97,15 +101,14 @@ export default function ProfileListPage({ isAuthorized, isSaved }) {
   }, [filters, pageNumber, pageSize, currentPage, isSaved]);
 
   async function fetcher(url) {
-    return axios.get(url)
-    .then(res => res.data);
+    return axios.get(url).then((res) => res.data);
   }
 
   const {
     data: fetchedProfiles,
     error,
     isLoading,
-  } = useSWR(url, fetcher, {onSuccess: (data) => setProfiles(data.results)});
+  } = useSWR(url, fetcher, { onSuccess: (data) => setProfiles(data.results) });
 
   useEffect(() => {
     if (fetchedProfiles?.total_items === 0) {
@@ -128,9 +131,9 @@ export default function ProfileListPage({ isAuthorized, isSaved }) {
 
   const changeCompanies = (companyId, saved) => {
     setProfiles((prevProfiles) =>
-        prevProfiles.map((profile) =>
-            profile.id === companyId ? { ...profile, is_saved: saved } : profile
-        )
+      prevProfiles.map((profile) =>
+        profile.id === companyId ? { ...profile, is_saved: saved } : profile,
+      ),
     );
   };
 
@@ -162,51 +165,59 @@ export default function ProfileListPage({ isAuthorized, isSaved }) {
 
   return (
     <div className={css.page}>
-      {error && error.response.status !==401 ? (
+      {error && error.response.status !== 401 ? (
         <ErrorPage404 />
       ) : (
         <div className={css['page-content']}>
           <div className={css['company-list__header--wrapper']}>
             <div className={css['company-list__header']}>
-                  <h2 className={css['company-list__title']}>
-                      {!isSaved ? 'Підприємства та сектори' : 'Мої збережені'}
-                  </h2>
-                  <div className={css['company-list__tabs']}>
-                    {COMPANY_TYPE.map((item) => (
-                      <div
-                        key={item.key}
-                        className={css['company-list__tabs--wrapper']}>
-                        <span
-                          className={activeTab === item.key ?
-                            css['company-list__tabs--element--active'] :
-                            css['company-list__tabs--element']}
-                          onClick={() => (handleFilters(item.value, activity))}
-                        >
-                          {item.title === 'Усі підприємства' ? linkText : item.title}
-                        </span>
-                        <span className={activeTab === item.key ? css['divider'] : ''}>
-                        </span>
-                      </div>
-                    ))}
+              <h2 className={css['company-list__title']}>
+                {!isSaved ? 'Підприємства та сектори' : 'Мої збережені'}
+              </h2>
+              <div className={css['company-list__tabs']}>
+                {COMPANY_TYPE.map((item) => (
+                  <div
+                    key={item.key}
+                    className={css['company-list__tabs--wrapper']}
+                  >
+                    <span
+                      className={
+                        activeTab === item.key
+                          ? css['company-list__tabs--element--active']
+                          : css['company-list__tabs--element']
+                      }
+                      onClick={() => handleFilters(item.value, activity)}
+                    >
+                      {item.title === 'Усі підприємства'
+                        ? linkText
+                        : item.title}
+                    </span>
+                    <span
+                      className={activeTab === item.key ? css['divider'] : ''}
+                    ></span>
                   </div>
+                ))}
               </div>
             </div>
+          </div>
           <div className={css['company-list__content']}>
             <div className={css['company-list__content--btns-wrapper']}>
               <div className={css['company-list__content--btns']}>
                 {ACTIVITY_TYPE.map((item) => (
                   <button
                     key={item.key}
-                    className={activeBtn === item.key ?
-                      css['company-list__btns--element--active'] :
-                      css['company-list__btns--element']}
-                    onClick={() => (handleFilters(companyType, item.value))}
+                    className={
+                      activeBtn === item.key
+                        ? css['company-list__btns--element--active']
+                        : css['company-list__btns--element']
+                    }
+                    onClick={() => handleFilters(companyType, item.value)}
                   >
                     {item.title}
                   </button>
-                    ))}
+                ))}
               </div>
-              <ProfileListHeader number={fetchedProfiles?.total_items}/>
+              <ProfileListHeader number={fetchedProfiles?.total_items} />
             </div>
             {isLoading ? (
               <Loader />
