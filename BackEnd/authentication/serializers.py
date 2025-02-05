@@ -10,6 +10,7 @@ from djoser.serializers import (
     TokenCreateSerializer,
 )
 from rest_framework import serializers
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from ratelimit.decorators import RateLimitDecorator
 from ratelimit.exception import RateLimitException
 
@@ -21,7 +22,20 @@ from validation.validate_password import (
 from validation.validate_profile import validate_profile
 from validation.validate_recaptcha import verify_recaptcha
 
+
 User = get_user_model()
+
+
+class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
+    @classmethod
+    def get_token(cls, user):
+        token = super().get_token(user)
+
+        token['email'] = user.email
+        token['is_staff'] = user.is_staff
+        token['is_superuser'] = user.is_superuser
+
+        return token
 
 
 class CustomProfileSerializer(serializers.ModelSerializer):
