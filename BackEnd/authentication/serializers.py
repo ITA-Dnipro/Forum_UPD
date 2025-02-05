@@ -22,6 +22,7 @@ from validation.validate_password import (
 from validation.validate_profile import validate_profile
 from validation.validate_recaptcha import verify_recaptcha
 
+from BackEnd.validation.validate_password import validate_password_strength
 
 User = get_user_model()
 
@@ -88,6 +89,10 @@ class UserRegistrationSerializer(UserCreatePasswordRetypeSerializer):
             custom_errors["password"].append(error.message)
         try:
             validate_password_include_symbols(password)
+        except ValidationError as error:
+            custom_errors["password"].append(error.message)
+        try:
+            validate_password_strength(password)
         except ValidationError as error:
             custom_errors["password"].append(error.message)
         if value["password"] != re_password:
