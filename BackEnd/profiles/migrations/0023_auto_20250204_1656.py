@@ -108,28 +108,13 @@ def seed_data(apps, schema_editor):
             }
         )
 
-
-def remove_data(apps, schema_editor):
-    
-    Category = apps.get_model('profiles', 'Category')
-    Activity = apps.get_model('profiles', 'Activity')
-    Region = apps.get_model('profiles', 'Region')
-    Profile = apps.get_model('profiles', 'Profile')
-    CustomUser = apps.get_model('authentication', 'CustomUser')
-
-    Category.objects.all().delete()
-    
-    Activity.objects.all().delete()
-    
-    Region.objects.all().delete()
-    
-    Profile.objects.all().delete()
-
-
 class Migration(migrations.Migration):
     dependencies = [
         ("profiles", "0022_alter_profile_name_alter_profile_official_name"),
         ("authentication", "0003_auto_20250204_1656"), 
     ]
 
-    operations = []
+    operations = [
+        migrations.RunPython(seed_data),
+    ]
+

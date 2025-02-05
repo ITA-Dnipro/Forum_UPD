@@ -22,10 +22,16 @@ def create_users(apps, schema_editor):
     for i in range(1, 31):
         email = f'user{i}@gmail.com'
         if not CustomUser.objects.filter(email=email).exists():
+            
+            name = (fake.unique.first_name_male() if i % 2 == 0 
+                    else fake.unique.first_name_female())
+            surname = (fake.unique.last_name_male() if i % 2 == 0 
+                       else fake.unique.last_name_female())
+            
             user = CustomUser(
                 email=email,
-                name=(fake.first_name_male() if i % 2 == 0 else fake.first_name_female()),
-                surname=(fake.last_name_male() if i % 2 == 0 else fake.last_name_female()),
+                name=name,
+                surname=surname,
                 is_active=True,
                 password=make_password('user12345'),
             )
