@@ -277,3 +277,4 @@ CONTACTS_INFO = {
     "university": "Львівська Політехніка",
     "address": "вул. Степана Бандери 12, Львів",
 }
+DJANGO_SETTINGS_MODULE = config("DJANGO_SETTINGS_MODULE")

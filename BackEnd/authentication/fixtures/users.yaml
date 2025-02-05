@@ -1,0 +1,105 @@
+- model: authentication.customuser
+  pk: 1
+  fields:
+    password: pbkdf2_sha256$600000$E47GdKtU7PAQLzxDp7rv0y$Us1pJufBnoEAAYNQ9i5gxAjl+DJMEXxwVfptEYjoG9s=
+    last_login: null
+    email: forumprojectstageua@gmail.com
+    name: Superuser_name
+    surname: Superuser_surname
+    is_active: true
+    is_staff: true
+    is_superuser: true
+    groups: []
+    user_permissions: []
+- model: authentication.customuser
+  pk: 2
+  fields:
+    password: pbkdf2_sha256$600000$jVY84yx6mnyn4nmibwKEVh$fQPUrTDq2SooSbyxESmHTPBS0fEiqeezz34IFDGHDGc=
+    last_login: null
+    email: startuper@gmail.com
+    name: Startuper
+    surname: startuper_surname
+    is_active: true
+    is_staff: false
+    is_superuser: false
+    groups: []
+    user_permissions: []
+- model: authentication.customuser
+  pk: 3
+  fields:
+    password: pbkdf2_sha256$600000$buLvhJVTiemOce5ia6XJPo$T7I/idS0ntimxihisjaa9refJfU7/rTA89eVxRaYwOQ=
+    last_login: null
+    email: investor@gmail.com
+    name: Investor
+    surname: Investor_surname
+    is_active: true
+    is_staff: false
+    is_superuser: false
+    groups: []
+    user_permissions: []
+- model: authentication.customuser
+  pk: 4
+  fields:
+    password: pbkdf2_sha256$600000$BaK86I6g5b4YJM8LWVr2nE$fUxPQQurE0TD/hAyCYWY9f4PoOmFqLHFZ3l1w0fGfNg=
+    last_login: null
+    email: some_mail@gmail.com
+    name: Valerii
+    surname: Hryb
+    is_active: true
+    is_staff: false
+    is_superuser: false
+    groups: []
+    user_permissions: []
+- model: authentication.customuser
+  pk: 5
+  fields:
+    password: pbkdf2_sha256$600000$yJSmjZl7RyPyASxAuqhOGL$sb2Sga2T5Io3git/LgX4sr0L8uNVaPDr90XN+XFuVZ4=
+    last_login: 2025-02-03 20:32:05.966085+00:00
+    email: john.doe@mail.com
+    name: John
+    surname: Doe
+    is_active: true
+    is_staff: false
+    is_superuser: false
+    groups: []
+    user_permissions: []
+- model: authentication.customuser
+  pk: 6
+  fields:
+    password: pbkdf2_sha256$600000$IVOzivlj3Fb3lU1aE0iK6p$qVVAw2rSrVdtekAYU+z4shjoPzP4X/JyzsU1s+HkUxk=
+    last_login: null
+    email: jane.smith@mail.com
+    name: Jane
+    surname: Smith
+    is_active: true
+    is_staff: false
+    is_superuser: false
+    groups: []
+    user_permissions: []
+- model: authentication.customuser
+  pk: 8
+  fields:
+    password: pbkdf2_sha256$600000$pExWbDNPKB9kbauZ9Chrhz$vVBGIx/VKmOQwFvmkVrAIF7vthWqzMV1j5e+RiVZqR8=
+    last_login: null
+    email: mail3@gmail.com
+    name: Cara
+    surname: Waters
+    is_active: false
+    is_staff: false
+    is_superuser: false
+    groups: []
+    user_permissions: []
+- model: authentication.customuser
+  pk: 9
+  fields:
+    password: pbkdf2_sha256$600000$PYX80RIg7DmuPquDU5ndDB$6mW6B4lLxCTJ5AlEBRBLsZ/2nbd9xad9mv8PvXzLjkg=
+    last_login: null
+    email: usermail@gmail.com
+    name: Elena
+    surname: Thorne
+    is_active: true
+    is_staff: false
+    is_superuser: false
+    groups: []
+    user_permissions: []
+
