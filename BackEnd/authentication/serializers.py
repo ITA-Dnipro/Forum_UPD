@@ -22,7 +22,7 @@ from validation.validate_password import (
 from validation.validate_profile import validate_profile
 from validation.validate_recaptcha import verify_recaptcha
 
-from BackEnd.validation.validate_password import validate_password_strength
+from validation.validate_password import validate_password_strength
 
 User = get_user_model()
 
