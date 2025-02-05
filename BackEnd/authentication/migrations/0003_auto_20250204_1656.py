@@ -19,15 +19,18 @@ def create_users(apps, schema_editor):
         )
         admin_user.save()
     
+    users_to_create = []
     for i in range(1, 31):
         email = f'user{i}@gmail.com'
         if not CustomUser.objects.filter(email=email).exists():
-            
-            name = (fake.unique.first_name_male() if i % 2 == 0 
-                    else fake.unique.first_name_female())
-            surname = (fake.unique.last_name_male() if i % 2 == 0 
-                       else fake.unique.last_name_female())
-            
+            name = (
+                fake.unique.first_name_male() if i % 2 == 0 
+                else fake.unique.first_name_female()
+            )
+            surname = (
+                fake.unique.last_name_male() if i % 2 == 0 
+                else fake.unique.last_name_female()
+            )
             user = CustomUser(
                 email=email,
                 name=name,
@@ -35,7 +38,10 @@ def create_users(apps, schema_editor):
                 is_active=True,
                 password=make_password('user12345'),
             )
-            user.save()
+            users_to_create.append(user)
+
+    if users_to_create:
+        CustomUser.objects.bulk_create(users_to_create)
 
 def remove_users(apps, schema_editor):
     CustomUser = apps.get_model('authentication', 'CustomUser')
