@@ -34,7 +34,20 @@ class RBACPermissionTests(APITestCase):
 
         self.regular_user = CustomUser.objects.create(email="user@test.com", is_active=True)
 
-        AutoModeration.objects.create(auto_moderation_hours=12)
+        self.auto_moderation, _ = AutoModeration.objects.get_or_create(auto_moderation_hours=12)
+
+    def tearDown(self):
+        """
+        Clean up test data after each test:
+        - Delete all AutoModeration objects
+        - Delete all CustomUser objects
+        - Delete all Role objects
+        - Delete all Permission objects
+        """
+        AutoModeration.objects.all().delete()
+        CustomUser.objects.all().delete()
+        Role.objects.all().delete()
+        Permission.objects.all().delete()
 
     def test_admin_access_to_protected_endpoints(self):
         """
