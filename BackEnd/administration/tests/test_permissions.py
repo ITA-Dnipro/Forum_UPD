@@ -1,3 +1,4 @@
+from django.urls import reverse
 from rest_framework.test import APITestCase
 from rest_framework import status
 from authentication.models import CustomUser, Permission, Role
@@ -44,14 +45,14 @@ class RBACPermissionTests(APITestCase):
         """
         self.client.force_authenticate(user=self.admin_user)
 
-        response = self.client.get(f'/{app_name}/users/')
+        response = self.client.get(reverse(f'{app_name}:users-list'))
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-        response = self.client.get(f'/{app_name}/profiles/')
+        response = self.client.get(reverse(f'{app_name}:profile-list'))
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         response = self.client.patch(
-            f'/{app_name}/automoderation/',
+            reverse(f'{app_name}:automoderation_hours'),
             {'auto_moderation_hours': 24},
             format='json'
         )
@@ -66,14 +67,14 @@ class RBACPermissionTests(APITestCase):
         """
         self.client.force_authenticate(user=self.moderator_user)
 
-        response = self.client.get(f'/{app_name}/profiles/')
+        response = self.client.get(reverse(f'{app_name}:profile-list'))
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-        response = self.client.get(f'/{app_name}/users/')
+        response = self.client.get(reverse(f'{app_name}:users-list'))
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
         response = self.client.patch(
-            f'/{app_name}/automoderation/',
+            reverse(f'{app_name}:automoderation_hours'),
             {'auto_moderation_hours': 24},
             format='json'
         )
@@ -88,15 +89,66 @@ class RBACPermissionTests(APITestCase):
         """
         self.client.force_authenticate(user=self.regular_user)
 
-        response = self.client.get(f'/{app_name}/users/')
+        response = self.client.get(reverse(f'{app_name}:users-list'))
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
-        response = self.client.get(f'/{app_name}/profiles/')
+        response = self.client.get(reverse(f'{app_name}:profile-list'))
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
         response = self.client.patch(
-            f'/{app_name}/automoderation/',
+            reverse(f'{app_name}:automoderation_hours'),
             {'auto_moderation_hours': 24},
             format='json'
         )
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_unauthenticated_access_to_protected_endpoints(self):
+        """
+        Verify that unauthenticated users receive 401 Unauthorized when accessing protected endpoints.
+        """
+        response = self.client.get(reverse(f'{app_name}:users-list'))
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+        response = self.client.get(reverse(f'{app_name}:profile-list'))
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+        response = self.client.patch(
+            reverse(f'{app_name}:automoderation_hours'),
+            {'auto_moderation_hours': 24},
+            format='json'
+        )
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_user_without_role_access(self):
+        """
+        Verify that users without a role cannot access any protected endpoints.
+        """
+        user_without_role = CustomUser.objects.create(email="nobody@test.com", is_active=True)
+        self.client.force_authenticate(user=user_without_role)
+
+        response = self.client.get(reverse(f'{app_name}:users-list'))
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+        response = self.client.get(reverse(f'{app_name}:profile-list'))
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_user_with_multiple_roles(self):
+        """
+        Verify that a user with multiple roles (Admin + Moderator) gets the highest level of access.
+        """
+        multi_role_user = CustomUser.objects.create(email="multi@test.com", is_active=True)
+        multi_role_user.roles.add(self.admin_role, self.moderator_role)
+        self.client.force_authenticate(user=multi_role_user)
+
+        response = self.client.get(reverse(f'{app_name}:user-list'))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)  # Admin-level access
+
+        response = self.client.get(reverse(f'{app_name}:profile-list'))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)  # Moderator-level access
+
+        response = self.client.patch(
+            reverse(f'{app_name}:automoderation-detail'),
+            {'auto_moderation_hours': 24},
+            format='json'
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)  # Admin-level access

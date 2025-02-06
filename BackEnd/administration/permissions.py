@@ -1,11 +1,7 @@
-import logging
 from rest_framework.permissions import (
     BasePermission,
     SAFE_METHODS
 )
-
-
-logger = logging.getLogger(__name__)
 
 
 class IsStaffUser(BasePermission):
@@ -29,30 +25,30 @@ class IsSuperUser(BasePermission):
 
 class HasRolePermission(BasePermission):
     """
-    Custom permission to check if the user has a specific role.
+    Grants access if a user has any of the specified roles.
+    Example usage: HasAnyRolePermission(["Admin", "Moderator"])
     """
-    def __init__(self, role_name):
-        self.role_name = role_name
+    allowed_roles = []
 
     def has_permission(self, request, view):
-        has_role = request.user.roles.filter(name=self.role_name).exists()
-        log_level = logger.info if has_role else logger.warning
-        log_level(
-            f"User {request.user.email} {'has' if has_role else 'does not have'} required role '{self.role_name}' for {request.method} {request.path}")
-        return has_role
+        """
+        Checks if the user has the required role.
+        Returns True if the user has the role, False otherwise.
+        """
+        if not request.user or not request.user.is_authenticated:
+            return False
+        return request.user.roles.filter(name__in=self.allowed_roles).exists()
 
 
 class IsAdminUser(HasRolePermission):
     """
     Custom permission to check if the user has the 'Admin' role.
     """
-    def __init__(self):
-        super().__init__("Admin")
+    role_name = "Admin"
 
 
 class IsModeratorUser(HasRolePermission):
     """
     Custom permission to check if the user has the 'Moderator' role.
     """
-    def __init__(self):
-        super().__init__("Moderator")
+    role_name = "Moderator"
