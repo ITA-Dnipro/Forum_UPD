@@ -3,7 +3,7 @@ on: pull_request
 
 env:
   DEBUG: True
-  SECRET-KEY: ${{ secrets.DEV_SECRET_KEY }}
+  SECRET-KEY: ${{ secrets.SECRET_KEY }}
   PG_DB: db
   PG_USER: postgres
   PG_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
