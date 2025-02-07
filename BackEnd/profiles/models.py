@@ -136,14 +136,16 @@ class Profile(models.Model):
 
     class Meta:
         indexes = [
-            models.Index(fields=('name')),
-            models.Index(fields=('official_name')),
-            models.Index(fields=('created_at')),
-            models.Index(fields=('updated_at')),
+            models.Index(fields=('name',)),
+            models.Index(fields=('official_name',)),
+            models.Index(fields=('created_at',)),
+            models.Index(fields=('updated_at',)),
             GinIndex(name="service_info_gin", fields=["service_info"]),  # using in advanced search
             GinIndex(name="product_info_gin", fields=["product_info"]), # using in advanced search
             GinIndex(name="common_info_gin", fields=["common_info"])   # using in advanced search
         ]
+
+        ordering = ['-created_at']   # ordering by date of creation (newest first)
 
 
 class Activity(models.Model):
