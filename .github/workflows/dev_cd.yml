@@ -34,26 +34,27 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Docker compouse DOWN old Django container and frontend container
-        run:  docker compose -f docker-compose.dev.yml down -v
-      - name: Docker compouse UP Django container and frontend container
+      - name: Docker compose DOWN old Django container and frontend container
+        run:  docker compose -f docker-compose.dev.yml down
+      - name: Docker compose UP Django container and frontend container
         run: docker compose -f docker-compose.dev.yml up -d --build
-      - name: Docker compouse MIGRATE models
-        run: docker compose -f docker-compose.dev.yml exec api-dev python manage.py migrate --noinput
+      - name: Docker compose MIGRATE models
+        run: docker compose -f docker-compose.dev.yml exec -T api-dev python manage.py migrate --noinput
       - name: Docker compose LOADDATA activities
-        run: docker compose -f docker-compose.dev.yml exec api-dev python manage.py loaddata activities
+        run: docker compose -f docker-compose.dev.yml exec -T api-dev python manage.py loaddata activities
       - name: Docker compose LOADDATA categories
-        run: docker compose -f docker-compose.dev.yml exec api-dev python manage.py loaddata categories
+        run: docker compose -f docker-compose.dev.yml exec -T api-dev python manage.py loaddata categories
       - name: Docker compose LOADDATA regions
-        run: docker compose -f docker-compose.dev.yml exec api-dev python manage.py loaddata regions
+        run: docker compose -f docker-compose.dev.yml exec -T api-dev python manage.py loaddata regions
       - name: nginx
         run: docker compose -f docker-compose.nginx.yml down -v
       - name: nginx
         run: docker compose -f docker-compose.nginx.yml up -d --build
 
-      - name: Clean up old docker resources
+      - name: Clean up old Docker resources
         run: |
-          docker system df
-          docker container prune -f
-          docker image prune -f
-
+            docker system df
+            docker container prune -f
+            docker image prune -f
+            docker volume prune -f
+            docker network prune -f
