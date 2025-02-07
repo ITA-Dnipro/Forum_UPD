@@ -4,7 +4,7 @@ on: pull_request
 env:
   DEBUG: True
   SECRET_KEY: ${{ secrets.SECRET_KEY }}
-  PG_DB: db
+  PG_DB: ${{ vars.PG_DB }}
   PG_USER: postgres
   PG_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
   DB_HOST: 127.0.0.1
