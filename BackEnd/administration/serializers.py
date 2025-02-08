@@ -14,7 +14,7 @@ from utils.administration.profiles.profiles_functions import (
     format_business_entity,
 )
 from utils.administration.create_password import generate_password
-from utils.administration.send_email import send_email_about_admin_registration
+from services.administration.send_email import send_email_about_admin_registration
 from .models import AutoModeration, ModerationEmail
 
 User = get_user_model()

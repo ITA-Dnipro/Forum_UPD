@@ -12,7 +12,7 @@ from .models import (
 from images.models import ProfileImage
 from utils.regions_ukr_names import get_regions_ukr_names_as_string
 from utils.moderation.moderation_action import ModerationAction
-from utils.moderation.image_moderation import ModerationManager
+from services.moderation.image_moderation import ModerationManager
 
 
 class ActivitySerializer(serializers.ModelSerializer):
