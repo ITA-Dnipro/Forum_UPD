@@ -40,6 +40,9 @@ ALLOWED_HOSTS = [
 # Application definition
 
 INSTALLED_APPS = [
+    "daphne",
+    "chat",
+    "channels",
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.sessions",
@@ -57,7 +60,6 @@ INSTALLED_APPS = [
     "search",
     "drf_spectacular",
     "images",
-    "chat",
 ]
 
 MIDDLEWARE = [
@@ -280,4 +282,13 @@ CONTACTS_INFO = {
 }
 DJANGO_SETTINGS_MODULE = config("DJANGO_SETTINGS_MODULE")
 
-ASGI_APPLICATION = "mysite.asgi.application"
+ASGI_APPLICATION = "forum.asgi.application"
+
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [("127.0.0.1", 6379)],
+        },
+    },
+}

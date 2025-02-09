@@ -13,8 +13,10 @@ ENV REACT_APP_PUBLIC_URL=$REACT_APP_PUBLIC_URL
 ENV REACT_APP_RECAPTCHA_V2_SITE_KEY=$REACT_APP_RECAPTCHA_V2_SITE_KEY
 
 RUN npm install
-RUN npm ci 
+# RUN npm ci 
 # Build the app
+RUN npx update-browserslist-db@latest
+RUN npm cache clean --force && npm ci
 RUN npm run build
 
 # Bundle static assets with nginx
