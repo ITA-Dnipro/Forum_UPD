@@ -1,4 +1,4 @@
-FROM node:16-alpine as builder
+FROM node:18-alpine as builder
 # Set the working directory to /app inside the container
 WORKDIR /app
 # Copy app files
@@ -12,6 +12,7 @@ ENV REACT_APP_BASE_API_URL=$REACT_APP_BASE_API_URL
 ENV REACT_APP_PUBLIC_URL=$REACT_APP_PUBLIC_URL
 ENV REACT_APP_RECAPTCHA_V2_SITE_KEY=$REACT_APP_RECAPTCHA_V2_SITE_KEY
 
+RUN npm install
 RUN npm ci 
 # Build the app
 RUN npm run build

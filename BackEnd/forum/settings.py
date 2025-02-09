@@ -57,6 +57,7 @@ INSTALLED_APPS = [
     "search",
     "drf_spectacular",
     "images",
+    "chat",
 ]
 
 MIDDLEWARE = [
@@ -278,3 +279,5 @@ CONTACTS_INFO = {
     "address": "вул. Степана Бандери 12, Львів",
 }
 DJANGO_SETTINGS_MODULE = config("DJANGO_SETTINGS_MODULE")
+
+ASGI_APPLICATION = "mysite.asgi.application"

@@ -5,7 +5,11 @@
     "browser": true,
     "es2021": true
   },
-  "extends": ["eslint:recommended", "plugin:react/recommended", "plugin:react-hooks/recommended"],
+  "extends": [
+    "eslint:recommended",
+    "plugin:react/recommended",
+    "plugin:react-hooks/recommended"
+  ],
   "parserOptions": {
     "ecmaVersion": 12,
     "sourceType": "module",
@@ -13,7 +17,10 @@
       "jsx": true
     }
   },
-  "plugins": ["react", "react-hooks"],
+  "plugins": [
+    "react",
+    "react-hooks"
+  ],
   "rules": {
     "react/react-in-jsx-scope": "off",
     "react/prop-types": "warn",
@@ -44,6 +51,9 @@
       }
     ],
     "no-trailing-spaces": 2,
-    "jsx-quotes": ["error", "prefer-double"]
+    "jsx-quotes": [
+      "error",
+      "prefer-double"
+    ]
   }
-} 
+}
