@@ -41,26 +41,30 @@ ALLOWED_HOSTS = [
 
 INSTALLED_APPS = [
     "daphne",
-    "chat",
     "channels",
+
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    "corsheaders",
-    "rest_framework",
+
+    "corsheaders",  
+    "rest_framework", 
     "rest_framework.authtoken",
     "django_filters",
     "djoser",
+    "drf_spectacular",
     "debug_toolbar",
+
     "authentication",
     "profiles",
     "administration",
     "search",
-    "drf_spectacular",
     "images",
+    "chat"
 ]
+
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -129,8 +133,17 @@ DATABASES = {
         "PASSWORD": config("PG_PASSWORD"),
         "HOST": config("DB_HOST"),
         "PORT": config("DB_PORT"),
+    },
+     "mongo": {
+        "ENGINE": "djongo",
+        "NAME": "forum_chat_db", 
+        "CLIENT": {
+             "host": "mongodb://mongo:27017",
+        }
     }
 }
+
+DATABASE_ROUTERS = ["chat.db_routers.ChatRouter"]
 
 # Password validation
 # https://docs.djangoproject.com/en/4.1/ref/settings/#auth-password-validators

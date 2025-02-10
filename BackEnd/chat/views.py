@@ -1,7 +1,7 @@
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from .models import Chat
+from .models import Message
 from .serializers import MessageSerializer
 
 
@@ -19,7 +19,7 @@ class MessageCreate(APIView):
 # Retrieve all messages (GET)
 class MessageList(APIView):
     def get(self, request):
-        chats = Chat.objects.all()
+        chats = Message.objects.all()
         serializer = MessageSerializer(chats, many=True)
         return Response(serializer.data)
 
@@ -28,8 +28,8 @@ class MessageList(APIView):
 class MessageDetail(APIView):
     def get(self, request, pk):
         try:
-            chat = Chat.objects.get(pk=pk)
-        except Chat.DoesNotExist:
+            chat = Message.objects.get(pk=pk)
+        except Message.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
         serializer = MessageSerializer(chat)
@@ -40,8 +40,8 @@ class MessageDetail(APIView):
 class MessageUpdate(APIView):
     def put(self, request, pk):
         try:
-            chat = Chat.objects.get(pk=pk)
-        except Chat.DoesNotExist:
+            chat = Message.objects.get(pk=pk)
+        except Message.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
         serializer = MessageSerializer(chat, data=request.data)
@@ -55,8 +55,8 @@ class MessageUpdate(APIView):
 class MessageDelete(APIView):
     def delete(self, request, pk):
         try:
-            chat = Chat.objects.get(pk=pk)
-        except Chat.DoesNotExist:
+            chat = Message.objects.get(pk=pk)
+        except Message.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
         chat.delete()
