@@ -265,11 +265,21 @@ $ docker stop $(docker ps -q)
 ### How to run tests
 - User, run test:
 ```shell
-$ python manage.py test --settings=forum.test_settings
+$ python manage.py test --settings=forum.test_setting
 ```
 - Running tests from Docker container:
 ```
-$ docker compose -f docker-compose.dev.yml exec api-dev python manage.py test --settings=forum.test_settings
+$ docker compose -f docker-compose.dev.yml exec api-dev python manage.py test --settings=forum.test_setting
+```
+- Check Test Coverage and make report (from Backend directory):
+```shell
+$ coverage run manage.py test --settings=forum.test_setting
+$ coverage report
+```
+- Check Test Coverage and make report from Docker container:
+```shell
+$ docker compose -f docker-compose.dev.yml exec api-dev coverage run manage.py test --settings=forum.test_setting
+$ docker compose -f docker-compose.dev.yml exec api-dev coverage report
 ```
 ### How to Checkstyle
 
