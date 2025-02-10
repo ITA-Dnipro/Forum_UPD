@@ -133,6 +133,15 @@ class Profile(models.Model):
 
     objects = ProfileManager.as_manager()
 
+    def soft_delete(self, user):
+        self.is_deleted = True
+        self.save()
+        user.is_active = False
+        user.email = (
+            f"is_deleted_{now().strftime('%Y%m%d%H%M%S')}_{user.email}"
+        )
+        user.save()
+
 
 class Activity(models.Model):
     id = models.AutoField(primary_key=True)

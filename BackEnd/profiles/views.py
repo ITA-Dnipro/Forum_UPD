@@ -207,14 +207,7 @@ class ProfileDetail(RetrieveUpdateDestroyAPIView):
         serializer.is_valid(raise_exception=True)
         user = self.request.user
         with transaction.atomic():
-            instance.objects.soft_delete(user)
-            # instance.is_deleted = True
-            # instance.save()
-            # user.is_active = False
-            # user.email = (
-            #     f"is_deleted_{now().strftime('%Y%m%d%H%M%S')}_{user.email}"
-            # )
-            # user.save()
+            instance.soft_delete(user)
             djoser_utils.logout_user(self.request)
 
     def perform_update(self, serializer):
