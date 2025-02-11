@@ -31,7 +31,8 @@ class AutoModeration(models.Model):
 
 
 class AutoapproveTask(models.Model):
-    celery_task_id = models.CharField()
+    celery_task_id = models.CharField(max_length=255, blank=True, null=True)
+
     profile = models.ForeignKey(Profile, on_delete=models.CASCADE)
 
 

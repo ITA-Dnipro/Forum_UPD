@@ -133,17 +133,19 @@ DATABASES = {
         "PASSWORD": config("PG_PASSWORD"),
         "HOST": config("DB_HOST"),
         "PORT": config("DB_PORT"),
-    },
-     "mongo": {
-        "ENGINE": "djongo",
-        "NAME": "forum_chat_db", 
-        "CLIENT": {
-             "host": "mongodb://mongo:27017",
-        }
     }
 }
 
-DATABASE_ROUTERS = ["chat.db_routers.ChatRouter"]
+import mongoengine
+
+mongoengine.connect(
+    db="forum_chat_db1",
+    username="root",
+    password="rootpass",
+    host="mongo",  
+    authentication_source="admin"
+)
+
 
 # Password validation
 # https://docs.djangoproject.com/en/4.1/ref/settings/#auth-password-validators

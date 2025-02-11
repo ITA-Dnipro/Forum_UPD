@@ -1,15 +1,28 @@
-from django.db import models
-from django.contrib.auth import get_user_model
+from mongoengine import Document, EmbeddedDocument
+from mongoengine.fields import (
+    StringField, DateTimeField, ReferenceField, ListField,
+    EmbeddedDocumentListField, EmbeddedDocumentField, IntField
+)
+from datetime import datetime
 
-User = get_user_model()
+class Message(EmbeddedDocument):
+    
+    sender_id = IntField(required=True)  
+    text = StringField()
+    timestamp = DateTimeField(default=datetime.utcnow)
 
-class Room(models.Model):
-    participants = models.ManyToManyField(User, related_name='rooms')
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
 
-class Message(models.Model):
-    room = models.ForeignKey(Room, related_name='messages', on_delete=models.CASCADE)
-    sender = models.ForeignKey(User, related_name='sent_messages', on_delete=models.CASCADE)
-    text = models.TextField()
-    timestamp = models.DateTimeField(auto_now_add=True)
+class Room(Document):
+
+    participant_ids = ListField(IntField())
+    created_at = DateTimeField(default=datetime.utcnow)
+    updated_at = DateTimeField(default=datetime.utcnow)
+
+    messages = EmbeddedDocumentListField(Message)
+
+    meta = {
+        "collection": "rooms",
+        "indexes": [
+            {"fields": ["participant_ids"]},  
+        ],
+    }
