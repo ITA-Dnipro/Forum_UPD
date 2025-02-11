@@ -17,3 +17,5 @@ BackEnd/celerybeat-schedule.*
 BackEnd/public/*
 !BackEnd/public/media/.gitkeep
 !BackEnd/public/static/.gitkeep
+
+.coverage
