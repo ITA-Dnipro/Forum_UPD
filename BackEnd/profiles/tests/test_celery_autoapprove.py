@@ -11,7 +11,7 @@ from images.factories import ProfileimageFactory
 from utils.unittest_helper import AnyInt
 
 
-@patch("utils.moderation.image_moderation.celery_autoapprove.apply_async")
+@patch("services.moderation.image_moderation.celery_autoapprove.apply_async")
 class TestCelery(APITestCase):
     def setUp(self) -> None:
         self.banner = ProfileimageFactory(image_type="banner")

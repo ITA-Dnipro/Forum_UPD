@@ -2,6 +2,7 @@ redis==5.0.7
 asgiref==3.7.2
 Django==4.2.3
 djangorestframework==3.14.0
+djangorestframework-simplejwt==5.2.2
 psycopg2==2.9.6
 psycopg2-binary==2.9.6
 pytz==2023.3
@@ -22,5 +23,4 @@ django-debug-toolbar==4.3.0
 celery==5.4.0
 passlib==1.7.4
 Faker==19.6.2
-
-
+coverage==7.6.10

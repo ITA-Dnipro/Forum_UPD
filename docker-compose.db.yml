@@ -33,8 +33,21 @@ services:
       - db
     networks:
       - forum_network
+
+  redis:
+    image: redis:7
+    container_name: redis
+    command: [ "redis-server", "--maxclients", "1000", "--maxmemory-policy", "allkeys-lru" ]
+    restart: always
+    volumes:
+      - redis_data:/data
+    networks:
+      - forum_network
+
 networks:
   forum_network:
+
 volumes:
   db_data:
   pgadmin_data:
+  redis_data:
