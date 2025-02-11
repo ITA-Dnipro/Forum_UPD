@@ -41,26 +41,30 @@ ALLOWED_HOSTS = [
 
 INSTALLED_APPS = [
     "daphne",
-    "chat",
     "channels",
+
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    "corsheaders",
-    "rest_framework",
+
+    "corsheaders",  
+    "rest_framework", 
     "rest_framework.authtoken",
     "django_filters",
     "djoser",
+    "drf_spectacular",
     "debug_toolbar",
+
     "authentication",
     "profiles",
     "administration",
     "search",
-    "drf_spectacular",
     "images",
+    "chat"
 ]
+
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -131,6 +135,17 @@ DATABASES = {
         "PORT": config("DB_PORT"),
     }
 }
+
+import mongoengine
+
+mongoengine.connect(
+    db="forum_chat_db1",
+    username="root",
+    password="rootpass",
+    host="mongo",  
+    authentication_source="admin"
+)
+
 
 # Password validation
 # https://docs.djangoproject.com/en/4.1/ref/settings/#auth-password-validators
