@@ -45,7 +45,7 @@ from authentication.models import CustomUser
 from profiles.models import Profile, Category
 from .permissions import IsStaffUser, IsStaffUserOrReadOnly, IsSuperUser
 from .serializers import FeedbackSerializer
-from utils.administration.send_email_feedback import send_email_feedback
+from services.administration.send_email_feedback import send_email_feedback
 from .filters import (
     UsersFilter,
     CategoriesFilter,
@@ -53,7 +53,7 @@ from .filters import (
     ProfileStatisticsFilter,
     MonthlyProfileFilter,
 )
-from utils.administration.send_email_notification import send_email_to_user
+from services.administration.send_email_notification import send_email_to_user
 from .permissions import (
     IsAdminUser,
     IsModeratorUser

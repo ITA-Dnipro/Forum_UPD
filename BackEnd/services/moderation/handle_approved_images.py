@@ -1,4 +1,4 @@
-from ..completeness_counter import completeness_count
+from utils.completeness_counter import completeness_count
 
 
 class ApprovedImagesDeleter:

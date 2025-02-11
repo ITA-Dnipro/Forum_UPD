@@ -781,10 +781,10 @@ class TestProfileDetailAPIView(APITestCase):
         self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
 
     @mock.patch(
-        "utils.moderation.image_moderation.ModerationManager.schedule_autoapprove"
+        "services.moderation.image_moderation.ModerationManager.schedule_autoapprove"
     )
     @mock.patch(
-        "utils.moderation.send_email.attach_image",
+        "services.moderation.send_email.attach_image",
         new_callable=mock.mock_open,
         read_data=b"image",
     )
