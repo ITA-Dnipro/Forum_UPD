@@ -23,5 +23,5 @@ celery==5.4.0
 passlib==1.7.4
 channels==4.2.0
 daphne==4.1.2
-
+channels_redis==4.2.1
 
