@@ -1,6 +1,6 @@
-# chat/management/commands/add_test_data.py
+# chat/management/commands/sync_indexes.py
 from django.core.management.base import BaseCommand
-from datetime import datetime
+from django.utils import timezone
 from chat.models import Room, Message
 
 class Command(BaseCommand):
@@ -12,12 +12,12 @@ class Command(BaseCommand):
         try:
             room = Room(
                 participant_ids=[1, 2, 3],
-                created_at=datetime.utcnow(),
-                updated_at=datetime.utcnow()
+                created_at=timezone.now(),
+                updated_at=timezone.now()
             )
 
-            room.messages.append(Message(sender_id=1, text="Привіт, як справи?", timestamp=datetime.utcnow()))
-            room.messages.append(Message(sender_id=2, text="Все добре, дякую!", timestamp=datetime.utcnow()))
+            room.messages.append(Message(sender_id=1, text="Привіт, як справи?", timestamp=timezone.now()))
+            room.messages.append(Message(sender_id=2, text="Все добре, дякую!", timestamp=timezone.now()))
             room.save()
 
             self.stdout.write(self.style.SUCCESS(f"Тестова кімната створена з id: {room.id}"))
