@@ -32,7 +32,9 @@ class CustomUserManager(BaseUserManager):
         Returns:
             CustomUser: The created superuser instance.
         """
-
+        extra_fields.setdefault('is_staff', True)
+        extra_fields.setdefault('is_active', True)
+        extra_fields.setdefault('is_superuser', True)
         user = self.create_user(email, password=password, **extra_fields)
         user.is_active = True
         user.is_staff = True
