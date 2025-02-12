@@ -2,7 +2,7 @@ from django.contrib.auth.base_user import BaseUserManager
 
 
 class CustomUserManager(BaseUserManager):
-    def create_user(self, email, password=None, **extra_fields):
+    def create_user(self, email, password, **extra_fields):
         """
         Creates and returns a regular user.
         
@@ -21,7 +21,7 @@ class CustomUserManager(BaseUserManager):
         user.save(using=self._db)
         return user
 
-    def create_superuser(self, email, password=None, **extra_fields):
+    def create_superuser(self, email, password, **extra_fields):
         """
         Creates and returns a superuser with elevated permissions.
         
@@ -32,7 +32,9 @@ class CustomUserManager(BaseUserManager):
         Returns:
             CustomUser: The created superuser instance.
         """
-
+        extra_fields.setdefault('is_staff', True)
+        extra_fields.setdefault('is_active', True)
+        extra_fields.setdefault('is_superuser', True)
         user = self.create_user(email, password=password, **extra_fields)
         user.is_active = True
         user.is_staff = True
