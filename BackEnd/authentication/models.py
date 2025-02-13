@@ -1,7 +1,9 @@
 from django.contrib.auth.base_user import AbstractBaseUser, BaseUserManager
 from django.contrib.auth.models import PermissionsMixin
 from django.db import models
+import logging
 
+logger = logging.getLogger(__name__)
 
 class CustomUserManager(BaseUserManager):
     def create_user(self, email, password=None, **extra_fields):
@@ -36,6 +38,6 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     ]
 
     objects = CustomUserManager()
-
+    
     def __str__(self):
         return self.email

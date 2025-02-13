@@ -13,6 +13,10 @@ from validation.validate_phone_number import (
     validate_phone_number_is_digit,
 )
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 
 class Region(models.Model):
     id = models.AutoField(primary_key=True)

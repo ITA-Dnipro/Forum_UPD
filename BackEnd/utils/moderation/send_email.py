@@ -10,11 +10,13 @@ from administration.models import AutoModeration
 from .encode_decode_id import encode_id
 from administration.models import ModerationEmail
 
+import logging
 
 EMAIL_CONTENT_SUBTYPE = "html"
 PROTOCOL = "http"
 DOMAIN = config("ALLOWED_ENV_HOST")
 
+logger = logging.getLogger(__name__)
 
 def define_ending(hours):
     result_of_hours = None
@@ -39,14 +41,18 @@ def generate_profile_moderation_url(profile_id, banner, logo, action):
 
 
 def attach_image(email, image, content_id):
-    image_name = os.path.basename(image.image_path.name)
-    with open(image.image_path.path, "rb") as img_file:
-        img = MIMEImage(img_file.read(), _subtype=image.content_type)
-        img.add_header("Content-ID", f"<{content_id}>")
-        img.add_header(
-            "Content-Disposition", f'inline; filename="{image_name}"'
-        )
-        email.attach(img)
+    try:
+        image_name = os.path.basename(image.image_path.name)
+        logger.info(f"Image attached: {image_name}")
+        with open(image.image_path.path, "rb") as img_file:
+            img = MIMEImage(img_file.read(), _subtype=image.content_type)
+            img.add_header("Content-ID", f"<{content_id}>")
+            img.add_header(
+                "Content-Disposition", f'inline; filename="{image_name}"'
+            )
+            email.attach(img)
+    except Exception as e:
+        logger.error(e)
 
 
 def send_moderation_email(profile, banner, logo, content_is_deleted):
@@ -91,3 +97,4 @@ def send_moderation_email(profile, banner, logo, content_is_deleted):
         attach_image(email, logo, logo.uuid)
 
     email.send(fail_silently=False)
+    logger.info("Message sent.")

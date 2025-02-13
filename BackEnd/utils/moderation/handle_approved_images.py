@@ -1,5 +1,7 @@
 from ..completeness_counter import completeness_count
+import logging
 
+logger = logging.getLogger(__name__)
 
 class ApprovedImagesDeleter:
     """
@@ -13,6 +15,7 @@ class ApprovedImagesDeleter:
         if self.profile.status == self.profile.PENDING and approved_image:
             approved_image.is_deleted = True
             approved_image.save()
+            logger.info("Image deleted.")
             completeness_count(self.profile)
 
     def handle_potential_deletion(self):
