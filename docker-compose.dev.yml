@@ -15,7 +15,7 @@ services:
     container_name: api-dev
     restart: on-failure
     command: /bin/sh -c "gunicorn --log-level debug forum.wsgi:application --bind 0.0.0.0:8000 & daphne -b 0.0.0.0 -p 8001 forum.asgi:application"
- # Run both Gunicorn and Daphne
+    # Run both Gunicorn and Daphne
     volumes:
       # - ./:/Forum
       - static:/home/forum/app/public/static
@@ -24,7 +24,7 @@ services:
       - 8000:8000
       - 8001:8001
     environment:
-      - DEBUG=True
+      - DEBUG=${DEBUG}
       - SECRET_KEY=${SECRET_KEY}
       - ENGINE=${ENGINE}
       - DB_HOST=${DB_HOST}
