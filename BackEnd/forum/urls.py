@@ -21,6 +21,7 @@ from django.conf.urls.static import static
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 
 urlpatterns = [
+    path("chat/", include("chat.urls")),
     path("api/", include("authentication.urls", namespace="authentication")),
     path("api/", include("profiles.urls", namespace="profiles")),
     path(
