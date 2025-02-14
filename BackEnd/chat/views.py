@@ -5,12 +5,15 @@ from rest_framework.views import APIView
 from .models import Message
 from .serializers import MessageSerializer
 
+
 # Template views
 def index(request):
     return render(request, "chat/index.html")
 
+
 def room(request, room_name):
     return render(request, "chat/room.html", {"room_name": room_name})
+
 
 # API views
 class MessageList(APIView):
@@ -19,6 +22,7 @@ class MessageList(APIView):
         serializer = MessageSerializer(chats, many=True)
         return Response(serializer.data)
 
+
 class MessageDetail(APIView):
     def get(self, request, pk):
         try:
@@ -26,7 +30,8 @@ class MessageDetail(APIView):
         except Message.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
         serializer = MessageSerializer(chat)
-        return Response(serializer.data)
+        return serializer.data
+
 
 class MessageUpdate(APIView):
     def put(self, request, pk):
@@ -39,6 +44,7 @@ class MessageUpdate(APIView):
             serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 class MessageDelete(APIView):
     def delete(self, request, pk):
