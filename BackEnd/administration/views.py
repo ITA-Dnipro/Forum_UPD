@@ -45,7 +45,7 @@ from authentication.models import CustomUser
 from profiles.models import Profile, Category
 from .permissions import IsStaffUser, IsStaffUserOrReadOnly, IsSuperUser
 from .serializers import FeedbackSerializer
-from utils.administration.send_email_feedback import send_email_feedback
+from services.administration.send_email_feedback import send_email_feedback
 from .filters import (
     UsersFilter,
     CategoriesFilter,
@@ -53,7 +53,11 @@ from .filters import (
     ProfileStatisticsFilter,
     MonthlyProfileFilter,
 )
-from utils.administration.send_email_notification import send_email_to_user
+from services.administration.send_email_notification import send_email_to_user
+from .permissions import (
+    IsAdminUser,
+    IsModeratorUser
+)
 
 
 class UsersListView(ListAPIView):
@@ -73,7 +77,7 @@ class UsersListView(ListAPIView):
     **Without is_deleted**
     """
 
-    permission_classes = [IsStaffUser]
+    permission_classes = [IsAdminUser]
     pagination_class = ListPagination
     serializer_class = AdminUserListSerializer
     filter_backends = [DjangoFilterBackend]
@@ -103,7 +107,7 @@ class ProfilesListView(ListAPIView):
     View to list profiles with optional filtering and ordering.
     """
 
-    permission_classes = [IsStaffUser]
+    permission_classes = [IsModeratorUser]
     pagination_class = ListPagination
     serializer_class = AdminCompanyListSerializer
     filter_backends = [DjangoFilterBackend]

@@ -7,6 +7,10 @@ services:
     restart: always
     volumes:
       - ./configs/postgres:/docker-entrypoint-initdb.d
+      -  db_data:/var/lib/postgresql/data
+
+    ports:
+      - 5432:5432
       - db_data:/var/lib/postgresql/data
     networks:
       - forum_network
@@ -45,6 +49,17 @@ services:
       MONGO_INITDB_ROOT_USERNAME: admin
       MONGO_INITDB_ROOT_PASSWORD: admin_password
 
+
+  redis:
+    image: redis:7
+    container_name: redis
+    command: [ "redis-server", "--maxclients", "1000", "--maxmemory-policy", "allkeys-lru" ]
+    restart: always
+    volumes:
+      - redis_data:/data
+    networks:
+      - forum_network
+
 networks:
   forum_network:
 
@@ -52,3 +67,5 @@ volumes:
   db_data:
   pgadmin_data:
   mongo_data:
+
+  redis_data:

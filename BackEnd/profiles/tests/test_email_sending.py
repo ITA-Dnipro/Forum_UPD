@@ -3,9 +3,9 @@ from rest_framework.test import APITestCase
 from unittest import mock
 from django.utils.timezone import now
 from django.core import mail
-from utils.moderation.handle_approved_images import ApprovedImagesDeleter
-from utils.moderation.send_email import send_moderation_email
-from utils.moderation.image_moderation import ModerationManager
+from services.moderation.handle_approved_images import ApprovedImagesDeleter
+from services.moderation.send_email import send_moderation_email
+from services.moderation.image_moderation import ModerationManager
 from authentication.factories import UserFactory
 from profiles.factories import ProfileStartupFactory
 from images.factories import ProfileimageFactory
@@ -375,7 +375,7 @@ class TestSendModerationManager(APITestCase):
         self.assertFalse(self.manager.needs_moderation(self.profile.banner))
         self.assertFalse(self.manager.needs_moderation(self.profile.logo))
 
-    @mock.patch("utils.moderation.image_moderation.now", return_value=now())
+    @mock.patch("services.moderation.image_moderation.now", return_value=now())
     def test_update_pending_status(self, mock_now):
         self.profile.banner = self.banner
         self.manager.update_pending_status("banner", self.profile.banner)
@@ -383,7 +383,7 @@ class TestSendModerationManager(APITestCase):
         self.assertEqual(self.profile.status_updated_at, mock_now.return_value)
         self.assertTrue(self.manager.moderation_is_needed)
 
-    @mock.patch("utils.moderation.image_moderation.now", return_value=now())
+    @mock.patch("services.moderation.image_moderation.now", return_value=now())
     def test_update_pending_status_previously_approved_banner(self, mock_now):
         new_banner = ProfileimageFactory(
             image_type="banner", hash_md5="0dc41dd9dcbc75e730642dbfb87cd1d5"
@@ -394,7 +394,7 @@ class TestSendModerationManager(APITestCase):
         self.assertEqual(self.profile.status_updated_at, mock_now.return_value)
         self.assertFalse(self.manager.moderation_is_needed)
 
-    @mock.patch("utils.moderation.image_moderation.now", return_value=now())
+    @mock.patch("services.moderation.image_moderation.now", return_value=now())
     def test_update_pending_status_previously_approved_logo(self, mock_now):
         new_logo = ProfileimageFactory(
             image_type="logo", hash_md5="b4094f9fa6e298a6e25c1dba791868fe"
@@ -417,7 +417,7 @@ class TestSendModerationManager(APITestCase):
         self.assertFalse(self.manager.moderation_is_needed)
 
     # cases for moderation is needed
-    @mock.patch("utils.moderation.image_moderation.now", return_value=now())
+    @mock.patch("services.moderation.image_moderation.now", return_value=now())
     def test_check_for_moderation(self, mock_now):
         self.profile.banner = self.banner
         self.profile.logo = self.logo
@@ -430,7 +430,7 @@ class TestSendModerationManager(APITestCase):
             {"banner": self.banner, "logo": self.logo},
         )
 
-    @mock.patch("utils.moderation.image_moderation.now", return_value=now())
+    @mock.patch("services.moderation.image_moderation.now", return_value=now())
     def test_check_for_moderation_previously_approved_banner(self, mock_now):
         new_banner = ProfileimageFactory(
             image_type="banner", hash_md5="0dc41dd9dcbc75e730642dbfb87cd1d5"
@@ -446,7 +446,7 @@ class TestSendModerationManager(APITestCase):
             {"banner": None, "logo": self.logo},
         )
 
-    @mock.patch("utils.moderation.image_moderation.now", return_value=now())
+    @mock.patch("services.moderation.image_moderation.now", return_value=now())
     def test_check_for_moderation_previously_approved_logo(self, mock_now):
         self.profile.banner = self.banner
         new_logo = ProfileimageFactory(
@@ -462,7 +462,7 @@ class TestSendModerationManager(APITestCase):
             {"banner": self.banner, "logo": None},
         )
 
-    @mock.patch("utils.moderation.image_moderation.now", return_value=now())
+    @mock.patch("services.moderation.image_moderation.now", return_value=now())
     def test_check_for_moderation_empty_banner(self, mock_now):
         self.profile.logo = self.logo
         self.manager.check_for_moderation()
@@ -473,7 +473,7 @@ class TestSendModerationManager(APITestCase):
             self.manager.images, {"banner": None, "logo": self.logo}
         )
 
-    @mock.patch("utils.moderation.image_moderation.now", return_value=now())
+    @mock.patch("services.moderation.image_moderation.now", return_value=now())
     def test_check_for_moderation_empty_logo(self, mock_now):
         self.profile.banner = self.banner
         self.manager.check_for_moderation()
@@ -484,7 +484,7 @@ class TestSendModerationManager(APITestCase):
             self.manager.images, {"banner": self.banner, "logo": None}
         )
 
-    @mock.patch("utils.moderation.image_moderation.now", return_value=now())
+    @mock.patch("services.moderation.image_moderation.now", return_value=now())
     def test_check_for_moderation_with_approved_image(self, mock_now):
         self.profile.banner = self.banner
         self.profile.banner.is_approved = True
@@ -525,7 +525,7 @@ class TestSendModerationManager(APITestCase):
         )
 
     # handle the deletion of a new image
-    @mock.patch("utils.moderation.image_moderation.now", return_value=now())
+    @mock.patch("services.moderation.image_moderation.now", return_value=now())
     def test_handle_approved_image_status_pending(self, mock_now):
         self.profile.banner = self.banner
         self.profile.banner.is_approved = True
@@ -569,7 +569,7 @@ class TestSendModerationManager(APITestCase):
         self.assertFalse(self.manager.content_deleted)
         self.assertEqual(self.manager.images, {"banner": None, "logo": None})
 
-    @mock.patch("utils.moderation.image_moderation.now", return_value=now())
+    @mock.patch("services.moderation.image_moderation.now", return_value=now())
     def test_handle_both_approved(self, mock_now):
         self.profile.status = self.profile.PENDING
         new_logo = ProfileimageFactory(
@@ -587,7 +587,7 @@ class TestSendModerationManager(APITestCase):
         self.assertEqual(self.profile.status_updated_at, mock_now.return_value)
         self.assertEqual(self.manager.images, {"banner": None, "logo": None})
 
-    @mock.patch("utils.moderation.image_moderation.now", return_value=now())
+    @mock.patch("services.moderation.image_moderation.now", return_value=now())
     def test_handle_both_approved_pending_status(self, mock_now):
         new_logo = ProfileimageFactory(
             image_type="logo", hash_md5="b4094f9fa6e298a6e25c1dba791868fe"
