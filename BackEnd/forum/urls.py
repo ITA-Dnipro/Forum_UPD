@@ -21,6 +21,7 @@ from django.conf.urls.static import static
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 
 urlpatterns = [
+    path("chat/", include("chat.urls")),
     path("api/", include("authentication.urls", namespace="authentication")),
     path("api/", include("profiles.urls", namespace="profiles")),
     path(
@@ -30,6 +31,7 @@ urlpatterns = [
     path("api/", include("search.urls", namespace="search")),
     path("api/", include("images.urls", namespace="images")),
     path("__debug__/", include("debug_toolbar.urls")),
+    path("api/", include("chat.urls", namespace="chat")),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 urlpatterns += staticfiles_urlpatterns()

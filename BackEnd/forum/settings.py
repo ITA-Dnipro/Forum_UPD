@@ -40,24 +40,31 @@ ALLOWED_HOSTS = [
 # Application definition
 
 INSTALLED_APPS = [
+    "daphne",
+    "channels",
+
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    "corsheaders",
-    "rest_framework",
+
+    "corsheaders",  
+    "rest_framework", 
     "rest_framework.authtoken",
     "django_filters",
     "djoser",
+    "drf_spectacular",
     "debug_toolbar",
+
     "authentication",
     "profiles",
     "administration",
     "search",
-    "drf_spectacular",
     "images",
+    "chat"
 ]
+
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -115,8 +122,8 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "forum.wsgi.application"
 
-CELERY_BROKER_URL = config("REDIS_URL")
-CELERY_RESULT_BACKEND = config("REDIS_URL")
+# CELERY_BROKER_URL = config("REDIS_URL")
+# CELERY_RESULT_BACKEND = config("REDIS_URL")
 
 DATABASES = {
     "default": {
@@ -128,6 +135,17 @@ DATABASES = {
         "PORT": config("DB_PORT"),
     }
 }
+
+import mongoengine
+
+mongoengine.connect(
+    db="forum_chat_db1",
+    username="root",
+    password="rootpass",
+    host="mongo",  
+    authentication_source="admin"
+)
+
 
 # Password validation
 # https://docs.djangoproject.com/en/4.1/ref/settings/#auth-password-validators
@@ -298,3 +316,14 @@ CONTACTS_INFO = {
     "address": "вул. Степана Бандери 12, Львів",
 }
 DJANGO_SETTINGS_MODULE = config("DJANGO_SETTINGS_MODULE")
+
+ASGI_APPLICATION = "forum.asgi.application"
+
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [("redis", 6379)],
+        },
+    },
+}
