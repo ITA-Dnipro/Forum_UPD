@@ -13,8 +13,6 @@ app_name = "authentication"
 
 urlpatterns = [
     path('auth/register/', UserRegistrationView.as_view(), name='register'),
-    #path("auth/", include("djoser.urls")),
-    #re_path(r"^auth/", include("djoser.urls.authtoken")),
     # JWT implementation
     path('auth/jwt/create/', CustomTokenObtainPairView.as_view(), name='jwt_create'),
     path('auth/jwt/refresh/', TokenRefreshView.as_view(), name='jwt_refresh'),
