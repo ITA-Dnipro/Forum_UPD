@@ -52,10 +52,11 @@ class CustomProfileSerializer(serializers.ModelSerializer):
 class UserRegistrationSerializer(serializers.ModelSerializer):
     company = CustomProfileSerializer(write_only=True)
     email = serializers.EmailField(
+        required=True,
         write_only=True,
     )
     password = serializers.CharField(
-        style={"input_type": "password"}, write_only=True
+        style={"input_type": "password"}, write_only=True, required=True
     )
     re_password = serializers.CharField(write_only=True)
     captcha = serializers.CharField(

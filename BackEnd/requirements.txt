@@ -3,7 +3,6 @@ asgiref==3.7.2
 Django==4.2.3
 djangorestframework==3.14.0
 djangorestframework-simplejwt==5.2.2
-drf-yasg==1.21.8
 psycopg2==2.9.6
 psycopg2-binary==2.9.6
 pytz==2023.3

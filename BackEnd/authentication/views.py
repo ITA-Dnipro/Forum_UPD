@@ -2,8 +2,13 @@ import logging
 
 from rest_framework_simplejwt.views import TokenObtainPairView
 
-from drf_yasg.utils import swagger_auto_schema
-from drf_yasg import openapi
+from drf_spectacular.utils import(
+    extend_schema,
+    OpenApiParameter,
+    OpenApiExample,
+    OpenApiResponse,
+)
+
 
 from .serializers import (
     CustomTokenObtainPairSerializer,
@@ -23,42 +28,18 @@ class CustomTokenObtainPairView(TokenObtainPairView):
 
 
 class UserRegistrationView(APIView):
-    @swagger_auto_schema(
-        operation_description="Register as a new user with email, password, name, surname, and company details",
-        request_body=openapi.Schema(
-            type=openapi.TYPE_OBJECT,
-            properties={
-                'email': openapi.Schema(type=openapi.TYPE_STRING),
-                'password': openapi.Schema(type=openapi.TYPE_STRING),
-                're_password': openapi.Schema(type=openapi.TYPE_STRING),
-                'name': openapi.Schema(type=openapi.TYPE_STRING),
-                'surname': openapi.Schema(type=openapi.TYPE_STRING),'captcha': openapi.Schema(type=openapi.TYPE_STRING, description="CAPTCHA token (optional)"),
-                'company': openapi.Schema(
-                    type=openapi.TYPE_OBJECT,
-                    properties={
-                        'name': openapi.Schema(type=openapi.TYPE_STRING),
-                        'is_registered': openapi.Schema(type=openapi.TYPE_BOOLEAN),
-                        'is_startup': openapi.Schema(type=openapi.TYPE_BOOLEAN),
-                        'is_fop': openapi.Schema(type=openapi.TYPE_BOOLEAN),
-                    },
-                    required=['name', 'is_registered', 'is_startup', 'is_fop']
-                )
-            },
-            required=['email', 'password', 're_password', 'name', 'surname', 'company'],
-        ),
+    @extend_schema(
+        operation_id="user_register",
+        summary="Register a new user",
+        description="Register as a new user with email, password, name, surname, and company details.",
+        request=UserRegistrationSerializer,
         responses={
-            201: openapi.Response(
+            201: OpenApiResponse(
+                response=UserRegistrationSerializer,
                 description="User registration successful",
-                schema=openapi.Schema(
-                    type=openapi.TYPE_OBJECT,
-                    properties={
-                        'name': openapi.Schema(type=openapi.TYPE_STRING),
-                        'surname': openapi.Schema(type=openapi.TYPE_STRING),
-                    }
-                ),
             ),
-            400: "Bad request (validation error or missing fields)",
-        }
+            400: OpenApiResponse(description="Bad request (validation error or missing fields)"),
+        },
     )
     def post(self, request):
         serializer = UserRegistrationSerializer(data=request.data)
