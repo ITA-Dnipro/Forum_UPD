@@ -54,3 +54,23 @@ class UserLogoutAPITests(APITestCase):
             {'detail': 'Authentication credentials were not provided.'},
             response.json(),
         )
+
+    def test_logout_with_reused_token(self):
+        self.user.set_password("Test1234")
+        self.user.save()
+        login_response = self.client.post(
+            path="/api/auth/login/",
+            data={"email": "test@test.com", "password": "Test1234"},
+        )
+        refresh_token = login_response.data["refresh"]
+        self.client.post(
+            path="/api/auth/logout/",
+            data={"refresh": refresh_token},
+        )
+        response = self.client.post(
+            path="/api/auth/logout/",
+            data={"refresh": refresh_token},
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertIn("detail", response.json())
