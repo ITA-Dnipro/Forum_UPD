@@ -49,7 +49,7 @@ class CustomProfileSerializer(serializers.ModelSerializer):
         fields = ("name", "is_registered", "is_startup", "is_fop")
 
 
-class UserRegistrationSerializer(UserCreatePasswordRetypeSerializer):
+class UserRegistrationSerializer(serializers.ModelSerializer):
     company = CustomProfileSerializer(write_only=True)
     email = serializers.EmailField(
         write_only=True,
@@ -57,19 +57,20 @@ class UserRegistrationSerializer(UserCreatePasswordRetypeSerializer):
     password = serializers.CharField(
         style={"input_type": "password"}, write_only=True
     )
+    re_password = serializers.CharField(write_only=True)
     captcha = serializers.CharField(
         write_only=True, allow_blank=True, allow_null=True
     )
 
     class Meta(UserCreatePasswordRetypeSerializer.Meta):
         model = User
-        fields = ("email", "password", "name", "surname", "company", "captcha")
+        fields = ("email", "password", "re_password", "name", "surname", "company", "captcha")
 
     def validate(self, value):
         custom_errors = defaultdict(list)
         captcha_token = value.get("captcha")
         self.fields.pop("re_password", None)
-        re_password = value.pop("re_password")
+        re_password = value.get("re_password")
         email = value.get("email").lower()
         password = value.get("password")
         company_data = value.get("company")
@@ -95,7 +96,7 @@ class UserRegistrationSerializer(UserCreatePasswordRetypeSerializer):
             validate_password_strength(password)
         except ValidationError as error:
             custom_errors["password"].append(error.message)
-        if value["password"] != re_password:
+        if value['password'] != value['re_password']:
             custom_errors["password"].append("Passwords don't match.")
         if captcha_token and not verify_recaptcha(captcha_token):
             custom_errors["captcha"].append(
@@ -106,9 +107,14 @@ class UserRegistrationSerializer(UserCreatePasswordRetypeSerializer):
         return value
 
     def create(self, validated_data):
+        validated_data.pop("re_password", None)
         validated_data.pop("captcha", None)
         company_data = validated_data.pop("company")
-        user = User.objects.create(**validated_data)
+        user = User.objects.create(
+            email=validated_data["email"],
+            name=validated_data["name"],
+            surname=validated_data["surname"],
+        )
         user.set_password(validated_data["password"])
         user.save()
         Profile.objects.create(**company_data, person=user)
