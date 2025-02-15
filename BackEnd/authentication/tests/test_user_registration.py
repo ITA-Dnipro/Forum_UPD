@@ -9,6 +9,8 @@ from utils.dump_response import dump  # noqa
 
 from django.urls import reverse
 
+url = reverse('authentication:register')
+
 
 class UserRegistrationAPITests(APITestCase):
     def setUp(self):
@@ -21,7 +23,6 @@ class UserRegistrationAPITests(APITestCase):
         self.user = UserFactory(email="test@test.com")
 
     def test_register_user_yurosoba_successful(self):
-        url = reverse('authentication:register')
         response = self.client.post(
             url,
             data={
@@ -54,7 +55,6 @@ class UserRegistrationAPITests(APITestCase):
 
 
     def test_register_user_fop_successful(self):
-        url = reverse('authentication:register')
         response = self.client.post(
             url,
             data={
@@ -86,7 +86,6 @@ class UserRegistrationAPITests(APITestCase):
         self.assertEqual(user.email, "jane@test.com")
 
     def test_register_user_email_incorrect(self):
-        url = reverse('authentication:register')
         response = self.client.post(
             url,
             data={
@@ -112,7 +111,6 @@ class UserRegistrationAPITests(APITestCase):
         )
 
     def test_register_user_email_exists(self):
-        url = reverse('authentication:register')
         response = self.client.post(
             url,
             data={
@@ -138,7 +136,6 @@ class UserRegistrationAPITests(APITestCase):
         )
 
     def test_register_user_password_incorrect(self):
-        url = reverse('authentication:register')
         response = self.client.post(
             url,
             data={
@@ -171,7 +168,6 @@ class UserRegistrationAPITests(APITestCase):
         )
 
     def test_register_user_who_represent_empty_fields(self):
-        url = reverse('authentication:register')
         response = self.client.post(
             url,
             data={
@@ -197,7 +193,6 @@ class UserRegistrationAPITests(APITestCase):
         )
 
     def test_register_user_who_represent_both_chosen(self):
-        url = reverse('authentication:register')
         response = self.client.post(
             url,
             data={
