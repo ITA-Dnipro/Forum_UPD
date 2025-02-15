@@ -4,13 +4,16 @@ from rest_framework_simplejwt.views import (
     TokenRefreshView,
     TokenVerifyView
 )
-from .views import CustomTokenObtainPairView
+from .views import CustomTokenObtainPairView, LogoutView
 
 app_name = "authentication"
 
 urlpatterns = [
     path("auth/", include("djoser.urls")),
     re_path(r"^auth/", include("djoser.urls.authtoken")),
+
+    path('auth/logout/', LogoutView.as_view(), name='logout'),
+    path('auth/login/', TokenObtainPairView.as_view(), name='login'),
 
     # JWT implementation
     path('auth/jwt/create/', CustomTokenObtainPairView.as_view(), name='jwt_create'),

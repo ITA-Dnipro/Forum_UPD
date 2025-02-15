@@ -13,6 +13,7 @@ from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from ratelimit.decorators import RateLimitDecorator
 from ratelimit.exception import RateLimitException
+from rest_framework_simplejwt.tokens import RefreshToken, AccessToken
 
 from profiles.models import Profile
 from validation.validate_password import (
@@ -166,3 +167,44 @@ class CustomTokenCreateSerializer(TokenCreateSerializer):
             [("password", attrs.get("password")), ("email", email)]
         )
         return super().validate(new_attr)
+
+
+class LoginSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    password = serializers.CharField()
+
+    def validate(self, data):
+        email = data.get('email')
+        password = data.get('password')
+
+        if not email or not password:
+            raise serializers.ValidationError("Email and password are required")
+
+        return data
+
+
+class LogoutSerializer(serializers.Serializer):
+    refresh = serializers.CharField(required=True)
+
+    def validate(self, data):
+        request = self.context.get('request')
+        auth_header = request.headers.get('Authorization', '')
+        access_token = auth_header.split()[1]
+        refresh_token = data.get('refresh')
+
+        try:
+            decoded_access_token = AccessToken(access_token)
+            user_id_from_access = decoded_access_token['user_id']
+        except Exception as e:
+            raise serializers.ValidationError({"access token error": str(e)})
+
+        try:
+            decoded_refresh_token = RefreshToken(refresh_token)
+            user_id_from_refresh = decoded_refresh_token['user_id']
+        except Exception as e:
+            raise serializers.ValidationError({"refresh token error": str(e)})
+
+        if user_id_from_access != user_id_from_refresh:
+            raise serializers.ValidationError({"error": "User ID mismatch between tokens."})
+
+        return data
