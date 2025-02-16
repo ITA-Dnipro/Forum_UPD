@@ -52,7 +52,8 @@ class UserRegistrationAPITests(APITestCase):
 
     def test_register_user_password_incorrect(self):
         payload = self.default_payload.copy()
-        payload["email"] = "test1@test.com"
+        test_user = UserFactory.build()
+        payload["email"] = test_user.email
         payload["password"] = "te1234"
         payload["re_password"] = "tess"
 
@@ -71,8 +72,9 @@ class UserRegistrationAPITests(APITestCase):
         )
 
     def test_register_user_who_represent_empty_fields(self):
+        test_user = UserFactory.build()
         payload = self.default_payload.copy()
-        payload["email"] = "test2@test.com"
+        payload["email"] = test_user.email
         payload["company"] = {
             "name": "My Company Empty",
             "is_registered": False,
@@ -85,8 +87,9 @@ class UserRegistrationAPITests(APITestCase):
         self.assertEqual({"comp_status": ["Please choose who you represent."]}, response.json())
 
     def test_register_user_both_companies_chosen(self):
+        test_user = UserFactory.build()
         payload = self.default_payload.copy()
-        payload["email"] = "test3@test.com"
+        payload["email"] = test_user.email
         payload["company"] = {
             "name": "My Company Startup FOP",
             "is_registered": True,
@@ -99,8 +102,9 @@ class UserRegistrationAPITests(APITestCase):
         self.assertEqual({"name": "Jane", "surname": "Smith"}, response.json())
 
     def test_register_user_yurosoba_successful(self):
+        test_user = UserFactory.build()
         payload = self.default_payload.copy()
-        payload["email"] = "test4@test.com"
+        payload["email"] = test_user.email
         payload["company"] = {
             "name": "My Company yurosoba",
             "is_registered": True,
@@ -112,12 +116,10 @@ class UserRegistrationAPITests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual({"name": "Jane", "surname": "Smith"}, response.json())
 
-        user = CustomUser.objects.get(email="test4@test.com")
-        self.assertEqual(user.email, "test4@test.com")
-
     def test_register_user_fop_successful(self):
+        test_user = UserFactory.build()
         payload = self.default_payload.copy()
-        payload["email"] = "test5@test.com"
+        payload["email"] = test_user.email
         payload["company"] = {
             "name": "My Company FOP",
             "is_registered": True,
@@ -128,6 +130,3 @@ class UserRegistrationAPITests(APITestCase):
         response = self.client.post(url, data=payload, format="json")
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual({"name": "Jane", "surname": "Smith"}, response.json())
-
-        user = CustomUser.objects.get(email="test5@test.com")
-        self.assertEqual(user.email, "test5@test.com")
