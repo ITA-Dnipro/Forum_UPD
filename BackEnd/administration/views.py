@@ -53,16 +53,12 @@ from .filters import (
     ProfileStatisticsFilter,
     MonthlyProfileFilter,
 )
-<<<<<<< HEAD
-from utils.administration.send_email_notification import send_email_to_user
-import logging
-=======
 from services.administration.send_email_notification import send_email_to_user
 from .permissions import (
     IsAdminUser,
     IsModeratorUser
 )
->>>>>>> origin/main
+import logging
 
 logger = logging.getLogger(__name__)
 
