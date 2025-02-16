@@ -1,13 +1,10 @@
 from unittest.mock import patch
-
+from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
-
 from authentication.factories import UserFactory
 from profiles.models import CustomUser
 from utils.dump_response import dump  # noqa
-
-from django.urls import reverse
 
 url = reverse('authentication:register')
 
@@ -20,140 +17,45 @@ class UserRegistrationAPITests(APITestCase):
         self.mock_verify_recaptcha = patcher.start()
         self.addCleanup(patcher.stop)
 
-        self.user = UserFactory(email="test@test.com")
+        self.existing_user = UserFactory.create(email="test@test.com")
 
-    def test_register_user_yurosoba_successful(self):
-        response = self.client.post(
-            url,
-            data={
-                "email": "jane@test.com",
-                "password": "Test12!34",
-                "re_password": "Test12!34",
-                "name": "Jane",
-                "surname": "Smith",
-                "captcha": "dummy_captcha",
-                "company": {
-                    "name": "My Company",
-                    "is_registered": True,
-                    "is_startup": False,
-                    "is_fop": False,
-                },
+        self.default_payload = {
+            "email": "jane@test.com",
+            "password": "Test12!34",
+            "re_password": "Test12!34",
+            "name": "Jane",
+            "surname": "Smith",
+            "captcha": "dummy_captcha",
+            "company": {
+                "name": "My Company",
+                "is_registered": True,
+                "is_startup": False,
+                "is_fop": False,
             },
-            format="json",
-        )
-
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(
-            {
-                "name": "Jane",
-                "surname": "Smith",
-            },
-            response.json(),
-        )
-        user = CustomUser.objects.get(email="jane@test.com")
-        self.assertEqual(user.email, "jane@test.com")
-
-
-    def test_register_user_fop_successful(self):
-        response = self.client.post(
-            url,
-            data={
-                "email": "jane@test.com",
-                "password": "Test12!34",
-                "re_password": "Test12!34",
-                "name": "Jane",
-                "surname": "Smith",
-                "captcha": "dummy_captcha",
-                "company": {
-                    "name": "My Company",
-                    "is_registered": True,
-                    "is_startup": False,
-                    "is_fop": True,
-                },
-            },
-            format="json",
-        )
-
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(
-            {
-                "name": "Jane",
-                "surname": "Smith",
-            },
-            response.json(),
-        )
-        user = CustomUser.objects.get(email="jane@test.com")
-        self.assertEqual(user.email, "jane@test.com")
+        }
 
     def test_register_user_email_incorrect(self):
-        response = self.client.post(
-            url,
-            data={
-                "email": "jane@testcom",
-                "password": "!Test1234",
-                "re_password": "!Test1234",
-                "name": "Jane",
-                "surname": "Smith",
-                "captcha": "dummy_captcha",
-                "company": {
-                    "name": "My Company",
-                    "is_registered": True,
-                    "is_startup": False,
-                    "is_fop": False,
-                },
-            },
-            format="json",
-        )
+        payload = self.default_payload.copy()
+        payload["email"] = "jane@testcom"
+
+        response = self.client.post(url, data=payload, format="json")
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(
-            {"email": ["Enter a valid email address."]},
-            response.json(),
-        )
+        self.assertEqual({"email": ["Enter a valid email address."]}, response.json())
 
     def test_register_user_email_exists(self):
-        response = self.client.post(
-            url,
-            data={
-                "email": "test@test.com",
-                "password": "Test12!34",
-                "re_password": "Test12!34",
-                "name": "Test",
-                "surname": "Test",
-                "captcha": "dummy_captcha",
-                "company": {
-                    "name": "Test Company",
-                    "is_registered": True,
-                    "is_startup": False,
-                    "is_fop": False,
-                },
-            },
-            format="json",
-        )
+        payload = self.default_payload.copy()
+        payload["email"] = self.existing_user.email
+
+        response = self.client.post(url, data=payload, format="json")
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(
-            {"email": ["Email is already registered"]},
-            response.json(),
-        )
+        self.assertEqual({"email": ["Email is already registered"]}, response.json())
 
     def test_register_user_password_incorrect(self):
-        response = self.client.post(
-            url,
-            data={
-                "email": "jane@test.com",
-                "password": "te1234",
-                "re_password": "tess",
-                "name": "Jane",
-                "surname": "Smith",
-                "captcha": "dummy_captcha",
-                "company": {
-                    "name": "My Company",
-                    "is_registered": True,
-                    "is_startup": False,
-                    "is_fop": False,
-                },
-            },
-            format="json",
-        )
+        payload = self.default_payload.copy()
+        payload["password"] = "te1234"
+        payload["re_password"] = "tess"
+
+        response = self.client.post(url, data=payload, format="json")
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(
             {
@@ -168,54 +70,59 @@ class UserRegistrationAPITests(APITestCase):
         )
 
     def test_register_user_who_represent_empty_fields(self):
-        response = self.client.post(
-            url,
-            data={
-                "email": "jane@test.com",
-                "password": "Test12!34",
-                "re_password": "Test12!34",
-                "name": "Jane",
-                "surname": "Smith",
-                "captcha": "dummy_captcha",
-                "company": {
-                    "name": "My Company",
-                    "is_registered": False,
-                    "is_startup": False,
-                    "is_fop": False,
-                },
-            },
-            format="json",
-        )
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(
-            {"comp_status": ["Please choose who you represent."]},
-            response.json(),
-        )
+        payload = self.default_payload.copy()
+        payload["company"] = {
+            "name": "My Company Empty",
+            "is_registered": False,
+            "is_startup": False,
+            "is_fop": False,
+        }
 
-    def test_register_user_who_represent_both_chosen(self):
-        response = self.client.post(
-            url,
-            data={
-                "email": "jane@test.com",
-                "password": "Test12!34",
-                "re_password": "Test12!34",
-                "name": "Jane",
-                "surname": "Smith",
-                "captcha": "dummy_captcha",
-                "company": {
-                    "name": "My Company",
-                    "is_registered": True,
-                    "is_startup": True,
-                    "is_fop": False,
-                },
-            },
-            format="json",
-        )
+        response = self.client.post(url, data=payload, format="json")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual({"comp_status": ["Please choose who you represent."]}, response.json())
+
+    def test_register_user_both_companies_chosen(self):
+        payload = self.default_payload.copy()
+        payload["company"] = {
+            "name": "My Company Startup FOP",
+            "is_registered": True,
+            "is_startup": True,
+            "is_fop": True,
+        }
+
+        response = self.client.post(url, data=payload, format="json")
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(
-            {
-                "name": "Jane",
-                "surname": "Smith",
-            },
-            response.json(),
-        )
+        self.assertEqual({"name": "Jane", "surname": "Smith"}, response.json())
+
+    def test_register_user_yurosoba_successful(self):
+        payload = self.default_payload.copy()
+        payload["company"] = {
+            "name": "My Company yurosoba",
+            "is_registered": True,
+            "is_startup": False,
+            "is_fop": False,
+        }
+
+        response = self.client.post(url, data=payload, format="json")
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual({"name": "Jane", "surname": "Smith"}, response.json())
+
+        user = CustomUser.objects.get(email="jane@test.com")
+        self.assertEqual(user.email, "jane@test.com")
+
+    def test_register_user_fop_successful(self):
+        payload = self.default_payload.copy()
+        payload["company"] = {
+            "name": "My Company FOP",
+            "is_registered": True,
+            "is_startup": False,
+            "is_fop": True,
+        }
+
+        response = self.client.post(url, data=payload, format="json")
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual({"name": "Jane", "surname": "Smith"}, response.json())
+
+        user = CustomUser.objects.get(email="jane@test.com")
+        self.assertEqual(user.email, "jane@test.com")

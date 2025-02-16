@@ -48,6 +48,11 @@ class CustomProfileSerializer(serializers.ModelSerializer):
         model = Profile
         fields = ("name", "is_registered", "is_startup", "is_fop")
 
+class UserRegistrationResponseSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ("name", "surname")
+
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
     company = CustomProfileSerializer(write_only=True)
@@ -97,7 +102,7 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
             validate_password_strength(password)
         except ValidationError as error:
             custom_errors["password"].append(error.message)
-        if value['password'] != value['re_password']:
+        if password != re_password:
             custom_errors["password"].append("Passwords don't match.")
         if captcha_token and not verify_recaptcha(captcha_token):
             custom_errors["captcha"].append(
