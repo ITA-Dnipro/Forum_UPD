@@ -12,7 +12,7 @@ from .models import (
 from images.models import ProfileImage
 from utils.regions_ukr_names import get_regions_ukr_names_as_string
 from utils.moderation.moderation_action import ModerationAction
-from utils.moderation.image_moderation import ModerationManager
+from services.moderation.image_moderation import ModerationManager
 import logging
 
 logger = logging.getLogger(__name__)
@@ -324,21 +324,21 @@ class ProfileOwnerDetailEditSerializer(serializers.ModelSerializer):
         is_fop = data.get("is_fop", self.instance.is_fop)
         name = data.get("name", self.instance.name)
         if rnokpp and not is_fop:
-            logger.error("For the RNOKPP field filled out, FOP must be set to True")
+            logger.warning("For the RNOKPP field filled out, FOP must be set to True")
             raise serializers.ValidationError(
                 {
                     "is_fop": "For the RNOKPP field filled out, FOP must be set to True"
                 }
             )
         if edrpou and is_fop:
-            logger.error("For the EDRPOU field filled out, FOP must be set to False")
+            logger.warning("For the EDRPOU field filled out, FOP must be set to False")
             raise serializers.ValidationError(
                 {
                     "is_fop": "For the EDRPOU field filled out, FOP must be set to False"
                 }
             )
         if name and len(name) > 45:
-            logger.error("Ensure this field has no more than 45 characters.")
+            logger.warning("Ensure this field has no more than 45 characters.")
             raise serializers.ValidationError(
                 {"name": "Ensure this field has no more than 45 characters."}
             )
@@ -360,7 +360,7 @@ class ProfileDeleteSerializer(serializers.Serializer):
     def validate_password(self, data):
         user = self.context["request"].user
         if not user.check_password(data):
-            logger.error("Invalid password")
+            logger.warning("Invalid password")
             raise serializers.ValidationError("Invalid password")
         return data
 
@@ -408,12 +408,12 @@ class SavedCompanySerializer(serializers.ModelSerializer):
         user = self.context["request"].user
         company_pk = attrs["company_pk"]
         if not Profile.objects.filter(pk=company_pk).exists():
-            logger.error(f"Company {company_pk} does not exist")
+            logger.warning(f"Company {company_pk} does not exist")
             raise serializers.ValidationError(
                 {"company_pk": ["Company does not exist"]}
             )
         if SavedCompany.objects.filter(user=user, company=company_pk).exists():
-            logger.error(f"Company {company_pk} is already in users saved companies list")
+            logger.warning(f"Company {company_pk} is already in users saved companies list")
             raise serializers.ValidationError(
                 {
                     "company_pk": [
@@ -478,13 +478,13 @@ class ProfileModerationSerializer(serializers.Serializer):
         logo = attrs.get("logo")
 
         if not logo and not banner:
-            logger.error("At least one image (logo or banner) must be provided for the moderation request.")
+            logger.warning("At least one image (logo or banner) must be provided for the moderation request.")
             raise serializers.ValidationError(
                 "At least one image (logo or banner) must be provided for the moderation request."
             )
 
         if profile.status != profile.PENDING:
-            logger.error("The change approval request has been processed. URL is outdated")
+            logger.warning("The change approval request has been processed. URL is outdated")
             raise serializers.ValidationError(
                 "The change approval request has been processed. URL is outdated"
             )
@@ -492,7 +492,7 @@ class ProfileModerationSerializer(serializers.Serializer):
             if (banner and profile.banner != banner) or (
                 logo and profile.logo != logo
             ):
-                logger.error("There is a new request for moderation. URL is outdated")
+                logger.warning("There is a new request for moderation. URL is outdated")
                 raise serializers.ValidationError(
                     "There is a new request for moderation. URL is outdated"
                 )

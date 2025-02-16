@@ -1,3 +1,4 @@
+import re
 from django.core.exceptions import ValidationError
 import logging
 
@@ -24,4 +25,45 @@ def validate_password_include_symbols(password_value: str):
         logger.error(error_string)
         raise ValidationError(
             error_string
+        )
+
+
+def validate_password_strength(password_value: str):
+    """
+    Validates the strength of the password by checking for:
+    - Special characters
+    - Common or easily guessable passwords
+    - Predictable sequences or repeated characters
+    Raises ValidationError if the password is weak.
+    """
+    if not re.search(r'[!@#$%^&*(),.?":{}|<>]', password_value):
+        raise ValidationError(
+            "Password must include at least one special character (e.g., !@#$%^&*)."
+        )
+
+    common_passwords = [
+        "123456", "password", "qwerty", "admin", "letmein", "12345678", "123123", "111111"
+    ]
+
+    if password_value.lower() in common_passwords:
+        raise ValidationError(
+            "Password is too common or easily guessable."
+        )
+
+    sequences = [
+        "1234", "2345", "3456", "4567", "5678", "6789", "7890",
+        "abcd", "bcde", "cdef", "defg", "efgh", "fghi", "ghij",
+        "qwert", "werty", "ertyui", "rtyui", "tyuio", "yuiop",
+    ]
+
+    for seq in sequences:
+        if seq in password_value.lower():
+            raise ValidationError(
+                "Password contains predictable sequences."
+            )
+
+    # Check for sequences (e.g., "abcd", "1234")
+    if re.search(r'(.)\1{2,}', password_value):
+        raise ValidationError(
+            "Password contains repeated characters."
         )

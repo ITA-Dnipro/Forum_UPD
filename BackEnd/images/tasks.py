@@ -4,7 +4,7 @@ from datetime import timedelta
 from django.db.models import Sum, Count
 from django.utils import timezone
 
-from utils.images.send_email import send_email_about_banners_and_logos
+from services.images.send_email import send_email_about_banners_and_logos
 from .models import ProfileImage
 
 

@@ -1,6 +1,7 @@
 from django.db import models
 from django.core.validators import MaxLengthValidator
 from django.utils.timezone import now
+from django.contrib.postgres.indexes import GinIndex
 
 from authentication.models import CustomUser
 from images.models import ProfileImage
@@ -137,6 +138,29 @@ class Profile(models.Model):
 
     objects = ProfileManager.as_manager()
 
+    def soft_delete(self, user):
+        self.is_deleted = True
+        self.save()
+        user.is_active = False
+        user.email = (
+            f"is_deleted_{now().strftime('%Y%m%d%H%M%S')}_{user.email}"
+        )
+        user.save()
+        logger.info(f"Profile {self.name} (ID: {self.pk}) was deleted.")
+    class Meta:
+        indexes = [
+            models.Index(fields=('name',)),
+            models.Index(fields=('official_name',)),
+            models.Index(fields=('created_at',)),
+            models.Index(fields=('updated_at',)),
+            GinIndex(name="service_info_gin", fields=["service_info"], opclasses=["gin_trgm_ops"]),  # using in advanced search
+            GinIndex(name="product_info_gin", fields=["product_info"], opclasses=["gin_trgm_ops"]), # using in advanced search
+            GinIndex(name="common_info_gin", fields=["common_info"], opclasses=["gin_trgm_ops"])   # using in advanced search
+        ]
+
+        ordering = ['-created_at']   # ordering by date of creation (newest first)
+
+    
 
 class Activity(models.Model):
     id = models.AutoField(primary_key=True)
@@ -161,12 +185,12 @@ class SavedCompany(models.Model):
     user = models.ForeignKey(
         CustomUser, on_delete=models.CASCADE, related_name="saved_list_items"
     )
-    added_at = models.DateTimeField(auto_now_add=True)
+    added_at = models.DateTimeField(auto_now_add=True, db_index=True)
     is_updated = models.BooleanField(default=False)
 
 
 class ViewedCompany(models.Model):
-    date = models.DateTimeField(auto_now_add=True)
+    date = models.DateTimeField(auto_now_add=True, db_index=True)
     user = models.ForeignKey(
         CustomUser, on_delete=models.CASCADE, blank=True, null=True
     )

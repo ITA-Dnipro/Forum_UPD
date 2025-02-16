@@ -7,7 +7,7 @@ from django.core.mail import EmailMultiAlternatives
 from django.conf import settings
 from django.template.loader import render_to_string
 from administration.models import AutoModeration
-from .encode_decode_id import encode_id
+from utils.moderation.encode_decode_id import encode_id
 from administration.models import ModerationEmail
 
 import logging
@@ -42,6 +42,8 @@ def generate_profile_moderation_url(profile_id, banner, logo, action):
 
 def attach_image(email, image, content_id):
     try:
+        if not os.path.exists(image.image_path.path):
+            raise FileNotFoundError(f"Image path not found: {image.image_path.path}")
         image_name = os.path.basename(image.image_path.name)
         logger.info(f"Image attached: {image_name}")
         with open(image.image_path.path, "rb") as img_file:
@@ -51,8 +53,8 @@ def attach_image(email, image, content_id):
                 "Content-Disposition", f'inline; filename="{image_name}"'
             )
             email.attach(img)
-    except Exception as e:
-        logger.error(e)
+    except FileNotFoundError as error:
+        logger.error(f"File not found: {error}")
 
 
 def send_moderation_email(profile, banner, logo, content_is_deleted):

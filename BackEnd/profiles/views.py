@@ -19,10 +19,10 @@ from rest_framework.permissions import (
 from rest_framework.response import Response
 from drf_spectacular.utils import extend_schema, PolymorphicProxySerializer
 from utils.completeness_counter import completeness_count
-from utils.moderation.send_email import send_moderation_email
+from services.moderation.send_email import send_moderation_email
 from utils.moderation.encode_decode_id import decode_id
-from utils.moderation.image_moderation import ModerationManager
-from utils.moderation.handle_approved_images import ApprovedImagesDeleter
+from services.moderation.image_moderation import ModerationManager
+from services.moderation.handle_approved_images import ApprovedImagesDeleter
 
 from forum.pagination import ForumPagination
 from images.models import ProfileImage
@@ -210,13 +210,7 @@ class ProfileDetail(RetrieveUpdateDestroyAPIView):
         serializer.is_valid(raise_exception=True)
         user = self.request.user
         with transaction.atomic():
-            instance.is_deleted = True
-            instance.save()
-            user.is_active = False
-            user.email = (
-                f"is_deleted_{now().strftime('%Y%m%d%H%M%S')}_{user.email}"
-            )
-            user.save()
+            instance.soft_delete(user)
             djoser_utils.logout_user(self.request)
         logger.info("Profile deleted")
 

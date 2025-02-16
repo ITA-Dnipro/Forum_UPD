@@ -3,7 +3,7 @@ from django.conf import settings
 from rest_framework import status
 from rest_framework.test import APITestCase
 from authentication.factories import UserFactory
-from utils.administration.send_email_notification import send_email_to_user
+from services.administration.send_email_notification import send_email_to_user
 
 
 class TestSendMessageView(APITestCase):

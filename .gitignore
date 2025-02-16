@@ -11,9 +11,12 @@ env
 /.DS_Store
 __pycache__/
 /FrontEnd/node_modules
+/logs
 django.log
 BackEnd/celerybeat-schedule.*
-
+BackEnd/venv
 BackEnd/public/*
 !BackEnd/public/media/.gitkeep
 !BackEnd/public/static/.gitkeep
+
+.coverage
