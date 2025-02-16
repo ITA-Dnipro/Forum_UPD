@@ -24,7 +24,7 @@ services:
       - 8000:8000
       - 8001:8001
     environment:
-      - DEBUG=${DEBUG}
+      - DEBUG=True
       - SECRET_KEY=${SECRET_KEY}
       - ENGINE=${ENGINE}
       - DB_HOST=${DB_HOST}

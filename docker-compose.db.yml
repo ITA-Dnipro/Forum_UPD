@@ -1,4 +1,4 @@
-version: "3.8"
+version: '3.8'
 
 services:
   db:
@@ -7,17 +7,19 @@ services:
     restart: always
     volumes:
       - ./configs/postgres:/docker-entrypoint-initdb.d
-      -  db_data:/var/lib/postgresql/data
-
+      - db_data:/var/lib/postgresql/data
     ports:
       - 5432:5432
-      - db_data:/var/lib/postgresql/data
     networks:
       - forum_network
     environment:
       POSTGRES_MULTIPLE_DATABASES: ${DBS}
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    healthcheck:
+      test: [ "CMD", "pg_isready", "-U", "${POSTGRES_USER}" ]
+      interval: 30s
+      retries: 5
 
   pgadmin:
     image: dpage/pgadmin4
@@ -46,9 +48,8 @@ services:
     networks:
       - forum_network
     environment:
-      MONGO_INITDB_ROOT_USERNAME: admin
-      MONGO_INITDB_ROOT_PASSWORD: admin_password
-
+      - MONGO_INITDB_ROOT_USERNAME=root
+      - MONGO_INITDB_ROOT_PASSWORD=rootpass
 
   redis:
     image: redis:7
@@ -63,9 +64,9 @@ services:
 networks:
   forum_network:
 
+
 volumes:
   db_data:
   pgadmin_data:
   mongo_data:
-
   redis_data:
