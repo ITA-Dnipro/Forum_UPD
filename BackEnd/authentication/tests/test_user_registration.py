@@ -52,6 +52,7 @@ class UserRegistrationAPITests(APITestCase):
 
     def test_register_user_password_incorrect(self):
         payload = self.default_payload.copy()
+        payload["email"] = "test1@test.com"
         payload["password"] = "te1234"
         payload["re_password"] = "tess"
 
@@ -71,6 +72,7 @@ class UserRegistrationAPITests(APITestCase):
 
     def test_register_user_who_represent_empty_fields(self):
         payload = self.default_payload.copy()
+        payload["email"] = "test2@test.com"
         payload["company"] = {
             "name": "My Company Empty",
             "is_registered": False,
@@ -84,6 +86,7 @@ class UserRegistrationAPITests(APITestCase):
 
     def test_register_user_both_companies_chosen(self):
         payload = self.default_payload.copy()
+        payload["email"] = "test3@test.com"
         payload["company"] = {
             "name": "My Company Startup FOP",
             "is_registered": True,
@@ -97,6 +100,7 @@ class UserRegistrationAPITests(APITestCase):
 
     def test_register_user_yurosoba_successful(self):
         payload = self.default_payload.copy()
+        payload["email"] = "test4@test.com"
         payload["company"] = {
             "name": "My Company yurosoba",
             "is_registered": True,
@@ -108,11 +112,12 @@ class UserRegistrationAPITests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual({"name": "Jane", "surname": "Smith"}, response.json())
 
-        user = CustomUser.objects.get(email="jane@test.com")
-        self.assertEqual(user.email, "jane@test.com")
+        user = CustomUser.objects.get(email="test4@test.com")
+        self.assertEqual(user.email, "test4@test.com")
 
     def test_register_user_fop_successful(self):
         payload = self.default_payload.copy()
+        payload["email"] = "test5@test.com"
         payload["company"] = {
             "name": "My Company FOP",
             "is_registered": True,
@@ -124,5 +129,5 @@ class UserRegistrationAPITests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual({"name": "Jane", "surname": "Smith"}, response.json())
 
-        user = CustomUser.objects.get(email="jane@test.com")
-        self.assertEqual(user.email, "jane@test.com")
+        user = CustomUser.objects.get(email="test5@test.com")
+        self.assertEqual(user.email, "test5@test.com")
