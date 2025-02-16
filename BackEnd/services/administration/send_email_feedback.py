@@ -1,13 +1,8 @@
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 from django.conf import settings
-<<<<<<< HEAD:BackEnd/utils/administration/send_email_feedback.py
-
-from utils.images.send_email import set_admin_email
-import logging
-=======
 from services.images.send_email import set_admin_email
->>>>>>> origin/main:BackEnd/services/administration/send_email_feedback.py
+import logging
 
 EMAIL_CONTENT_SUBTYPE = "html"
 PROTOCOL = "http"
