@@ -1,46 +1,76 @@
-from unittest.mock import patch
-
 from rest_framework import status
 from rest_framework.test import APITestCase
 
 from authentication.factories import UserFactory
-from utils.dump_response import dump  # noqa
-from time import sleep
 
 
 class UserLogoutAPITests(APITestCase):
     def setUp(self):
-        patcher = patch(
-            "authentication.serializers.verify_recaptcha", return_value=True
-        )
-        self.mock_verify_recaptcha = patcher.start()
-        self.addCleanup(patcher.stop)
-
         self.user = UserFactory(email="test@test.com")
 
     def test_logout_successful(self):
         self.user.set_password("Test1234")
         self.user.save()
-
-        self.test_user_token = self.client.post(
-            path="/api/auth/token/login/",
+        login_response = self.client.post(
+            path="/api/auth/login/",
             data={
                 "email": "test@test.com",
                 "password": "Test1234",
-                "captcha": "dummy_captcha",
             },
-        ).data["auth_token"]
-        self.client.credentials(
-            HTTP_AUTHORIZATION=f"Token {self.test_user_token}"
         )
-        response = self.client.post(path="/api/auth/token/logout/")
-        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        access_token = login_response.data["access"]
+        refresh_token = login_response.data["refresh"]
 
-    def test_logout_not_logged_in(self):
-        response = self.client.post(path="/api/auth/token/logout/")
-        sleep(6)
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        # Logout with refresh token
+        response = self.client.post(
+            path="/api/auth/logout/",
+            data={"refresh": refresh_token},
+            HTTP_AUTHORIZATION=f"Bearer {access_token}",
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(
-            {"detail": "Authentication credentials were not provided."},
+            {"detail": "Logged out successfully."},
             response.json(),
         )
+
+    def test_logout_not_logged_in(self):
+        response = self.client.post(
+            path="/api/auth/logout/",
+            data={"refresh": "invalid_token"},
+        )
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertEqual(
+            {'detail': 'Authentication credentials were not provided.'},
+            response.json(),
+        )
+
+    def test_logout_with_invalid_token(self):
+        response = self.client.post(
+            path="/api/auth/logout/",
+            data={"refresh": "invalid_token"},
+        )
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertEqual(
+            {'detail': 'Authentication credentials were not provided.'},
+            response.json(),
+        )
+
+    def test_logout_with_reused_token(self):
+        self.user.set_password("Test1234")
+        self.user.save()
+        login_response = self.client.post(
+            path="/api/auth/login/",
+            data={"email": "test@test.com", "password": "Test1234"},
+        )
+        refresh_token = login_response.data["refresh"]
+        self.client.post(
+            path="/api/auth/logout/",
+            data={"refresh": refresh_token},
+        )
+        response = self.client.post(
+            path="/api/auth/logout/",
+            data={"refresh": refresh_token},
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertIn("detail", response.json())
