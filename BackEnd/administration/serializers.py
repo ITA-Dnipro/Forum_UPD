@@ -16,9 +16,11 @@ from utils.administration.profiles.profiles_functions import (
 from utils.administration.create_password import generate_password
 from services.administration.send_email import send_email_about_admin_registration
 from .models import AutoModeration, ModerationEmail
+import logging
 
 User = get_user_model()
 
+logger = logging.getLogger(__name__)
 
 class AdminRegionSerializer(serializers.ModelSerializer):
     class Meta:
@@ -47,6 +49,7 @@ class AdminRegistrationSerializer(serializers.Serializer):
         email = value.get("email").lower()
 
         if User.objects.filter(email=email).exists():
+            logger.error("Email is already registered")
             raise serializers.ValidationError(
                 {"email": "Email is already registered"}
             )
@@ -64,6 +67,7 @@ class AdminRegistrationSerializer(serializers.Serializer):
         admin.set_password(password)
         admin.save()
         send_email_about_admin_registration(email, password)
+        logger.info("Admin created.")
         return admin
 
 

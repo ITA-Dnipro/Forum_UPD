@@ -2,10 +2,12 @@ from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 from django.conf import settings
 from services.images.send_email import set_admin_email
+import logging
 
 EMAIL_CONTENT_SUBTYPE = "html"
 PROTOCOL = "http"
 
+logger = logging.getLogger(__name__)
 
 def send_email_feedback(user_email, message, category):
     """Function for sending feedback letters to the administrator and the user."""
@@ -41,3 +43,4 @@ def send_email_feedback(user_email, message, category):
     )
     email_user.content_subtype = EMAIL_CONTENT_SUBTYPE
     email_user.send(fail_silently=False)
+    logger.info("Feedback letter sent.")

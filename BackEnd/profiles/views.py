@@ -52,6 +52,9 @@ from .serializers import (
 )
 from .filters import ProfileFilter
 
+import logging
+
+logger = logging.getLogger(__name__)
 
 class SavedCompaniesCreate(CreateAPIView):
     """
@@ -209,6 +212,7 @@ class ProfileDetail(RetrieveUpdateDestroyAPIView):
         with transaction.atomic():
             instance.soft_delete(user)
             djoser_utils.logout_user(self.request)
+        logger.info("Profile deleted")
 
     def perform_update(self, serializer):
         profile = serializer.save()
@@ -230,7 +234,7 @@ class ProfileDetail(RetrieveUpdateDestroyAPIView):
                 is_deleted = moderation_manager.content_deleted
                 send_moderation_email(profile, banner, logo, is_deleted)
                 moderation_manager.schedule_autoapprove()
-
+        logger.info("Profile updated")
 
 class ProfileViewCreate(CreateAPIView):
     serializer_class = ViewedCompanySerializer

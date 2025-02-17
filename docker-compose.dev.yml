@@ -19,6 +19,8 @@ services:
       # - ./:/Forum
       - static:/home/forum/app/public/static
       - media:/home/forum/app/public/media
+      - ./logs/django.log:/home/forum/app/django.log
+      - ./logs/error.log:/home/forum/app/error.log
     ports:
       - 8000:8000
     environment:
@@ -137,8 +139,6 @@ networks:
 
 volumes:
   static:
-    external:
-      name: forum_static
+    name: forum_static
   media:
-    external:
-      name: forum_media
+    name: forum_media

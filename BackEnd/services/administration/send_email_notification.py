@@ -3,10 +3,12 @@ from django.template.loader import render_to_string
 from django.conf import settings
 from django.core.validators import validate_email
 from django.core.exceptions import ValidationError
+import logging
 
 EMAIL_CONTENT_SUBTYPE = "html"
 PROTOCOL = "http"
 
+logger = logging.getLogger(__name__)
 
 def send_email_to_user(
     user,
@@ -56,3 +58,4 @@ def send_email_to_user(
     )
     email.content_subtype = EMAIL_CONTENT_SUBTYPE
     email.send(fail_silently=False)
+    logger.info("Custom email sent.")
