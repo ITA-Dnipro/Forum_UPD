@@ -1,9 +1,13 @@
 from django.core.exceptions import ValidationError
+import logging
 
+logger = logging.getLogger(__name__)
 
 def validate_edrpou(edrpou: str):
     if len(edrpou) != 8 or not edrpou.isdecimal():
-        raise ValidationError("EDRPOU must be exactly 8 digits long.")
+        error_string = "EDRPOU must be exactly 8 digits long."
+        logger.error(error_string)
+        raise ValidationError(error_string)
     value_for_validation = [int(i) for i in edrpou]
     # Determine weight coefficients for calculating the checksum key, based on the value of the EDRPOU.
     weight_coeff_base = (
@@ -29,6 +33,6 @@ def validate_edrpou(edrpou: str):
     if key < 10 and key == value_for_validation[-1]:
         return True
     else:
-        raise ValidationError(
-            "EDRPOU is not correct, checksum key is not valid."
-        )
+        error_string = "EDRPOU is not correct, checksum key is not valid."
+        logger.error(error_string)
+        raise ValidationError(error_string)

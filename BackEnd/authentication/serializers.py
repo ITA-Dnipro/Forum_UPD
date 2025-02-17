@@ -25,6 +25,10 @@ from validation.validate_recaptcha import verify_recaptcha
 
 from validation.validate_password import validate_password_strength
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 User = get_user_model()
 
 
@@ -84,10 +88,12 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         is_registered = company_data.get("is_registered")
         is_startup = company_data.get("is_startup")
         if User.objects.filter(email=email).exists():
+            logger.error(f"Email is already registered {email}")
             custom_errors["email"].append("Email is already registered")
         else:
             value["email"] = email
         if not is_registered and not is_startup:
+            logger.error("No recipient specified.")
             custom_errors["comp_status"].append(
                 "Please choose who you represent."
             )
@@ -104,12 +110,15 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         except ValidationError as error:
             custom_errors["password"].append(error.message)
         if password != re_password:
+            logger.error("Passwords don't match.")
             custom_errors["password"].append("Passwords don't match.")
         if captcha_token and not verify_recaptcha(captcha_token):
+            logger.error("Invalid reCAPTCHA. Please try again.")
             custom_errors["captcha"].append(
                 "Invalid reCAPTCHA. Please try again."
             )
         if custom_errors:
+            logger.error(custom_errors)
             raise serializers.ValidationError(custom_errors)
         return value
 
@@ -123,6 +132,7 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
             surname=validated_data["surname"],
         )
         user.set_password(validated_data["password"])
+        logger.info(f"Saving user {user.email}")
         user.save()
         Profile.objects.create(**company_data, person=user)
         return user
