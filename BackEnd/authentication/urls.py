@@ -4,14 +4,19 @@ from rest_framework_simplejwt.views import (
     TokenRefreshView,
     TokenVerifyView
 )
-from .views import CustomTokenObtainPairView, LogoutView
+from .views import (
+    CustomTokenObtainPairView,
+    UserRegistrationView,
+    LogoutView
+)
+
 
 app_name = "authentication"
 
 urlpatterns = [
+    path('auth/register/', UserRegistrationView.as_view(), name='register'),
     path("auth/", include("djoser.urls")),
     re_path(r"^auth/", include("djoser.urls.authtoken")),
-
     path('auth/logout/', LogoutView.as_view(), name='logout'),
     path('auth/login/', TokenObtainPairView.as_view(), name='login'),
 
