@@ -4,7 +4,13 @@ from rest_framework_simplejwt.views import (
     TokenRefreshView,
     TokenVerifyView
 )
-from .views import CustomTokenObtainPairView, LogoutView
+from .views import (
+    CustomTokenObtainPairView,
+    LogoutView,
+    PasswordResetRequestView,
+    PasswordResetConfirmView,
+    PasswordChangeView
+)
 
 app_name = "authentication"
 
@@ -14,6 +20,17 @@ urlpatterns = [
 
     path('auth/logout/', LogoutView.as_view(), name='logout'),
     path('auth/login/', TokenObtainPairView.as_view(), name='login'),
+    path(
+        "auth/password-reset/",
+        PasswordResetRequestView.as_view(),
+        name="password_reset"
+    ),
+    path(
+        "auth/password-reset-confirm/",
+        PasswordResetConfirmView.as_view(),
+        name="password_reset_confirm"
+    ),
+    path("auth/password-change/", PasswordChangeView.as_view(), name="password_change"),
 
     # JWT implementation
     path('auth/jwt/create/', CustomTokenObtainPairView.as_view(), name='jwt_create'),
