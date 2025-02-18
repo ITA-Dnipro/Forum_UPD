@@ -1,16 +1,31 @@
 from django.apps import AppConfig
 import mongoengine
 import logging
+import os
+from . import models
 
 logger = logging.getLogger(__name__)
+
 
 class ChatConfig(AppConfig):
     name = "chat"
 
     def ready(self):
-        try:
-
-            from . import models
-            models.Room.ensure_indexes()
-        except Exception as e:
-            logger.error(f"Error ensuring indexes for Room: {e}")
+        if os.environ.get("ENSURE_INDEXES", "false").lower() == "true":
+            try:
+                models.Room.ensure_indexes()
+                logger.info("Indexes ensured successfully.")
+            except mongoengine.OperationError as e:
+                logger.error(
+                    f"MongoEngine operation error while ensuring indexes: {e}"
+                )
+                raise
+            except Exception as e:
+                logger.exception(
+                    "Unexpected error while ensuring indexes for Room"
+                )
+                raise
+        else:
+            logger.info(
+                "Skipping index creation; ENSURE_INDEXES is not set to true."
+            )
