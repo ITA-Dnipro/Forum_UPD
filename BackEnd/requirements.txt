@@ -25,3 +25,8 @@ celery==5.4.0
 passlib==1.7.4
 Faker==19.6.2
 coverage==7.6.10
+channels==4.2.0
+daphne==4.1.2
+pymongo==3.12.3
+mongoengine==0.27.0
+channels_redis==4.2.1

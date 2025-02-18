@@ -9,12 +9,13 @@ services:
       - "6379:6379"
     networks:
       - forum_network
-      
+
   api-dev:
     build: ./BackEnd
     container_name: api-dev
     restart: on-failure
-    command: gunicorn --log-level debug forum.wsgi:application --bind 0.0.0.0:8000
+    command: /bin/sh -c "gunicorn --log-level debug forum.wsgi:application --bind 0.0.0.0:8000 & daphne -b 0.0.0.0 -p 8001 forum.asgi:application"
+    # Run both Gunicorn and Daphne
     volumes:
       # - ./:/Forum
       - static:/home/forum/app/public/static
@@ -23,6 +24,7 @@ services:
       - ./logs/error.log:/home/forum/app/error.log
     ports:
       - 8000:8000
+      - 8001:8001
     environment:
       - DEBUG=${DEBUG}
       - SECRET_KEY=${SECRET_KEY}
@@ -133,9 +135,10 @@ services:
       - RECAPTCHA_URL=${RECAPTCHA_URL}
     networks:
       - forum_network
-      
+
 networks:
   forum_network:
+
 
 volumes:
   static:
