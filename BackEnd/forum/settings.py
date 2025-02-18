@@ -10,12 +10,19 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.1/ref/settings/
 """
 
+import mongoengine
 import os
 from datetime import timedelta
 from pathlib import Path
 
 from corsheaders.defaults import default_headers
 from decouple import config
+from dotenv import load_dotenv
+import logging
+
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -42,27 +49,24 @@ ALLOWED_HOSTS = [
 INSTALLED_APPS = [
     "daphne",
     "channels",
-
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-
-    "corsheaders",  
-    "rest_framework", 
+    "corsheaders",
+    "rest_framework",
     "rest_framework.authtoken",
     "django_filters",
     "djoser",
     "drf_spectacular",
     "debug_toolbar",
-
     "authentication",
     "profiles",
     "administration",
     "search",
     "images",
-    "chat"
+    "chat",
 ]
 
 
@@ -136,19 +140,38 @@ DATABASES = {
     }
 }
 
-import mongoengine
 
-mongoengine.connect(
-    db="forum_chat_db1",
-    username="root",
-    password="rootpass",
-    host="mongo",  
-    authentication_source="admin"
-)
+load_dotenv()
 
 
-# Password validation
-# https://docs.djangoproject.com/en/4.1/ref/settings/#auth-password-validators
+mongo_db_name = os.getenv("MONGO_DB_NAME")
+mongo_username = os.getenv("MONGO_USERNAME")
+mongo_password = os.getenv("MONGO_PASSWORD")
+mongo_host = os.getenv("MONGO_HOST", "localhost")
+mongo_port = int(os.getenv("MONGO_PORT", 27017))
+mongo_authentication_source = os.getenv("MONGO_AUTHENTICATION_SOURCE", "admin")
+
+
+try:
+    # Attempt to connect to MongoDB with values from environment variables
+    mongoengine.connect(
+        db=mongo_db_name,
+        username=mongo_username,
+        password=mongo_password,
+        host=mongo_host,
+        port=mongo_port,
+        authentication_source=mongo_authentication_source,
+    )
+    logger.info("MongoDB connection successful.")
+except mongoengine.errors.ConnectionError as e:
+    logger.error(f"MongoDB connection error: {e}")
+    raise  # Re-raise the exception after logging it to stop execution
+except mongoengine.errors.OperationError as e:
+    logger.error(f"MongoDB operation error: {e}")
+    raise  # Re-raise the exception after logging it to stop execution
+except Exception as e:
+    logger.error(f"An unexpected error occurred: {e}")
+    raise  # Re-raise the exception after logging it to stop execution
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -203,22 +226,20 @@ REST_FRAMEWORK = {
 }
 
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
-    'ROTATE_REFRESH_TOKENS': False,
-    'BLACKLIST_AFTER_ROTATION': True,
-    'UPDATE_LAST_LOGIN': False,
-
-    'ALGORITHM': 'HS256',
-    'SIGNING_KEY': SECRET_KEY,
-    'VERIFYING_KEY': None,
-    'AUDIENCE': None,
-    'ISSUER': None,
-
-    'AUTH_HEADER_TYPES': ('Bearer',),
-    'AUTH_HEADER_NAME': 'HTTP_AUTHORIZATION',
-    'USER_ID_FIELD': 'id',
-    'USER_ID_CLAIM': 'user_id',
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=60),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
+    "ROTATE_REFRESH_TOKENS": False,
+    "BLACKLIST_AFTER_ROTATION": True,
+    "UPDATE_LAST_LOGIN": False,
+    "ALGORITHM": "HS256",
+    "SIGNING_KEY": SECRET_KEY,
+    "VERIFYING_KEY": None,
+    "AUDIENCE": None,
+    "ISSUER": None,
+    "AUTH_HEADER_TYPES": ("Bearer",),
+    "AUTH_HEADER_NAME": "HTTP_AUTHORIZATION",
+    "USER_ID_FIELD": "id",
+    "USER_ID_CLAIM": "user_id",
 }
 
 SPECTACULAR_SETTINGS = {

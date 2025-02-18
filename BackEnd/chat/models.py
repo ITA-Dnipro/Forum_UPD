@@ -12,7 +12,7 @@ from django.utils import timezone
 class Message(EmbeddedDocument):
     sender_id = IntField(required=True)
     text = StringField(required=True)
-    timestamp = DateTimeField(default=timezone.now)
+    timestamp = DateTimeField(default=lambda: timezone.now())
 
     def clean(self):
         if not self.text:
@@ -22,33 +22,38 @@ class Message(EmbeddedDocument):
 
 
 class Room(Document):
-    participant_ids = ListField(IntField())
-    created_at = DateTimeField(default=timezone.now)
-    updated_at = DateTimeField(default=timezone.now)
+    participant_ids = ListField(IntField(), required=True)
+    created_at = DateTimeField(default=lambda: timezone.now())
+    updated_at = DateTimeField(default=lambda: timezone.now())
 
     messages = EmbeddedDocumentListField(Message)
 
     meta = {
         "collection": "rooms",
         "indexes": [
-            {
-                "fields": ["$participant_ids"]
-            },  # Ensure index is on participant_ids
+            {"fields": ["$participant_ids"]}, 
+            {"fields": ["messages.timestamp"]}, 
         ],
     }
 
     def clean(self):
+        if not isinstance(self.participant_ids, list):
+            raise ValueError("participant_ids must be a list")
 
-        if not self.participant_ids:
-            raise ValueError("Participant IDs cannot be empty.")
+        if not all(
+            isinstance(user_id, int) for user_id in self.participant_ids
+        ):
+            raise ValueError("All participant IDs must be integers")
 
-        if len(self.participant_ids) != len(set(self.participant_ids)):
-            raise ValueError("Participant IDs must be unique.")
+    def add_message(self, sender_id, text):
 
-        for message in self.messages:
-            if message.sender_id not in self.participant_ids:
-                raise ValueError(
-                    f"Sender ID {message.sender_id} must be in participant_ids."
-                )
+        if sender_id not in self.participant_ids:
+            raise ValueError(
+                f"Sender ID {sender_id} is not a participant in this room"
+            )
 
+        message = Message(sender_id=sender_id, text=text)
+        self.messages.append(message)
         self.updated_at = timezone.now()
+
+        self.save()
