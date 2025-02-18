@@ -16,11 +16,11 @@ app_name = "authentication"
 
 urlpatterns = [
     path('auth/register/', UserRegistrationView.as_view(), name='register'),
+    path('auth/activate/', AccountActivationView.as_view(), name='activate'),
     path("auth/", include("djoser.urls")),
     re_path(r"^auth/", include("djoser.urls.authtoken")),
     path('auth/logout/', LogoutView.as_view(), name='logout'),
     path('auth/login/', TokenObtainPairView.as_view(), name='login'),
-    path('activate/', AccountActivationView.as_view(), name='activate'),
 
     # JWT implementation
     path('auth/jwt/create/', CustomTokenObtainPairView.as_view(), name='jwt_create'),

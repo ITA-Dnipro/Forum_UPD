@@ -85,7 +85,7 @@ class UserRegistrationView(APIView):
                 signed_token = signer.sign(uid)
 
                 email_subject = "Account Activation"
-                activation_link = f"https://frontend.com/activate/?token={signed_token}"
+                activation_link = f"http://localhost:8080/auth/activate/?token={signed_token}"
                 email_message = render_to_string("email/custom_activation.html", {
                     'user': user,
                     'activation_link': activation_link,
@@ -107,6 +107,8 @@ class UserRegistrationView(APIView):
 
 
 class AccountActivationView(APIView):
+    permission_classes = [AllowAny]
+
     @extend_schema(
         operation_id="activate_account",
         summary="Activate a user account",
