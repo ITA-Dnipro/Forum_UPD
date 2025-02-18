@@ -221,8 +221,8 @@ REST_FRAMEWORK = {
         "rest_framework_simplejwt.authentication.JWTAuthentication",
         "authentication.authentication.DjoserTokenAuthentication",
     ),
-    'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.IsAuthenticated',
+    "DEFAULT_PERMISSION_CLASSES": [
+        "rest_framework.permissions.IsAuthenticated",
     ],
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
 }
@@ -361,7 +361,7 @@ LOGGING = {
         "administration": {
             "handlers": ["file", "error_file"],
             "level": "INFO",
-            "propagade": False,  
+            "propagade": False,
         },
         "utils": {
             "handlers": ["file"],
