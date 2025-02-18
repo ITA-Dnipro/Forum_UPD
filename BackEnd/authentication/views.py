@@ -1,7 +1,14 @@
 import logging
 
+from django.core.signing import(
+    TimestampSigner,
+    BadSignature,
+)
+from django.core.mail import send_mail
+from django.template.loader import render_to_string
+
 from django.contrib.auth import(
-  get_user_model, 
+  get_user_model,
   authenticate
 )
 
@@ -25,7 +32,7 @@ from .serializers import (
 from rest_framework.views import APIView
 from rest_framework import status
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -42,6 +49,8 @@ class CustomTokenObtainPairView(TokenObtainPairView):
 
 
 class UserRegistrationView(APIView):
+    permission_classes = [AllowAny]
+
     @extend_schema(
         operation_id="user_register",
         summary="Register a new user",
@@ -70,12 +79,83 @@ class UserRegistrationView(APIView):
                 user = serializer.save()
                 user_data = UserRegistrationResponseSerializer(user).data
                 logger.info("User created successfully")
+
+                signer = TimestampSigner()
+                uid = str(user.pk)
+                signed_token = signer.sign(uid)
+
+                email_subject = "Account Activation"
+                activation_link = f"https://frontend.com/activate/?token={signed_token}"
+                email_message = render_to_string("email/custom_activation.html", {
+                    'user': user,
+                    'activation_link': activation_link,
+                })
+
+                send_mail(
+                    email_subject,
+                    email_message,
+                    'noreply@example.com',
+                    [user.email]
+                )
+
                 return Response(user_data, status=status.HTTP_201_CREATED)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
         except Exception:
             logger.error(f"Unexpected error occurred.")
             return Response({"detail": "Internal server error. Please try again later."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class AccountActivationView(APIView):
+    @extend_schema(
+        operation_id="activate_account",
+        summary="Activate a user account",
+        description="Activate a newly registered user account by providing a signed token as a query parameter.",
+        parameters=[
+            OpenApiParameter(
+                name="token",
+                type=str,
+                location=OpenApiParameter.QUERY,
+                required=True,
+                description="The signed activation token sent via email."
+            )
+        ],
+        responses={
+            200: OpenApiResponse(
+                description="Account activated successfully.",
+                response={"detail": "Account activated successfully."}
+            ),
+            400: OpenApiResponse(
+                description="Bad request (e.g., missing or invalid token).",
+                response={"error": "Invalid or expired token."}
+            )
+        }
+    )
+    def get(self, request):
+        token = request.query_params.get('token')
+
+        if not token:
+            logger.error(f"No token provided.")
+            return Response({"detail": "No token provided."}, status=status.HTTP_400_BAD_REQUEST)
+
+        signer = TimestampSigner()
+        try:
+            uid = signer.unsign(token, max_age=3600)
+
+            user = get_user_model().objects.get(pk=uid)
+
+            user.is_active = True
+            user.save()
+
+            logger.info("Account activated successfully.")
+            return Response({"detail": "Account activated successfully."}, status=status.HTTP_200_OK)
+        except BadSignature:
+            logger.error(f"Invalid or expired token.")
+            return Response({"error": "Invalid or expired token."}, status=status.HTTP_400_BAD_REQUEST)
+        except get_user_model().DoesNotExist:
+            logger.error(f"User not found.")
+            return Response({"error": "User not found."}, status=status.HTTP_400_BAD_REQUEST)
+
 
 class LoginView(APIView):
     @swagger_auto_schema(
