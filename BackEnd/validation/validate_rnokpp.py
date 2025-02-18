@@ -1,9 +1,14 @@
 from django.core.exceptions import ValidationError
 
+import logging
+
+logger = logging.getLogger(__name__)
 
 def validate_rnokpp(rnokpp: str):
     if len(rnokpp) != 10 or not rnokpp.isdecimal():
-        raise ValidationError("RNOKPP must be exactly 10 digits long.")
+        error_string = "RNOKPP must be exactly 10 digits long."
+        logger.error(error_string)
+        raise ValidationError(error_string)
     value_for_validation = [int(i) for i in rnokpp]
     # Weight coefficients for calculating the checksum key
     weight_coeff_base = [-1, 5, 7, 9, 4, 6, 10, 5, 7]
@@ -16,6 +21,8 @@ def validate_rnokpp(rnokpp: str):
     if key == value_for_validation[-1]:
         return True
     else:
+        error_string = "RNOKPP is not correct, checksum key is not valid."
+        logger.error(error_string)
         raise ValidationError(
-            "RNOKPP is not correct, checksum key is not valid."
+            error_string
         )

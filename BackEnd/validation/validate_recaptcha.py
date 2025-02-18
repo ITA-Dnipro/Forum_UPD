@@ -1,6 +1,8 @@
 from django.conf import settings
 import requests
+import logging
 
+logger = logging.getLogger(__name__)
 
 def verify_recaptcha(token):
     """
@@ -13,4 +15,5 @@ def verify_recaptcha(token):
     }
     response = requests.post(recaptcha_url, data=recaptcha_data)
     result = response.json()
+    logger.info("Successful reCAPTCHA")
     return result.get("success", False)

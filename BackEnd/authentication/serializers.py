@@ -13,6 +13,7 @@ from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from ratelimit.decorators import RateLimitDecorator
 from ratelimit.exception import RateLimitException
+from rest_framework_simplejwt.tokens import RefreshToken, AccessToken
 
 from profiles.models import Profile
 from validation.validate_password import (
@@ -23,6 +24,10 @@ from validation.validate_profile import validate_profile
 from validation.validate_recaptcha import verify_recaptcha
 
 from validation.validate_password import validate_password_strength
+
+import logging
+
+logger = logging.getLogger(__name__)
 
 User = get_user_model()
 
@@ -48,38 +53,47 @@ class CustomProfileSerializer(serializers.ModelSerializer):
         model = Profile
         fields = ("name", "is_registered", "is_startup", "is_fop")
 
+class UserRegistrationResponseSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ("name", "surname")
 
-class UserRegistrationSerializer(UserCreatePasswordRetypeSerializer):
+
+class UserRegistrationSerializer(serializers.ModelSerializer):
     company = CustomProfileSerializer(write_only=True)
     email = serializers.EmailField(
+        required=True,
         write_only=True,
     )
     password = serializers.CharField(
-        style={"input_type": "password"}, write_only=True
+        style={"input_type": "password"}, write_only=True, required=True
     )
+    re_password = serializers.CharField(write_only=True)
     captcha = serializers.CharField(
         write_only=True, allow_blank=True, allow_null=True
     )
 
     class Meta(UserCreatePasswordRetypeSerializer.Meta):
         model = User
-        fields = ("email", "password", "name", "surname", "company", "captcha")
+        fields = ("email", "password", "re_password", "name", "surname", "company", "captcha")
 
     def validate(self, value):
         custom_errors = defaultdict(list)
         captcha_token = value.get("captcha")
         self.fields.pop("re_password", None)
-        re_password = value.pop("re_password")
+        re_password = value.get("re_password")
         email = value.get("email").lower()
         password = value.get("password")
         company_data = value.get("company")
         is_registered = company_data.get("is_registered")
         is_startup = company_data.get("is_startup")
         if User.objects.filter(email=email).exists():
+            logger.error(f"Email is already registered {email}")
             custom_errors["email"].append("Email is already registered")
         else:
             value["email"] = email
         if not is_registered and not is_startup:
+            logger.error("No recipient specified.")
             custom_errors["comp_status"].append(
                 "Please choose who you represent."
             )
@@ -95,21 +109,30 @@ class UserRegistrationSerializer(UserCreatePasswordRetypeSerializer):
             validate_password_strength(password)
         except ValidationError as error:
             custom_errors["password"].append(error.message)
-        if value["password"] != re_password:
+        if password != re_password:
+            logger.error("Passwords don't match.")
             custom_errors["password"].append("Passwords don't match.")
         if captcha_token and not verify_recaptcha(captcha_token):
+            logger.error("Invalid reCAPTCHA. Please try again.")
             custom_errors["captcha"].append(
                 "Invalid reCAPTCHA. Please try again."
             )
         if custom_errors:
+            logger.error(custom_errors)
             raise serializers.ValidationError(custom_errors)
         return value
 
     def create(self, validated_data):
+        validated_data.pop("re_password", None)
         validated_data.pop("captcha", None)
         company_data = validated_data.pop("company")
-        user = User.objects.create(**validated_data)
+        user = User.objects.create(
+            email=validated_data["email"],
+            name=validated_data["name"],
+            surname=validated_data["surname"],
+        )
         user.set_password(validated_data["password"])
+        logger.info(f"Saving user {user.email}")
         user.save()
         Profile.objects.create(**company_data, person=user)
         return user
@@ -166,3 +189,44 @@ class CustomTokenCreateSerializer(TokenCreateSerializer):
             [("password", attrs.get("password")), ("email", email)]
         )
         return super().validate(new_attr)
+
+
+class LoginSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    password = serializers.CharField()
+
+    def validate(self, data):
+        email = data.get('email')
+        password = data.get('password')
+
+        if not email or not password:
+            raise serializers.ValidationError("Email and password are required")
+
+        return data
+
+
+class LogoutSerializer(serializers.Serializer):
+    refresh = serializers.CharField(required=True)
+
+    def validate(self, data):
+        request = self.context.get('request')
+        auth_header = request.headers.get('Authorization', '')
+        access_token = auth_header.split()[1]
+        refresh_token = data.get('refresh')
+
+        try:
+            decoded_access_token = AccessToken(access_token)
+            user_id_from_access = decoded_access_token['user_id']
+        except Exception as e:
+            raise serializers.ValidationError({"access token error": str(e)})
+
+        try:
+            decoded_refresh_token = RefreshToken(refresh_token)
+            user_id_from_refresh = decoded_refresh_token['user_id']
+        except Exception as e:
+            raise serializers.ValidationError({"refresh token error": str(e)})
+
+        if user_id_from_access != user_id_from_refresh:
+            raise serializers.ValidationError({"error": "User ID mismatch between tokens."})
+
+        return data
