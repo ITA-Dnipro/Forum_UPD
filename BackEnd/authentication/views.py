@@ -118,6 +118,42 @@ class PasswordResetRequestView(APIView):
     """
     permission_classes = [AllowAny]
 
+    @swagger_auto_schema(
+        operation_description="Request a password reset by providing your email address.",
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                'email': openapi.Schema(type=openapi.TYPE_STRING, format='email', description='User\'s email address'),
+            },
+            required=['email'],
+        ),
+        responses={
+            200: openapi.Response(
+                description="Password reset email sent successfully",
+                examples={
+                    "application/json": {
+                        "message": "The link for password reset was sent. Please, check your mail."
+                    }
+                }
+            ),
+            400: openapi.Response(
+                description="Invalid email or user not found",
+                examples={
+                    "application/json": {
+                        "error": "User does not exist."
+                    }
+                }
+            ),
+            500: openapi.Response(
+                description="Internal server error",
+                examples={
+                    "application/json": {
+                        "error": "An unexpected error occurred."
+                    }
+                }
+            ),
+        }
+    )
     def post(self, request):
         serializer = PasswordResetRequestSerializer(data=request.data)
         if not serializer.is_valid():
@@ -159,6 +195,35 @@ class PasswordResetConfirmView(APIView):
     """
     permission_classes = [AllowAny]
 
+    @swagger_auto_schema(
+        operation_description="Confirm password reset by providing the token and new password.",
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                'token': openapi.Schema(type=openapi.TYPE_STRING, description='Reset token received via email'),
+                'new_password': openapi.Schema(type=openapi.TYPE_STRING, description='New password for the account'),
+            },
+            required=['token', 'new_password'],
+        ),
+        responses={
+            200: openapi.Response(
+                description="Password reset successful",
+                examples={
+                    "application/json": {
+                        "message": "The password was updated successfully."
+                    }
+                }
+            ),
+            400: openapi.Response(
+                description="Invalid or expired token",
+                examples={
+                    "application/json": {
+                        "error": "Token is invalid or expired."
+                    }
+                }
+            ),
+        }
+    )
     def post(self, request):
         token = request.data.get("token")
         new_password = request.data.get("new_password")
@@ -181,11 +246,43 @@ class PasswordResetConfirmView(APIView):
 
 
 class PasswordChangeView(APIView):
-    permission_classes = [IsAuthenticated]
     """
     API view to change the password of an authenticated user.
     Expects `old_password`, `new_password`, and `confirm_password`.
     """
+    permission_classes = [IsAuthenticated]
+
+    @swagger_auto_schema(
+        operation_description="Change the password of an authenticated user.",
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                'old_password': openapi.Schema(type=openapi.TYPE_STRING, description='Current password'),
+                'new_password': openapi.Schema(type=openapi.TYPE_STRING, description='New password'),
+                'confirm_password': openapi.Schema(type=openapi.TYPE_STRING,
+                                                   description='Confirmation of the new password'),
+            },
+            required=['old_password', 'new_password', 'confirm_password'],
+        ),
+        responses={
+            200: openapi.Response(
+                description="Password changed successfully",
+                examples={
+                    "application/json": {
+                        "message": "Password was updated successfully."
+                    }
+                }
+            ),
+            400: openapi.Response(
+                description="Invalid input or password mismatch",
+                examples={
+                    "application/json": {
+                        "error": "Old password is incorrect."
+                    }
+                }
+            ),
+        }
+    )
     def post(self, request):
         serializer = PasswordChangeSerializer(data=request.data, context={'request': request})
         if serializer.is_valid():
