@@ -1,65 +1,62 @@
 from rest_framework import serializers
+from .models import Message, Room
+from django.utils import timezone
+
+from rest_framework import serializers
 from .models import Message
 
 
-class MessageSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Message
-        fields = "__all__"
+class MessageSerializer(serializers.Serializer):
+    sender_id = serializers.IntegerField()
+    text = serializers.CharField(allow_blank=True, required=False)
+    timestamp = serializers.DateTimeField(default=timezone.now)
+    conversation_id = serializers.CharField(required=False)
 
 
-import json
-import logging
-from channels.generic.websocket import AsyncWebsocketConsumer
-
-logger = logging.getLogger(__name__)
+from rest_framework import serializers
+from .models import Room, Message
+from .serializers import MessageSerializer
 
 
-class ChatConsumer(AsyncWebsocketConsumer):
-    async def connect(self):
-        self.room_name = self.scope["url_route"]["kwargs"]["room_name"]
-        self.room_group_name = f"chat_{self.room_name}"
+class RoomSerializer(serializers.Serializer):
+    participant_ids = serializers.ListField(child=serializers.IntegerField())
+    created_at = serializers.DateTimeField(default=timezone.now)
+    updated_at = serializers.DateTimeField(default=timezone.now)
+    messages = MessageSerializer(many=True, required=False)
 
-        try:
-            # Join room group
-            await self.channel_layer.group_add(
-                self.room_group_name, self.channel_name
-            )
-            await self.accept()
-        except Exception as e:
-            logger.error(f"Failed to join room group: {e}")
-            await self.close()
+    def create(self, validated_data):
+        """
+        Create and return a new `Room` instance, given the validated data.
+        """
+        print(f"created method: {validated_data}")
+        messages_data = validated_data.pop("messages", [])
+        room = Room.objects.create(**validated_data)
 
-    async def disconnect(self, close_code):
-        try:
-            await self.channel_layer.group_discard(
-                self.room_group_name, self.channel_name
-            )
-        except Exception as e:
-            logger.warning(f"Failed to discard from room group: {e}")
+        # Create message instances and add them to the room
+        for message_data in messages_data:
+            Message.objects.create(room=room, **message_data)
 
-    async def receive(self, text_data):
-        try:
-            text_data_json = json.loads(text_data)
-            message = text_data_json.get("message")
-            if message:
-                await self.channel_layer.group_send(
-                    self.room_group_name,
-                    {"type": "chat.message", "message": message},
-                )
-            else:
-                logger.warning("Received message without 'message' key")
-        except json.JSONDecodeError:
-            logger.warning("Invalid JSON received")
-        except Exception as e:
-            logger.error(f"Error while processing received message: {e}")
+        return room
 
-    async def chat_message(self, event):
-        message = event.get("message")
-        if message:
-            try:
-                await self.send(text_data=json.dumps({"message": message}))
-            except Exception as e:
-                logger.error(f"Failed to send message: {e}")
-        else:
-            logger.warning("Received event without 'message' key")
+    def update(self, instance, validated_data):
+        """
+        Update and return an existing `Room` instance, given the validated data.
+        """
+        messages_data = validated_data.pop("messages", [])
+
+        # Update fields in the room instance
+        instance.participant_ids = validated_data.get(
+            "participant_ids", instance.participant_ids
+        )
+        instance.created_at = validated_data.get(
+            "created_at", instance.created_at
+        )
+        instance.updated_at = validated_data.get(
+            "updated_at", instance.updated_at
+        )
+        instance.save()
+
+        for message_data in messages_data:
+            Message.objects.update_or_create(room=instance, **message_data)
+
+        return instance
