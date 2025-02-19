@@ -1,5 +1,3 @@
-version: '3.9'
-
 services:
   redis:
     image: redis:7
@@ -50,6 +48,13 @@ services:
       - RECAPTCHA_URL=${RECAPTCHA_URL}
       - DJANGO_SETTINGS_MODULE=${DJANGO_SETTINGS_MODULE}
       - PYTHONPATH=${PYTHONPATH}:/app
+      - MONGO_DB_NAME=${MONGO_DB_NAME}
+      - MONGO_USERNAME=${MONGO_USERNAME}
+      - MONGO_PASSWORD=${MONGO_PASSWORD}
+      - MONGO_HOST=${MONGO_HOST}
+      - MONGO_PORT=${MONGO_PORT}
+      - MONGO_AUTHENTICATION_SOURCE=${MONGO_AUTHENTICATION_SOURCE}
+      - ENSURE_INDEXES = ${ENSURE_INDEXES}
     networks:
       - forum_network
   frontend:
