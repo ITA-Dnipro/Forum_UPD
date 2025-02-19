@@ -135,6 +135,7 @@ class AccountActivationView(APIView):
     )
     def get(self, request):
         token = request.query_params.get('token')
+        User = get_user_model()
 
         if not token:
             logger.error(f"No token provided.")
@@ -144,7 +145,7 @@ class AccountActivationView(APIView):
         try:
             uid = signer.unsign(token, max_age=3600)
 
-            user = get_user_model().objects.get(pk=uid)
+            user = User().objects.get(pk=uid)
 
             user.is_active = True
             user.save()
@@ -154,7 +155,7 @@ class AccountActivationView(APIView):
         except BadSignature:
             logger.error(f"Invalid or expired token.")
             return Response({"error": "Invalid or expired token."}, status=status.HTTP_400_BAD_REQUEST)
-        except get_user_model().DoesNotExist:
+        except User.DoesNotExist:
             logger.error(f"User not found.")
             return Response({"error": "User not found."}, status=status.HTTP_400_BAD_REQUEST)
 

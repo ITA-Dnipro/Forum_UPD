@@ -238,8 +238,8 @@ class EmailActivationSerializer(serializers.Serializer):
         try:
             user = User.objects.get(email=value)
         except User.DoesNotExist:
-            raise serializers.ValidationError("User with this email does not exist.")
-            logger.error("User with this email does not exist.")
+            raise serializers.ValidationError("Email activation error.")
+            logger.error("Email activation error.")
         if user.is_active:
             raise serializers.ValidationError("This account is already active.")
             logger.error("This account is already active.")
