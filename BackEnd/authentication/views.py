@@ -6,6 +6,7 @@ from django.core.signing import(
 )
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
+from django.conf import settings
 
 from django.contrib.auth import(
   get_user_model,
@@ -85,7 +86,7 @@ class UserRegistrationView(APIView):
                 signed_token = signer.sign(uid)
 
                 email_subject = "Account Activation"
-                activation_link = f"http://localhost:8080/auth/activate/?token={signed_token}"
+                activation_link = f"{settings.FRONTEND_URL}/auth/activate/?token={signed_token}"
                 email_message = render_to_string("email/custom_activation.html", {
                     'user': user,
                     'activation_link': activation_link,
