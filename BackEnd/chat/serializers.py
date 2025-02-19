@@ -28,7 +28,6 @@ class RoomSerializer(serializers.Serializer):
         """
         Create and return a new `Room` instance, given the validated data.
         """
-        print(f"created method: {validated_data}")
         messages_data = validated_data.pop("messages", [])
         room = Room.objects.create(**validated_data)
 

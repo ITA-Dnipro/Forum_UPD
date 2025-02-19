@@ -5,6 +5,7 @@ from mongoengine.fields import (
     ListField,
     EmbeddedDocumentListField,
     IntField,
+    ValidationError,
 )
 from django.utils import timezone
 
@@ -26,29 +27,46 @@ class Room(Document):
     created_at = DateTimeField(default=lambda: timezone.now())
     updated_at = DateTimeField(default=lambda: timezone.now())
 
-    messages = EmbeddedDocumentListField(Message)
+    messages = EmbeddedDocumentListField("Message")
 
     meta = {
         "collection": "rooms",
         "indexes": [
-            {"fields": ["$participant_ids"]}, 
-            {"fields": ["messages.timestamp"]}, 
+            {
+                "fields": ["participant_ids"],
+                "unique": True,
+            },
+            {"fields": ["messages.timestamp"]},
         ],
     }
 
     def clean(self):
         if not isinstance(self.participant_ids, list):
-            raise ValueError("participant_ids must be a list")
+            raise ValidationError("participant_ids must be a list")
 
         if not all(
             isinstance(user_id, int) for user_id in self.participant_ids
         ):
-            raise ValueError("All participant IDs must be integers")
+            raise ValidationError("All participant IDs must be integers")
+
+        if len(self.participant_ids) != len(set(self.participant_ids)):
+            raise ValidationError("participant_ids contains duplicates")
+
+        # Сортуємо та унікалізуємо список
+        self.participant_ids = sorted(self.participant_ids)
+
+        # Перевіряємо, чи існує кімната з такою ж комбінацією учасників (без урахування поточної)
+        existing_room = Room.objects(
+            participant_ids=self.participant_ids
+        ).first()
+        if existing_room:
+            raise ValidationError(
+                "A room with the same participants already exists."
+            )
 
     def add_message(self, sender_id, text):
-
         if sender_id not in self.participant_ids:
-            raise ValueError(
+            raise ValidationError(
                 f"Sender ID {sender_id} is not a participant in this room"
             )
 

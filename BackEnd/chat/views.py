@@ -7,9 +7,9 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 
 
 class CreateConversation(APIView):
-    permission_classes = [
-        IsAuthenticated
-    ]  # Ensure only authenticated users can create a conversation
+    # permission_classes = [
+    #     IsAuthenticated
+    # ]  # Ensure only authenticated users can create a conversation
 
     def post(self, request, format=None):
         # Try to fetch the authenticated user's ID
