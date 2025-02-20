@@ -223,13 +223,8 @@ class PasswordResetRequestSerializer(serializers.Serializer):
     """
     email = serializers.EmailField()
 
-    def validate_email(self, value):
-        if not User.objects.filter(email=value).exists():
-            raise serializers.ValidationError("Email address does not exist. Please, try again.")
-        return value
-
     def generate_new_token(self, user):
-        return signer.sign(user.pk)
+        return signer.sign(f"{user.pk}:{user.password}")
 
 
 class PasswordResetConfirmSerializer(serializers.Serializer):
@@ -258,21 +253,29 @@ class PasswordResetConfirmSerializer(serializers.Serializer):
         except ValidationError as error:
             custom_errors["new_password"].append(error.message)
 
-        if custom_errors:
-            raise serializers.ValidationError(custom_errors)
+        try:
+            decoded_uid_bytes = urlsafe_base64_decode(data["uid"])
+            decoded_uid = force_str(decoded_uid_bytes)
+        except Exception:
+            raise serializers.ValidationError({"uid": "Invalid uid provided."})
 
         try:
-            uid = force_str(urlsafe_base64_decode(data["uid"]))
-            user = User.objects.get(pk=uid)
+            user = User.objects.get(pk=decoded_uid)
         except (User.DoesNotExist, ValueError, TypeError):
             raise serializers.ValidationError(
                 {"uid": "User does not exist. Please, try again."}
             )
+
+        if user.check_password(new_password):
+            custom_errors["new_password"].append("New password must be different from the current password.")
+
+        if custom_errors:
+            raise serializers.ValidationError(custom_errors)
+
         if not default_token_generator.check_token(user, data["token"]):
-            raise serializers.ValidationError(
-                {"token": "Token is invalid or expired"}
-            )
-        return {"user": user, "new_password": data["new_password"]}
+            raise serializers.ValidationError({"token": "Token is invalid or expired"})
+
+        return {"user": user, "new_password": new_password}
 
     def save(self, **kwargs):
         user = self.validated_data["user"]
@@ -313,6 +316,10 @@ class PasswordChangeSerializer(serializers.Serializer):
         return value
 
     def validate(self, attrs):
+        user = self.context["request"].user
+        if user.check_password(attrs["new_password"]):
+            raise serializers.ValidationError(
+                {"new_password": "New password must be different from the current password."})
         if attrs["new_password"] != attrs["confirm_password"]:
             raise serializers.ValidationError({"confirm_password": "Passwords do not match."})
         return attrs
