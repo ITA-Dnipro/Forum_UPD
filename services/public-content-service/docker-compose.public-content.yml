@@ -1,0 +1,35 @@
+# version: "3"
+# services:
+#   lua-profile-fetcher:
+#     build: .
+#     container_name: lua-profile-fetcher
+#     environment:
+#       - API_URL=http://example.com/api/profiles
+#     ports:
+#       - "8085:8085"
+#     volumes:
+#       - ./src:/app/src
+#     restart: always
+
+
+
+
+version: '3'
+
+services:
+  public-content:
+    build: .
+    container_name: public-content
+    ports:
+      - "8085:8085"
+    volumes:
+      - ./src:/app 
+    environment:
+      - LUA_PATH=/usr/local/openresty/luajit/share/lua/5.1/?.lua;;
+    networks:
+      - openresty_network
+
+networks:
+  openresty_network:
+    driver: bridge
+
