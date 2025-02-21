@@ -1,49 +1,21 @@
 from rest_framework import serializers
-from .models import Message, Room
 from django.utils import timezone
-
-from rest_framework import serializers
-from .models import Message
-
-
-class MessageSerializer(serializers.Serializer):
-    sender_id = serializers.IntegerField()
-    text = serializers.CharField(allow_blank=True, required=False)
-    timestamp = serializers.DateTimeField(default=timezone.now)
-    conversation_id = serializers.CharField(required=False)
-
-
-from rest_framework import serializers
-from .models import Room, Message
-from .serializers import MessageSerializer
+from bson import json_util
+import json
+from .models import Message, Room
 
 
 class RoomSerializer(serializers.Serializer):
     participant_ids = serializers.ListField(child=serializers.IntegerField())
     created_at = serializers.DateTimeField(default=timezone.now)
     updated_at = serializers.DateTimeField(default=timezone.now)
-    messages = MessageSerializer(many=True, required=False)
 
     def create(self, validated_data):
-        """
-        Create and return a new `Room` instance, given the validated data.
-        """
-        messages_data = validated_data.pop("messages", [])
-        room = Room.objects.create(**validated_data)
-
-        # Create message instances and add them to the room
-        for message_data in messages_data:
-            Message.objects.create(room=room, **message_data)
-
-        return room
+        # Create a new Room instance
+        return Room.objects.create(**validated_data)
 
     def update(self, instance, validated_data):
-        """
-        Update and return an existing `Room` instance, given the validated data.
-        """
-        messages_data = validated_data.pop("messages", [])
-
-        # Update fields in the room instance
+        # Update an existing Room instance
         instance.participant_ids = validated_data.get(
             "participant_ids", instance.participant_ids
         )
@@ -54,8 +26,65 @@ class RoomSerializer(serializers.Serializer):
             "updated_at", instance.updated_at
         )
         instance.save()
-
-        for message_data in messages_data:
-            Message.objects.update_or_create(room=instance, **message_data)
-
         return instance
+
+    def validate_participant_ids(self, value):
+        """
+        Custom validation to ensure participant_ids are unique and sorted.
+        """
+        if len(value) != len(set(value)):
+            raise serializers.ValidationError(
+                "participant_ids contains duplicates"
+            )
+
+        if not all(isinstance(user_id, int) for user_id in value):
+            raise serializers.ValidationError(
+                "All participant IDs must be integers"
+            )
+
+        return sorted(value)
+
+
+class MessageSerializer(serializers.Serializer):
+    room = serializers.PrimaryKeyRelatedField(queryset=Room.objects.all())
+    sender_id = serializers.IntegerField()
+    text = serializers.CharField()
+    timestamp = serializers.DateTimeField(default=timezone.now)
+
+    def create(self, validated_data):
+        # Create a new Message instance
+        return Message.objects.create(**validated_data)
+
+    def update(self, instance, validated_data):
+        # Update an existing Message instance
+        instance.sender_id = validated_data.get(
+            "sender_id", instance.sender_id
+        )
+        instance.text = validated_data.get("text", instance.text)
+        instance.timestamp = validated_data.get(
+            "timestamp", instance.timestamp
+        )
+        instance.save()
+        return instance
+
+    def validate_text(self, value):
+        """
+        Ensure that the message text is not empty or just whitespace.
+        """
+        if not value or len(value.strip()) == 0:
+            raise serializers.ValidationError(
+                "Message text cannot be empty or just whitespace."
+            )
+        return value
+
+    def to_representation(self, instance):
+        """
+        Customize serialization to handle ObjectId properly.
+        """
+        representation = super().to_representation(instance)
+        # Use parse_json to safely convert ObjectId to JSON
+        return self.parse_json(representation)
+
+    @staticmethod
+    def parse_json(data):
+        return json.loads(json_util.dumps(data))

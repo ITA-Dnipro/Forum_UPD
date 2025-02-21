@@ -8,7 +8,7 @@ urlpatterns = [
     path("conversations/", CreateConversation.as_view()),
     path("messages/", SendMessage.as_view()),
     path(
-        "conversations/<str:conversation_id>/messages/",
+        "conversations/history/",
         GetMessages.as_view(),
         name="get_messages",
     ),

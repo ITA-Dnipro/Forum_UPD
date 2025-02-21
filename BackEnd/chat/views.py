@@ -1,56 +1,39 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from .serializers import RoomSerializer, MessageSerializer
 from rest_framework import status
+from rest_framework.permissions import IsAuthenticated
+from django.shortcuts import get_object_or_404
+from .serializers import RoomSerializer, MessageSerializer
 from .models import Room, Message
-from rest_framework.permissions import IsAuthenticated, AllowAny
+
+
+def error_response(message, status_code):
+    """Helper function to return consistent error responses."""
+    return Response({"message": message}, status=status_code)
 
 
 class CreateConversation(APIView):
-    # permission_classes = [
-    #     IsAuthenticated
-    # ]  # Ensure only authenticated users can create a conversation
+    permission_classes = [IsAuthenticated]
 
-    def post(self, request, format=None):
-        # Try to fetch the authenticated user's ID
-        try:
-            api_requested_sender_id = request.user.id
-            print(f"Request sender ID: {api_requested_sender_id}")
-        except AttributeError:
-            return Response(
-                {"message": "Authentication required."},
-                status=status.HTTP_401_UNAUTHORIZED,
+    def post(self, request):
+        participant_ids = sorted(request.data.get("participant_ids", []))
+
+        if request.user.id not in participant_ids:
+            return error_response(
+                "You must be a participant in the conversation.",
+                status.HTTP_403_FORBIDDEN,
             )
 
-        # Deserialize the request data
+        # Check if a room with the same participants already exists
+        if Room.objects.filter(participant_ids=participant_ids).exists():
+            return error_response(
+                "A room with this participant pair already exists.",
+                status.HTTP_409_CONFLICT,
+            )
+
         serializer = RoomSerializer(data=request.data)
         if serializer.is_valid():
-            participant_ids = sorted(request.data.get("participant_ids", []))
-
-            # Ensure that the authenticated user is included in the participant_ids
-            if api_requested_sender_id not in participant_ids:
-                return Response(
-                    {
-                        "message": "You must be a participant in the conversation."
-                    },
-                    status=status.HTTP_403_FORBIDDEN,
-                )
-
-            existing_room = Room.objects.filter(
-                participant_ids=participant_ids
-            ).first()
-
-            if existing_room:
-                return Response(
-                    {
-                        "message": "A room with this participant pair already exists."
-                    },
-                    status=status.HTTP_409_CONFLICT,
-                )
-
-            # Create and save the room (conversation)
-            room = serializer.save()
-
+            serializer.save()
             return Response(
                 {"message": "Conversation was created"},
                 status=status.HTTP_201_CREATED,
@@ -59,50 +42,33 @@ class CreateConversation(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.response import Response
-from rest_framework.views import APIView
-from rest_framework import status
-
-
 class SendMessage(APIView):
     permission_classes = [IsAuthenticated]
 
-    def post(self, request, format=None):
-        try:
-            api_requested_sender_id = request.user.id
-            print(f"request sender id: {api_requested_sender_id}")
-        except AttributeError:
-            return Response(
-                {"message": "Authentication required."},
-                status=status.HTTP_401_UNAUTHORIZED,
+    def post(self, request):
+        participant_ids = request.data.get("participant_ids")
+
+        if not participant_ids:
+            return error_response(
+                "Participant IDs are required.", status.HTTP_400_BAD_REQUEST
+            )
+
+        # Ensure room exists with given participants
+        room = Room.objects.filter(participant_ids=participant_ids).first()
+        if not room:
+            return error_response(
+                "Conversation not found.", status.HTTP_404_NOT_FOUND
+            )
+
+        if request.user.id not in room.participant_ids:
+            return error_response(
+                "Sender is not a participant of this conversation.",
+                status.HTTP_403_FORBIDDEN,
             )
 
         serializer = MessageSerializer(data=request.data)
         if serializer.is_valid():
-            conversation_id = serializer.validated_data["conversation_id"]
-            message_text = serializer.validated_data["text"]
-            sender_id = api_requested_sender_id  # Use authenticated user's ID as sender_id
-
-            try:
-                room = Room.objects.get(conversation_id=conversation_id)
-            except Room.DoesNotExist:
-                return Response(
-                    {"message": "Conversation not found."},
-                    status=status.HTTP_404_NOT_FOUND,
-                )
-
-            if sender_id not in room.participant_ids:
-                return Response(
-                    {
-                        "message": "Sender is not a participant of this conversation."
-                    },
-                    status=status.HTTP_403_FORBIDDEN,
-                )
-
-            new_message = Message(sender_id=sender_id, text=message_text)
-            room.update(push__messages=new_message)
-
+            serializer.save()
             return Response(
                 {"message": "Message sent successfully."},
                 status=status.HTTP_201_CREATED,
@@ -112,21 +78,19 @@ class SendMessage(APIView):
 
 
 class GetMessages(APIView):
-    # permission_classes = [IsAuthenticated]
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated]
 
-    def get(self, request, conversation_id, format=None):
-        try:
-            room = Room.objects.get(conversation_id=conversation_id)
+    def get(self, request):
+        room = get_object_or_404(Room, id=request.query_params.get("room_id"))
 
-            serializer = MessageSerializer(room.messages, many=True)
-
-            return Response(
-                {"messages": serializer.data}, status=status.HTTP_200_OK
+        if request.user.id not in room.participant_ids:
+            return error_response(
+                "You are not a participant of this conversation.",
+                status.HTTP_403_FORBIDDEN,
             )
 
-        except Room.DoesNotExist:
-            return Response(
-                {"message": "Conversation not found."},
-                status=status.HTTP_404_NOT_FOUND,
-            )
+        messages = Message.objects.filter(room=room).order_by("timestamp")
+        serializer = MessageSerializer(messages, many=True)
+        return Response(
+            {"messages": serializer.data}, status=status.HTTP_200_OK
+        )

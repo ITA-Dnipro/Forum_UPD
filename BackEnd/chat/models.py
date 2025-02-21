@@ -1,44 +1,21 @@
-from mongoengine import Document, EmbeddedDocument
+from mongoengine import Document
 from mongoengine.fields import (
     StringField,
     DateTimeField,
-    ListField,
-    EmbeddedDocumentListField,
     IntField,
     ValidationError,
+    SortedListField,
+    ReferenceField,
 )
 from django.utils import timezone
 
 
-class Message(EmbeddedDocument):
-    sender_id = IntField(required=True)
-    text = StringField(required=True)
-    timestamp = DateTimeField(default=lambda: timezone.now())
-
-    def clean(self):
-        if not self.text:
-            raise ValueError("Message text cannot be empty.")
-        if len(self.text.strip()) == 0:
-            raise ValueError("Message text cannot be only whitespace.")
-
-
 class Room(Document):
-    participant_ids = ListField(IntField(), required=True)
+    participant_ids = SortedListField(IntField())
     created_at = DateTimeField(default=lambda: timezone.now())
     updated_at = DateTimeField(default=lambda: timezone.now())
 
-    messages = EmbeddedDocumentListField("Message")
-
-    meta = {
-        "collection": "rooms",
-        "indexes": [
-            {
-                "fields": ["participant_ids"],
-                "unique": True,
-            },
-            {"fields": ["messages.timestamp"]},
-        ],
-    }
+    meta = {"collection": "rooms", "indexes": ["created_at"]}
 
     def clean(self):
         if not isinstance(self.participant_ids, list):
@@ -52,10 +29,8 @@ class Room(Document):
         if len(self.participant_ids) != len(set(self.participant_ids)):
             raise ValidationError("participant_ids contains duplicates")
 
-        # Сортуємо та унікалізуємо список
         self.participant_ids = sorted(self.participant_ids)
 
-        # Перевіряємо, чи існує кімната з такою ж комбінацією учасників (без урахування поточної)
         existing_room = Room.objects(
             participant_ids=self.participant_ids
         ).first()
@@ -64,14 +39,27 @@ class Room(Document):
                 "A room with the same participants already exists."
             )
 
-    def add_message(self, sender_id, text):
-        if sender_id not in self.participant_ids:
-            raise ValidationError(
-                f"Sender ID {sender_id} is not a participant in this room"
-            )
+    def __str__(self):
+        return f"Room created at {self.created_at}"
 
-        message = Message(sender_id=sender_id, text=text)
-        self.messages.append(message)
-        self.updated_at = timezone.now()
 
-        self.save()
+class Message(Document):
+
+    room = ReferenceField(Room, required=True)
+    sender_id = IntField(required=True)
+    text = StringField(required=True)
+    timestamp = DateTimeField(default=lambda: timezone.now())
+    meta = {
+        "indexes": [
+            "timestamp",
+        ],
+        "collection": "messages",
+    }
+
+    def clean(self):
+        if not self.text:
+            raise ValidationError("Message text cannot be empty.")
+        if len(self.text.strip()) == 0:
+            raise ValidationError("Message text cannot be only whitespace.")
+        if self.sender_id not in self.room.participant_ids:
+            raise ValidationError("Sender is not in the room")
