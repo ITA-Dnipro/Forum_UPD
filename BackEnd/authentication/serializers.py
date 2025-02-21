@@ -230,3 +230,24 @@ class LogoutSerializer(serializers.Serializer):
             raise serializers.ValidationError({"error": "User ID mismatch between tokens."})
 
         return data
+
+
+class EmailActivationSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    def validate_email(self, value):
+        try:
+            user = User.objects.get(email=value)
+        except User.DoesNotExist:
+            raise serializers.ValidationError("Email activation error.")
+            logger.error("Email activation error.")
+        if user.is_active:
+            raise serializers.ValidationError("This account is already active.")
+            logger.error("This account is already active.")
+        return value
+
+    def save(self):
+        user = User.objects.get(email=self.validated_data['email'])
+        user.is_active = True
+        user.save()
+
+        return {'detail': 'Account successfully activated.'}
