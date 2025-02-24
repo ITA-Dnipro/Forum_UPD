@@ -6,18 +6,21 @@ from rest_framework_simplejwt.views import (
 )
 from .views import (
     CustomTokenObtainPairView,
-    LogoutView,
     PasswordResetRequestView,
     PasswordResetConfirmView,
     PasswordChangeView
+    UserRegistrationView,
+    LogoutView,
+    AccountActivationView,
 )
 
 app_name = "authentication"
 
 urlpatterns = [
+    path('auth/register/', UserRegistrationView.as_view(), name='register'),
+    path('auth/activate/', AccountActivationView.as_view(), name='activate'),
     path("auth/", include("djoser.urls")),
     re_path(r"^auth/", include("djoser.urls.authtoken")),
-
     path('auth/logout/', LogoutView.as_view(), name='logout'),
     path('auth/login/', TokenObtainPairView.as_view(), name='login'),
     path(

@@ -30,6 +30,10 @@ from validation.validate_recaptcha import verify_recaptcha
 
 from validation.validate_password import validate_password_strength
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 User = get_user_model()
 signer = TimestampSigner()
 
@@ -55,38 +59,47 @@ class CustomProfileSerializer(serializers.ModelSerializer):
         model = Profile
         fields = ("name", "is_registered", "is_startup", "is_fop")
 
+class UserRegistrationResponseSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ("name", "surname")
 
-class UserRegistrationSerializer(UserCreatePasswordRetypeSerializer):
+
+class UserRegistrationSerializer(serializers.ModelSerializer):
     company = CustomProfileSerializer(write_only=True)
     email = serializers.EmailField(
+        required=True,
         write_only=True,
     )
     password = serializers.CharField(
-        style={"input_type": "password"}, write_only=True
+        style={"input_type": "password"}, write_only=True, required=True
     )
+    re_password = serializers.CharField(write_only=True)
     captcha = serializers.CharField(
         write_only=True, allow_blank=True, allow_null=True
     )
 
     class Meta(UserCreatePasswordRetypeSerializer.Meta):
         model = User
-        fields = ("email", "password", "name", "surname", "company", "captcha")
+        fields = ("email", "password", "re_password", "name", "surname", "company", "captcha")
 
     def validate(self, value):
         custom_errors = defaultdict(list)
         captcha_token = value.get("captcha")
         self.fields.pop("re_password", None)
-        re_password = value.pop("re_password")
+        re_password = value.get("re_password")
         email = value.get("email").lower()
         password = value.get("password")
         company_data = value.get("company")
         is_registered = company_data.get("is_registered")
         is_startup = company_data.get("is_startup")
         if User.objects.filter(email=email).exists():
+            logger.error(f"Email is already registered {email}")
             custom_errors["email"].append("Email is already registered")
         else:
             value["email"] = email
         if not is_registered and not is_startup:
+            logger.error("No recipient specified.")
             custom_errors["comp_status"].append(
                 "Please choose who you represent."
             )
@@ -102,21 +115,30 @@ class UserRegistrationSerializer(UserCreatePasswordRetypeSerializer):
             validate_password_strength(password)
         except ValidationError as error:
             custom_errors["password"].append(error.message)
-        if value["password"] != re_password:
+        if password != re_password:
+            logger.error("Passwords don't match.")
             custom_errors["password"].append("Passwords don't match.")
         if captcha_token and not verify_recaptcha(captcha_token):
+            logger.error("Invalid reCAPTCHA. Please try again.")
             custom_errors["captcha"].append(
                 "Invalid reCAPTCHA. Please try again."
             )
         if custom_errors:
+            logger.error(custom_errors)
             raise serializers.ValidationError(custom_errors)
         return value
 
     def create(self, validated_data):
+        validated_data.pop("re_password", None)
         validated_data.pop("captcha", None)
         company_data = validated_data.pop("company")
-        user = User.objects.create(**validated_data)
+        user = User.objects.create(
+            email=validated_data["email"],
+            name=validated_data["name"],
+            surname=validated_data["surname"],
+        )
         user.set_password(validated_data["password"])
+        logger.info(f"Saving user {user.email}")
         user.save()
         Profile.objects.create(**company_data, person=user)
         return user
@@ -215,7 +237,27 @@ class LogoutSerializer(serializers.Serializer):
 
         return data
 
+class EmailActivationSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    def validate_email(self, value):
+        try:
+            user = User.objects.get(email=value)
+        except User.DoesNotExist:
+            raise serializers.ValidationError("Email activation error.")
+            logger.error("Email activation error.")
+        if user.is_active:
+            raise serializers.ValidationError("This account is already active.")
+            logger.error("This account is already active.")
+        return value
 
+    def save(self):
+        user = User.objects.get(email=self.validated_data['email'])
+        user.is_active = True
+        user.save()
+
+        return {'detail': 'Account successfully activated.'}
+
+      
 class PasswordResetRequestSerializer(serializers.Serializer):
     """
     Serializer used for handling password reset requests.

@@ -58,7 +58,9 @@ from .permissions import (
     IsAdminUser,
     IsModeratorUser
 )
+import logging
 
+logger = logging.getLogger(__name__)
 
 class UsersListView(ListAPIView):
     """
@@ -97,6 +99,7 @@ class UserDetailView(RetrieveUpdateDestroyAPIView):
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
         if not Profile.objects.filter(person_id=instance.id).exists():
+            logger.info("User deleted.")
             return super().destroy(request, *args, **kwargs)
         else:
             return self.http_method_not_allowed(request, *args, **kwargs)

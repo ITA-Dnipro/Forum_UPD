@@ -1,5 +1,3 @@
-version: '3.9'
-
 services:
   redis:
     image: redis:7
@@ -9,18 +7,22 @@ services:
       - "6379:6379"
     networks:
       - forum_network
-      
+
   api-dev:
     build: ./BackEnd
     container_name: api-dev
     restart: on-failure
-    command: gunicorn --log-level debug forum.wsgi:application --bind 0.0.0.0:8000
+    command: /bin/sh -c "gunicorn --log-level debug forum.wsgi:application --bind 0.0.0.0:8000 & daphne -b 0.0.0.0 -p 8001 forum.asgi:application"
+    # Run both Gunicorn and Daphne
     volumes:
       # - ./:/Forum
       - static:/home/forum/app/public/static
       - media:/home/forum/app/public/media
+      - ./logs/django.log:/home/forum/app/django.log
+      - ./logs/error.log:/home/forum/app/error.log
     ports:
       - 8000:8000
+      - 8001:8001
     environment:
       - DEBUG=${DEBUG}
       - SECRET_KEY=${SECRET_KEY}
@@ -46,6 +48,13 @@ services:
       - RECAPTCHA_URL=${RECAPTCHA_URL}
       - DJANGO_SETTINGS_MODULE=${DJANGO_SETTINGS_MODULE}
       - PYTHONPATH=${PYTHONPATH}:/app
+      - MONGO_DB_NAME=${MONGO_DB_NAME}
+      - MONGO_USERNAME=${MONGO_USERNAME}
+      - MONGO_PASSWORD=${MONGO_PASSWORD}
+      - MONGO_HOST=${MONGO_HOST}
+      - MONGO_PORT=${MONGO_PORT}
+      - MONGO_AUTHENTICATION_SOURCE=${MONGO_AUTHENTICATION_SOURCE}
+      - ENSURE_INDEXES = ${ENSURE_INDEXES}
     networks:
       - forum_network
   frontend:
@@ -131,14 +140,13 @@ services:
       - RECAPTCHA_URL=${RECAPTCHA_URL}
     networks:
       - forum_network
-      
+
 networks:
   forum_network:
 
+
 volumes:
   static:
-    external:
-      name: forum_static
+    name: forum_static
   media:
-    external:
-      name: forum_media
+    name: forum_media

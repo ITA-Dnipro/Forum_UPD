@@ -6,9 +6,24 @@ from django.core.mail import send_mail
 from django.utils.http import urlsafe_base64_encode
 from django.utils.encoding import force_bytes
 from django.contrib.auth.tokens import default_token_generator
+from django.core.signing import(
+    TimestampSigner,
+    BadSignature,
+)
+from django.template.loader import render_to_string
+from django.conf import settings
+from drf_spectacular.utils import(
+    extend_schema,
+    OpenApiParameter,
+    OpenApiExample,
+    OpenApiResponse,
+)
+from ratelimit.decorators import RateLimitDecorator
+from rest_framework.views import APIView
 from django.contrib.auth import authenticate, get_user_model, logout
 from django_ratelimit.decorators import ratelimit
 from rest_framework import status
+from rest_framework.response import Response
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -19,6 +34,8 @@ from drf_yasg import openapi
 
 from .serializers import (
     CustomTokenObtainPairSerializer,
+    UserRegistrationSerializer,
+    UserRegistrationResponseSerializer,
     LogoutSerializer,
     PasswordResetRequestSerializer,
     PasswordResetConfirmSerializer,
@@ -37,6 +54,118 @@ User = get_user_model()
 
 class CustomTokenObtainPairView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer
+
+
+class UserRegistrationView(APIView):
+    permission_classes = [AllowAny]
+
+    @extend_schema(
+        operation_id="user_register",
+        summary="Register a new user",
+        description="Register as a new user with email, password, name, surname, and company details.",
+        request=UserRegistrationSerializer,
+        responses={
+            201: OpenApiResponse(
+                response=UserRegistrationSerializer,
+                description="User registration successful",
+            ),
+            400: OpenApiResponse(description="Bad request (validation error or missing fields)"),
+            500: OpenApiResponse(description="Internal server error"),
+        },
+    )
+    @RateLimitDecorator(
+        calls=10,
+        period=600,
+    )
+    def post(self, request):
+        if getattr(request, 'limited', False):
+            return Response({"detail": "Request limit exceeded."}, status=status.HTTP_429_TOO_MANY_REQUESTS)
+
+        try:
+            serializer = UserRegistrationSerializer(data=request.data)
+            if serializer.is_valid():
+                user = serializer.save()
+                user_data = UserRegistrationResponseSerializer(user).data
+                logger.info("User created successfully")
+
+                signer = TimestampSigner()
+                uid = str(user.pk)
+                signed_token = signer.sign(uid)
+
+                email_subject = "Account Activation"
+                activation_link = f"{settings.FRONTEND_URL}/auth/activate/?token={signed_token}"
+                email_message = render_to_string("email/custom_activation.html", {
+                    'user': user,
+                    'activation_link': activation_link,
+                })
+
+                send_mail(
+                    email_subject,
+                    email_message,
+                    'noreply@example.com',
+                    [user.email]
+                )
+
+                return Response(user_data, status=status.HTTP_201_CREATED)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        except Exception:
+            logger.error(f"Unexpected error occurred.")
+            return Response({"detail": "Internal server error. Please try again later."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class AccountActivationView(APIView):
+    permission_classes = [AllowAny]
+
+    @extend_schema(
+        operation_id="activate_account",
+        summary="Activate a user account",
+        description="Activate a newly registered user account by providing a signed token as a query parameter.",
+        parameters=[
+            OpenApiParameter(
+                name="token",
+                type=str,
+                location=OpenApiParameter.QUERY,
+                required=True,
+                description="The signed activation token sent via email."
+            )
+        ],
+        responses={
+            200: OpenApiResponse(
+                description="Account activated successfully.",
+                response={"detail": "Account activated successfully."}
+            ),
+            400: OpenApiResponse(
+                description="Bad request (e.g., missing or invalid token).",
+                response={"error": "Invalid or expired token."}
+            )
+        }
+    )
+    def get(self, request):
+        token = request.query_params.get('token')
+        User = get_user_model()
+
+        if not token:
+            logger.error(f"No token provided.")
+            return Response({"detail": "No token provided."}, status=status.HTTP_400_BAD_REQUEST)
+
+        signer = TimestampSigner()
+        try:
+            uid = signer.unsign(token, max_age=3600)
+
+            user = User().objects.get(pk=uid)
+
+            user.is_active = True
+            user.save()
+
+            logger.info("Account activated successfully.")
+            return Response({"detail": "Account activated successfully."}, status=status.HTTP_200_OK)
+        except BadSignature:
+            logger.error(f"Invalid or expired token.")
+            return Response({"error": "Invalid or expired token."}, status=status.HTTP_400_BAD_REQUEST)
+        except User.DoesNotExist:
+            logger.error(f"User not found.")
+            return Response({"error": "User not found."}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class LoginView(APIView):

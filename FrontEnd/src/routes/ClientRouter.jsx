@@ -60,7 +60,10 @@ function ClientRouter() {
             ) : (
               <PageWrapper>
                 <Routes>
-                  <Route path="/" element={<MainPage isAuthorized={isAuth} />} />
+                  <Route
+                    path="/"
+                    element={<MainPage isAuthorized={isAuth} />}
+                  />
                   <Route path="/about-us" element={<AboutUsPage />} />
                   {isAuth ? (
                     <Route path="/profile/*" element={<ProfilePage />} />
