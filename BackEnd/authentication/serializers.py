@@ -1,5 +1,9 @@
 from collections import defaultdict
 
+from django.core.signing import TimestampSigner, BadSignature, SignatureExpired
+from django.utils.http import urlsafe_base64_decode
+from django.contrib.auth.tokens import default_token_generator
+from django.utils.encoding import force_str
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.conf import settings as django_settings
@@ -9,6 +13,7 @@ from djoser.serializers import (
     UserSerializer,
     TokenCreateSerializer,
 )
+
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from ratelimit.decorators import RateLimitDecorator
@@ -30,6 +35,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 User = get_user_model()
+signer = TimestampSigner()
 
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
@@ -231,7 +237,6 @@ class LogoutSerializer(serializers.Serializer):
 
         return data
 
-
 class EmailActivationSerializer(serializers.Serializer):
     email = serializers.EmailField()
     def validate_email(self, value):
@@ -251,3 +256,117 @@ class EmailActivationSerializer(serializers.Serializer):
         user.save()
 
         return {'detail': 'Account successfully activated.'}
+
+      
+class PasswordResetRequestSerializer(serializers.Serializer):
+    """
+    Serializer used for handling password reset requests.
+    Validates email and generates reset token.
+    """
+    email = serializers.EmailField()
+
+    def generate_new_token(self, user):
+        return signer.sign(f"{user.pk}:{user.password}")
+
+
+class PasswordResetConfirmSerializer(serializers.Serializer):
+    """
+    Serializer for confirming password reset process.
+    Validates reset token and new password requirements.
+    """
+    uid = serializers.CharField()
+    token = serializers.CharField()
+    new_password = serializers.CharField(write_only=True, min_length=8)
+
+    def validate(self, data):
+        custom_errors = defaultdict(list)
+        new_password = data["new_password"]
+
+        try:
+            validate_password_long(new_password)
+        except ValidationError as error:
+            custom_errors["new_password"].append(error.message)
+        try:
+            validate_password_include_symbols(new_password)
+        except ValidationError as error:
+            custom_errors["new_password"].append(error.message)
+        try:
+            validate_password_strength(new_password)
+        except ValidationError as error:
+            custom_errors["new_password"].append(error.message)
+
+        try:
+            decoded_uid_bytes = urlsafe_base64_decode(data["uid"])
+            decoded_uid = force_str(decoded_uid_bytes)
+        except Exception:
+            raise serializers.ValidationError({"uid": "Invalid uid provided."})
+
+        try:
+            user = User.objects.get(pk=decoded_uid)
+        except (User.DoesNotExist, ValueError, TypeError):
+            raise serializers.ValidationError(
+                {"uid": "User does not exist. Please, try again."}
+            )
+
+        if user.check_password(new_password):
+            custom_errors["new_password"].append("New password must be different from the current password.")
+
+        if custom_errors:
+            raise serializers.ValidationError(custom_errors)
+
+        if not default_token_generator.check_token(user, data["token"]):
+            raise serializers.ValidationError({"token": "Token is invalid or expired"})
+
+        return {"user": user, "new_password": new_password}
+
+    def save(self, **kwargs):
+        user = self.validated_data["user"]
+        user.set_password(self.validated_data["new_password"])
+        user.save()
+
+
+class PasswordChangeSerializer(serializers.Serializer):
+    """
+    Serializer for changing user password while authenticated.
+    Validates old password and new password requirements.
+    """
+    old_password = serializers.CharField(write_only=True)
+    new_password = serializers.CharField(write_only=True)
+    confirm_password = serializers.CharField(write_only=True)
+
+    def validate_old_password(self, value):
+        user = self.context["request"].user
+        if not user.check_password(value):
+            raise serializers.ValidationError("Old password is incorrect.")
+        return value
+
+    def validate_new_password(self, value):
+        errors = []
+        for validator in [
+            validate_password_include_symbols,
+            validate_password_strength,
+            validate_password_long
+        ]:
+            try:
+                validator(value)
+            except ValidationError as error:
+                errors.append(error.message)
+
+        if errors:
+            raise serializers.ValidationError({"new_password": errors})
+
+        return value
+
+    def validate(self, attrs):
+        user = self.context["request"].user
+        if user.check_password(attrs["new_password"]):
+            raise serializers.ValidationError(
+                {"new_password": "New password must be different from the current password."})
+        if attrs["new_password"] != attrs["confirm_password"]:
+            raise serializers.ValidationError({"confirm_password": "Passwords do not match."})
+        return attrs
+
+    def save(self, **kwargs):
+        user = self.context["request"].user
+        user.set_password(self.validated_data["new_password"])
+        user.save(update_fields=["password"])
