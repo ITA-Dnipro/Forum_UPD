@@ -6,41 +6,13 @@ from .models import Room, Message
 from rest_framework.permissions import IsAuthenticated
 
 
-class CreateConversation(APIView):
+class ConversationCreateView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request, format=None):
-        try:
-            api_requested_sender_id = request.user.id
-        except AttributeError:
-            return Response(
-                {"message": "Authentication required."},
-                status=status.HTTP_401_UNAUTHORIZED,
-            )
 
         serializer = RoomSerializer(data=request.data)
         if serializer.is_valid():
-            participant_ids = sorted(request.data.get("participant_ids", []))
-
-            if api_requested_sender_id not in participant_ids:
-                return Response(
-                    {
-                        "message": "You must be a participant in the conversation."
-                    },
-                    status=status.HTTP_403_FORBIDDEN,
-                )
-
-            existing_room = Room.objects.filter(
-                participant_ids=participant_ids
-            ).first()
-
-            if existing_room:
-                return Response(
-                    {
-                        "message": "A room with this participant pair already exists."
-                    },
-                    status=status.HTTP_409_CONFLICT,
-                )
             serializer.save()
             return Response(
                 {"message": "Conversation was created"},
@@ -50,7 +22,7 @@ class CreateConversation(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class SendMessage(APIView):
+class MessageSendView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request, format=None):
@@ -92,12 +64,12 @@ class SendMessage(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class GetMessages(APIView):
+class MessageListView(APIView):
     permission_classes = [IsAuthenticated]
 
-    def get(self, request, format=None):
+    def get(self, request, room_id, format=None):
         try:
-            room = Room.objects.get(id=request.query_params.get("room_id"))
+            room = Room.objects.get(id=room_id)
             messages = Message.objects.filter(room=room).order_by("timestamp")
             serializer = MessageSerializer(messages, many=True)
             return Response(

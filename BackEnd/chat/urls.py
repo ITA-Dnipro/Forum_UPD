@@ -1,15 +1,19 @@
 from django.urls import path
-from .views import CreateConversation, SendMessage, GetMessages
+from .views import ConversationCreateView, MessageSendView, MessageListView
 
 app_name = "chat"
 
 
 urlpatterns = [
-    path("conversations/", CreateConversation.as_view()),
-    path("messages/", SendMessage.as_view()),
     path(
-        "conversations/history/",
-        GetMessages.as_view(),
+        "conversations/",
+        ConversationCreateView.as_view(),
+        name="create_conversation",
+    ),
+    path("messages/", MessageSendView.as_view(), name="send_message"),
+    path(
+        "conversations/<str:room_id>/history/",
+        MessageListView.as_view(),
         name="get_messages",
     ),
 ]

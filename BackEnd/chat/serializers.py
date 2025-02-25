@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.utils import timezone
-from bson import json_util
+from bson import ObjectId
 import json
 from .models import Message, Room
 
@@ -71,6 +71,10 @@ class MessageSerializer(serializers.Serializer):
         """
         Ensure that the message text is not empty or just whitespace.
         """
+        if len(value) > 500:
+            raise serializers.ValidationError(
+                "Message text is too long. It should be no more than 500 characters."
+            )
         if not value or len(value.strip()) == 0:
             raise serializers.ValidationError(
                 "Message text cannot be empty or just whitespace."
@@ -79,12 +83,12 @@ class MessageSerializer(serializers.Serializer):
 
     def to_representation(self, instance):
         """
-        Customize serialization to handle ObjectId properly.
+        Customize serialization to handle ObjectId fields properly.
         """
         representation = super().to_representation(instance)
-        # Use parse_json to safely convert ObjectId to JSON
-        return self.parse_json(representation)
 
-    @staticmethod
-    def parse_json(data):
-        return json.loads(json_util.dumps(data))
+        for field, value in representation.items():
+            if isinstance(value, ObjectId):
+                representation[field] = str(value)
+
+        return representation
