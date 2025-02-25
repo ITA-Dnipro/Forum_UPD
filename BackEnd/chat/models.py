@@ -77,6 +77,8 @@ class Message(Document):
             raise ValidationError("Message text cannot be empty.")
         if len(self.text.strip()) == 0:
             raise ValidationError("Message text cannot be only whitespace.")
+        if not self.sender_id:
+            raise AttributeError("Sender ID is required.")
         if self.sender_id not in self.room.participant_ids:
             raise ValidationError("Sender is not in the room")
 

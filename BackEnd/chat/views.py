@@ -4,6 +4,7 @@ from .serializers import RoomSerializer, MessageSerializer
 from rest_framework import status
 from .models import Room, Message
 from rest_framework.permissions import IsAuthenticated
+from forum.pagination import ForumPagination
 
 
 class ConversationCreateView(APIView):
@@ -26,36 +27,20 @@ class MessageSendView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request, format=None):
-        try:
-            api_requested_sender_id = request.user.id
-        except AttributeError:
+
+        api_requested_sender_id = request.user.id
+
+        if api_requested_sender_id != request.data["sender_id"]:
             return Response(
-                {"message": "Authentication required."},
-                status=status.HTTP_401_UNAUTHORIZED,
+                {
+                    "message": "Sender ID does not match the authenticated user."
+                },
+                status=status.HTTP_403_FORBIDDEN,
             )
 
         serializer = MessageSerializer(data=request.data)
-        participant_ids = request.data["participant_ids"]
         if serializer.is_valid():
-            sender_id = api_requested_sender_id
-
-            try:
-                room = Room.objects.get(participant_ids=participant_ids)
-            except Room.DoesNotExist:
-                return Response(
-                    {"message": "Conversation not found."},
-                    status=status.HTTP_404_NOT_FOUND,
-                )
-
-            if sender_id not in room.participant_ids:
-                return Response(
-                    {
-                        "message": "Sender is not a participant of this conversation."
-                    },
-                    status=status.HTTP_403_FORBIDDEN,
-                )
             serializer.save()
-
             return Response(
                 {"message": "Message sent successfully."},
                 status=status.HTTP_201_CREATED,
@@ -66,6 +51,7 @@ class MessageSendView(APIView):
 
 class MessageListView(APIView):
     permission_classes = [IsAuthenticated]
+    pagination_class = [ForumPagination]
 
     def get(self, request, room_id, format=None):
         try:
