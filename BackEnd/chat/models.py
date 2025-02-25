@@ -63,3 +63,9 @@ class Message(Document):
             raise ValidationError("Message text cannot be only whitespace.")
         if self.sender_id not in self.room.participant_ids:
             raise ValidationError("Sender is not in the room")
+
+    def save(self, *args, **kwargs):
+        """Update the room's updated_at field when a new message is created."""
+        if not self.pk:
+            self.room.update(set__updated_at=timezone.now())
+        return super().save(*args, **kwargs)
