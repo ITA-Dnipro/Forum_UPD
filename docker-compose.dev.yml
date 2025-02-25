@@ -16,6 +16,7 @@ services:
     # Run both Gunicorn and Daphne
     volumes:
       # - ./:/Forum
+      - ./BackEnd:/home/forum/app
       - static:/home/forum/app/public/static
       - media:/home/forum/app/public/media
       - ./logs/django.log:/home/forum/app/django.log

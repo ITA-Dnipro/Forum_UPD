@@ -11,7 +11,7 @@ from django.utils import timezone
 
 
 class Room(Document):
-    participant_ids = SortedListField(IntField())
+    participant_ids = SortedListField(IntField(), required=True)
     created_at = DateTimeField(default=lambda: timezone.now())
     updated_at = DateTimeField(default=lambda: timezone.now())
 
@@ -31,16 +31,32 @@ class Room(Document):
 
         self.participant_ids = sorted(self.participant_ids)
 
-        existing_room = Room.objects(
-            participant_ids=self.participant_ids
-        ).first()
+        pipeline = [
+            {
+                "$match": {
+                    "participant_ids": {"$all": self.participant_ids},
+                    "$expr": {
+                        "$eq": [
+                            {"$size": "$participant_ids"},
+                            len(self.participant_ids),
+                        ]
+                    },
+                }
+            },
+            {"$limit": 1},
+        ]
+
+        existing_room = list(Room.objects.aggregate(pipeline))
         if existing_room:
             raise ValidationError(
                 "A room with the same participants already exists."
             )
 
     def __str__(self):
-        return f"Room created at {self.created_at}"
+        return f"Room created at {self.created_at}, participant_ids {self.participant_ids}"
+
+    def __repl__(self):
+        return f"Room created at {self.created_at}, participant_ids {self.participant_ids}"
 
 
 class Message(Document):
