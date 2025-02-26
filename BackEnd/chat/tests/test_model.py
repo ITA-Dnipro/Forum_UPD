@@ -1,11 +1,10 @@
 from django.test import TestCase
 from mongoengine import connect, disconnect, ValidationError
-from .models import Room, Message
+from ..models import Room, Message
 from django.utils import timezone
 import os
 import random
 import string
-from unittest import skip
 
 
 class TestRoomMessage(TestCase):
