@@ -13,7 +13,7 @@ class ProfileOrm(Model):
     is_registered: Mapped[bool]
     is_startup: Mapped[bool]
     is_fop: Mapped[bool]
-    profile_categories: Mapped[list["CategoryOrm"]] = relationship(
+    profile_categories: Mapped[list["CategoryOrm"]] = relationship( # type: ignore
         back_populates="category_profiles", 
         secondary="profile_category"
         )

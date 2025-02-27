@@ -2,7 +2,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends
 from schemas.profiles import Profile
 from crud.profiles import ProfileRepository
-
+from dependencies import profile_create_dependency
 
 router = APIRouter(
     tags=["Profiles"]
@@ -17,7 +17,7 @@ async def profiles_list():
 
 @router.post("/", status_code=201)
 async def create_profile(
-    profile: Profile #Annotated[Profile, Depends()]
+    profile: Annotated[Profile, Depends(dependency=profile_create_dependency)]
     ):
     profile_id = await ProfileRepository.add_one(profile)
     
@@ -34,7 +34,7 @@ async def profiles_detail(profile_id: int):
 
 @router.put("/{profile_id}")
 async def profile_update(
-    profile_id: int, profile_data: Annotated[Profile, Depends()]
+    profile_id: int, profile_data: Annotated[Profile, Depends(dependency=profile_create_dependency)]
     ):
     profile = await ProfileRepository.update_or_404(profile_id, profile_data)
     return profile
