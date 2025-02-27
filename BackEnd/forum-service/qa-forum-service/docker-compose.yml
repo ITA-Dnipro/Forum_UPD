@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    ports:
+      - "8080:8080"
+    depends_on:
+      scylladb:
+        condition: service_healthy
+    environment:
+      - SCYLLA_HOSTS=scylladb
+      - SCYLLA_KEYSPACE=qa_forum
+    networks:
+      - qa-network
+
+  scylladb:
+    image: scylladb/scylla
+    ports:
+      - "9042:9042"
+    command: --smp 1 --memory 750M --overprovisioned 1
+    healthcheck:
+      test: ["CMD-SHELL", "cqlsh -e 'show version'"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    networks:
+      - qa-network
+
+networks:
+  qa-network:
+    driver: bridge
