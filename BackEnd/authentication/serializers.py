@@ -7,12 +7,6 @@ from django.utils.encoding import force_str
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.conf import settings as django_settings
-from djoser.conf import settings as djoser_settings
-from djoser.serializers import (
-    UserCreatePasswordRetypeSerializer,
-    UserSerializer,
-    TokenCreateSerializer,
-)
 
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
@@ -79,7 +73,7 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         write_only=True, allow_blank=True, allow_null=True
     )
 
-    class Meta(UserCreatePasswordRetypeSerializer.Meta):
+    class Meta:
         model = User
         fields = ("email", "password", "re_password", "name", "surname", "company", "captcha")
 
@@ -144,59 +138,6 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         return user
 
 
-class UserListSerializer(UserSerializer):
-    profile_id = serializers.PrimaryKeyRelatedField(
-        source="profile", read_only=True
-    )
-
-    class Meta(UserSerializer.Meta):
-        model = User
-        fields = (
-            "id",
-            "email",
-            "name",
-            "surname",
-            "profile_id",
-            "is_staff",
-            "is_superuser",
-        )
-
-
-class CustomTokenCreateSerializer(TokenCreateSerializer):
-    captcha = serializers.CharField(
-        write_only=True, allow_blank=True, allow_null=True
-    )
-
-    def validate(self, attrs):
-        captcha_token = attrs.get("captcha")
-
-        try:
-            validate_profile(attrs.get("email"))
-        except ValidationError as error:
-            raise serializers.ValidationError(error.message)
-
-        try:
-            return self.validate_for_rate(attrs)
-        except RateLimitException:
-            self.fail("inactive_account")
-
-        if captcha_token and not verify_recaptcha(captcha_token):
-            raise serializers.ValidationError(
-                "Invalid reCAPTCHA. Please try again."
-            )
-
-    @RateLimitDecorator(
-        calls=django_settings.ATTEMPTS_FOR_LOGIN,
-        period=django_settings.DELAY_FOR_LOGIN,
-    )
-    def validate_for_rate(self, attrs):
-        email = attrs.get(djoser_settings.LOGIN_FIELD).lower()
-        new_attr = dict(
-            [("password", attrs.get("password")), ("email", email)]
-        )
-        return super().validate(new_attr)
-
-
 class LoginSerializer(serializers.Serializer):
     email = serializers.EmailField()
     password = serializers.CharField()
@@ -257,7 +198,7 @@ class EmailActivationSerializer(serializers.Serializer):
 
         return {'detail': 'Account successfully activated.'}
 
-      
+
 class PasswordResetRequestSerializer(serializers.Serializer):
     """
     Serializer used for handling password reset requests.
