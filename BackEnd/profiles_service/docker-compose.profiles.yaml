@@ -1,0 +1,24 @@
+services:
+  db:
+      image: postgres:14
+      container_name: profiles_db
+      restart: always
+      environment:
+        - POSTGRES_PASSWORD=${DB_PASSWORD}
+        - POSTGRES_DB=${DB_NAME}
+        - POSTGRES_USER=${DB_USER}
+      ports:
+        - "5432:5432"
+  profiles:
+    build: .
+    depends_on:
+      - db
+    restart: on-failure
+    environment:
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_NAME=${DB_NAME}
+      - DB_USER=${DB_USER}
+      - DB_HOST=${DB_HOST}
+      - DB_PORT=${DB_PORT}
+    ports:
+      - "8000:8000"
