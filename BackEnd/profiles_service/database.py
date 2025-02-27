@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-connect_str = f"postgresql+psycopg://{environ['DB_USER']}:{environ['DB_PASSWORD']}@{environ['DB_HOST']}:{environ['DB_PORT']}/{environ['DB_NAME']}"
+connect_str = f"postgresql+psycopg://{environ['PROFILES_DB_USER']}:{environ['PROFILES_DB_PASSWORD']}@{environ['PROFILES_DB_HOST']}:{environ['PROFILES_DB_PORT']}/{environ['PROFILES_DB_NAME']}"
 engine = create_async_engine(
     connect_str
 )
