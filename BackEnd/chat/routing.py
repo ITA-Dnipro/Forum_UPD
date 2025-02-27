@@ -10,5 +10,5 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "forum.settings")
 
 
 websocket_urlpatterns = [
-    re_path(r"ws/chat/(?P<room_name>\w+)/$", consumers.ChatConsumer.as_asgi()),
+    re_path(r"ws/chat/(?P<room_id>\w+)/$", consumers.ChatConsumer.as_asgi()),
 ]
