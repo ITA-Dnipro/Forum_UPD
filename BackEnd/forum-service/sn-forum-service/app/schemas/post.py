@@ -38,4 +38,4 @@ class PostList(BaseModel):
     post_id: int
     title: str = Field(..., min_length=3, max_length=200)
     author_id: int
-created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))

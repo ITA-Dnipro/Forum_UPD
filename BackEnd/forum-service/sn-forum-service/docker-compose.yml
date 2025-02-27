@@ -3,17 +3,16 @@ version: '3.8'
 services:
   cassandra:
     image: cassandra:latest
-    container_name: cassandra_forum
+    container_name: cassandra
     ports:
       - "9062:9042"
     environment:
-      - CASSANDRA_START_RPC=true
       - CASSANDRA_USERNAME=cassandra
       - CASSANDRA_PASSWORD=cassandra
     volumes:
       - cassandra-data:/var/lib/cassandra
     healthcheck:
-      test: ["CMD-SHELL", "cqlsh -u cassandra -p cassandra -e 'describe keyspaces'"]
+      test: ["CMD", "cqlsh", "-u", "cassandra", "-p", "cassandra", "-e", "SELECT release_version FROM system.local"]
       interval: 15s
       timeout: 10s
       retries: 10
@@ -44,6 +43,7 @@ services:
         condition: service_healthy
     volumes:
       - .:/app
-
+    entrypoint: ["sh", "./entrypoint.sh"]
+    
 volumes:
   cassandra-data:

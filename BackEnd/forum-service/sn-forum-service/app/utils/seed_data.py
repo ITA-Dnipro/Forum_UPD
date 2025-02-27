@@ -5,8 +5,8 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-def seed_database():
-    session = get_session()
+async def seed_database():
+    session = await get_session()
     
     try:
         categories = [

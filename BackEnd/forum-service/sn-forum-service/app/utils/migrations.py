@@ -1,11 +1,11 @@
 # app/utils/migrations.py
 from app.services.cassandra import get_session
 
-session = get_session()
+import logging
+logger = logging.getLogger(__name__)
 
-def create_udt_types():
 
-
+async def create_udt_types(session):
     """Створення користувацьких типів (UDT) у Cassandra"""
     session.execute("""
         CREATE TYPE IF NOT EXISTS comment_reply (
@@ -66,10 +66,8 @@ def create_udt_types():
         );
     """)
 
-
-def create_tables():
+async def create_tables(session):
     """Створення основних таблиць у Cassandra"""
-
     session.execute("""
         CREATE TABLE IF NOT EXISTS blog_posts (
             post_id int PRIMARY KEY,
@@ -171,11 +169,14 @@ def create_tables():
             PRIMARY KEY (post_id, user_id)
         );
     """)
-    
-def run_migrations():
-    print("Створення UDT...")
-    create_udt_types()
-    print("Створення таблиць...")
-    create_tables()
-    print("Міграції завершено.")
 
+async def run_migrations():
+    session = await get_session() 
+
+    logger.info("Створення UDT...")
+    await create_udt_types(session)
+    
+    logger.info("Створення таблиць...")
+    await create_tables(session)  
+    
+    logger.info("Міграції завершено.")
