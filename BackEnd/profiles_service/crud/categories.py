@@ -23,6 +23,20 @@ class CategoryRepository:
             result = await session.execute(query)
             category_models = result.scalars().all()
             return category_models
+    
+    @staticmethod
+    async def get_list_by_ids(categories_id: list[int]):
+        """
+        Takes list of category ids and returns list of respective category objects
+        """
+        async with new_session() as session:
+            categories = await session.execute(
+            select(CategoryOrm).where(CategoryOrm.id.in_(categories_id))
+            )
+            categories = categories.scalars().all()
+            if not categories:
+                raise HTTPException(status_code=400, detail="Invalid category IDs")
+            return categories
 
 
     @staticmethod
@@ -35,6 +49,7 @@ class CategoryRepository:
                     )
             return category
     
+
     @staticmethod
     async def get_by_id_list(category_id: list[int]):
         async with new_session() as session:

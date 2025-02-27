@@ -4,26 +4,26 @@ from models.profiles import ProfileOrm
 from sqlalchemy import ForeignKey
 
 
-class ProfileCategoryORM(Model):
-    __tablename__ = "profile_category"
+class ProfileRegionORM(Model):
+    __tablename__ = "profile_region"
     profile_id: Mapped[int] = mapped_column(
         ForeignKey("profiles.id"),
         primary_key=True
     )
-    category_id: Mapped[int] = mapped_column(
-        ForeignKey("category.id"),
+    region_id: Mapped[int] = mapped_column(
+        ForeignKey("region.id"),
         primary_key=True
     )
 
 
-class CategoryOrm(Model):
-    __tablename__ = "category"
+class RegionOrm(Model):
+    __tablename__ = "region"
 
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(unique=True)
-    category_profiles: Mapped[list["ProfileOrm"]] = relationship(
-        back_populates="profile_categories", 
-        secondary="profile_category"
+    region_profiles: Mapped[list["ProfileOrm"]] = relationship(
+        back_populates="profile_categories",
+        secondary="profile_region"
         )
 
 

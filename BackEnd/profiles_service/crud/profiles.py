@@ -1,7 +1,7 @@
 from sqlalchemy import select
 from database import new_session
 from models.profiles import ProfileOrm
-from models.categories import CategoryOrm
+from crud.categories import CategoryRepository
 from schemas.profiles import Profile
 from fastapi import HTTPException
 
@@ -10,17 +10,8 @@ class ProfileRepository:
     async def add_one(data: Profile):
         async with new_session() as session:
             profile_dict = data.model_dump()
-            category_ids = profile_dict["profile_categories"]
-
-            if category_ids:
-                categories = await session.execute(
-                select(CategoryOrm).where(CategoryOrm.id.in_(category_ids))
-            )
-            categories = categories.scalars().all()
-
-            if not categories:
-                raise HTTPException(status_code=400, detail="Invalid category IDs")
-
+            categories_id = profile_dict["profile_categories"]
+            categories = await CategoryRepository.get_list_by_ids(categories_id)
             profile_dict["profile_categories"] = categories
             profile = ProfileOrm(**profile_dict)
             session.add(profile)
