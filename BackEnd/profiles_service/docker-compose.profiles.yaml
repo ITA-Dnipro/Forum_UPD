@@ -9,6 +9,9 @@ services:
         - POSTGRES_USER=${PROFILES_DB_USER}
       ports:
         - "5432:5432"
+      volumes:
+        - profiles_data:/var/lib/postgresql/data
+
   profiles:
     build: .
     depends_on:
@@ -22,3 +25,8 @@ services:
       - PROFILES_DB_PORT=${PROFILES_DB_PORT}
     ports:
       - "8000:8000"
+    volumes:
+      - ./:/app
+
+volumes:
+  profiles_data:
