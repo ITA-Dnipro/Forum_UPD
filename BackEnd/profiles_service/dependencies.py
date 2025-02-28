@@ -1,17 +1,19 @@
 from fastapi import Form
-from schemas.profiles import Profile
+from schemas.profiles import Profile, StatusEnum
 
 def profile_create_dependency(
     name: str = Form(...),
+    status: StatusEnum = Form(...),
     is_registered: bool = Form(False),
     is_startup: bool = Form(False),
     is_fop: bool = Form(False),
-    categories_ids: list[int] = Form(...),
+    profile_categories: list[int] = Form(...),
 ) -> Profile:
     return Profile(
         name=name,
+        status=status,
         is_registered=is_registered,
         is_startup=is_startup,
         is_fop=is_fop,
-        categories_ids=categories_ids
+        profile_categories=profile_categories
     )
