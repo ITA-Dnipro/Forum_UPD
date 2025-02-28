@@ -1,0 +1,49 @@
+version: '3.8'
+
+services:
+  cassandra:
+    image: cassandra:latest
+    container_name: cassandra
+    ports:
+      - "9062:9042"
+    environment:
+      - CASSANDRA_USERNAME=cassandra
+      - CASSANDRA_PASSWORD=cassandra
+    volumes:
+      - cassandra-data:/var/lib/cassandra
+    healthcheck:
+      test: ["CMD", "cqlsh", "-u", "cassandra", "-p", "cassandra", "-e", "SELECT release_version FROM system.local"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+
+  sn-forum-service:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    container_name: sn-forum-service
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      - CASSANDRA_HOST=cassandra
+      - CASSANDRA_PORT=9042
+      - CASSANDRA_KEYSPACE=forum_keyspace
+      - APP_HOST=0.0.0.0
+      - APP_PORT=8000
+      - PYTHONUNBUFFERED=1 
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    depends_on:
+      cassandra:
+        condition: service_healthy
+    volumes:
+      - .:/app
+    entrypoint: ["sh", "./entrypoint.sh"]
+    
+volumes:
+  cassandra-data:
