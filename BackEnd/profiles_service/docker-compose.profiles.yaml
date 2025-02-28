@@ -4,9 +4,9 @@ services:
       container_name: profiles_db
       restart: always
       environment:
-        - POSTGRES_PASSWORD=${DB_PASSWORD}
-        - POSTGRES_DB=${DB_NAME}
-        - POSTGRES_USER=${DB_USER}
+        - POSTGRES_PASSWORD=${PROFILES_DB_PASSWORD}
+        - POSTGRES_DB=${PROFILES_DB_NAME}
+        - POSTGRES_USER=${PROFILES_DB_USER}
       ports:
         - "5432:5432"
   profiles:
@@ -15,10 +15,10 @@ services:
       - db
     restart: on-failure
     environment:
-      - DB_PASSWORD=${DB_PASSWORD}
-      - DB_NAME=${DB_NAME}
-      - DB_USER=${DB_USER}
-      - DB_HOST=${DB_HOST}
-      - DB_PORT=${DB_PORT}
+      - PROFILES_DB_PASSWORD=${PROFILES_DB_PASSWORD}
+      - PROFILES_DB_NAME=${PROFILES_DB_NAME}
+      - PROFILES_DB_USER=${PROFILES_DB_USER}
+      - PROFILES_DB_HOST=${PROFILES_DB_HOST}
+      - PROFILES_DB_PORT=${PROFILES_DB_PORT}
     ports:
       - "8000:8000"
