@@ -22,7 +22,7 @@ class RegionOrm(Model):
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(unique=True)
     region_profiles: Mapped[list["ProfileOrm"]] = relationship(
-        back_populates="profile_categories",
+        back_populates="profile_regions",
         secondary="profile_region"
         )
 

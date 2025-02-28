@@ -3,6 +3,7 @@ from logging.config import fileConfig
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool
 
+from models.regions import RegionOrm, ProfileRegionORM
 from models.categories import CategoryOrm, ProfileCategoryORM
 from models.profiles import ProfileOrm 
 from models import Model

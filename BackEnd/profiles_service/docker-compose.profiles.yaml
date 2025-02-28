@@ -8,7 +8,7 @@ services:
         - POSTGRES_DB=${PROFILES_DB_NAME}
         - POSTGRES_USER=${PROFILES_DB_USER}
       ports:
-        - "5432:5432"
+        - "5433:5432"
       volumes:
         - profiles_data:/var/lib/postgresql/data
 

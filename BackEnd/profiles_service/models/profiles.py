@@ -17,3 +17,7 @@ class ProfileOrm(Model):
         back_populates="category_profiles", 
         secondary="profile_category"
         )
+    profile_regions: Mapped[list["RegionOrm"]] = relationship( # type: ignore
+        back_populates="region_profiles", 
+        secondary="profile_region"
+        )

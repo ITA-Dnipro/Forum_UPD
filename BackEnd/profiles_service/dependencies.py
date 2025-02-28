@@ -8,7 +8,7 @@ def profile_create_dependency(
     is_registered: bool = Form(False),
     is_startup: bool = Form(False),
     is_fop: bool = Form(False),
-    profile_categories: List[str] = Form(..., default=""),
+    profile_categories: List[str] = Form(...),
 ) -> Profile:
     return Profile(
         name=name,
