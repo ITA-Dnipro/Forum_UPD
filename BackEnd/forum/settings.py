@@ -38,18 +38,21 @@ DEBUG = config("DEBUG", cast=bool)
 
 FRONTEND_URL = "http://localhost:8080"
 
-# ALLOWED_HOSTS = [
-#     "localhost",
-#     "127.0.0.1",
-#     "[::1]",
-#     "0.0.0.0",
-#     config("ALLOWED_ENV_HOST"),
-# ]
-ALLOWED_HOSTS = ["*"]
+ALLOWED_HOSTS = [
+    "localhost",
+    "127.0.0.1",
+    "[::1]",
+    "0.0.0.0",
+    config("ALLOWED_ENV_HOST"),
+]
+# ALLOWED_HOSTS = ["*"]
 
 # Application definition
 
 INSTALLED_APPS = [
+    "daphne",
+    "channels",
+    "chat.apps.ChatConfig",
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.sessions",
@@ -66,9 +69,6 @@ INSTALLED_APPS = [
     "administration",
     "search",
     "images",
-    "daphne",
-    "channels",
-    "chat",
 ]
 
 
