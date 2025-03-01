@@ -89,11 +89,8 @@ class JWTAuthMiddleware:
 
             # Decode the query string and get token parameter from it.
             token = self.get_token_from_scope(scope)
-            print(f"token: {token}")
-
             # Decode the token to get the user id from it.
             data = jwt_decode(token, settings.SECRET_KEY, algorithms=["HS256"])
-            print(f"data: {data}")
             # Get the user from database based on user id and add it to the scope.
             scope["user"] = await self.get_user(data["user_id"])
         except (
