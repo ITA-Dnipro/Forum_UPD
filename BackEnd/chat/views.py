@@ -14,9 +14,12 @@ class ConversationCreateView(APIView):
 
         serializer = RoomSerializer(data=request.data)
         if serializer.is_valid():
-            serializer.save()
+            room = serializer.save()
             return Response(
-                {"message": "Conversation was created"},
+                {
+                    "message": "Conversation was created",
+                    "room_id": str(room.id),
+                },
                 status=status.HTTP_201_CREATED,
             )
 
