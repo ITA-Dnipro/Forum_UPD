@@ -22,9 +22,7 @@ object Main extends App {
 		"EMAIL_HOST_USER" -> "Email host user",
 		"EMAIL_HOST" -> "Email host",
 		"EMAIL_PORT" -> "Email port",
-		"EMAIL_HOST_PASSWORD" -> "Email host password",
-		"NOTIFICATIONS_HOST" -> "Notifications Service host",
-		"NOTIFICATIONS_PORT" -> "Notifications Service port"
+		"EMAIL_HOST_PASSWORD" -> "Email host password"
 	)
 
 	private val envVars: Map[String, String] = requiredEnvVars.map { case (key, description) =>
@@ -35,8 +33,8 @@ object Main extends App {
 	val emailPort: String = envVars("EMAIL_PORT")
 	val emailHostUser: String = envVars("EMAIL_HOST_USER")
 	val emailHostPassword: String = envVars("EMAIL_HOST_PASSWORD")
-	val host: String = envVars("NOTIFICATIONS_HOST")
-	val port: Int = envVars("NOTIFICATIONS_PORT").toInt
+	val host: String =  sys.env.getOrElse("NOTIFICATIONS_HOST", "0.0.0.0")
+	val port: Int = sys.env.get("NOTIFICATIONS_PORT").flatMap(_.toIntOption).getOrElse(8086)
 	val templateEngine = new TemplateEngine
 
 	val routes = List(
