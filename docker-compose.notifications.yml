@@ -1,0 +1,21 @@
+version: '3.9'
+
+services:
+  scala-mail-service:
+    image: sbtscala/scala-sbt:graalvm-ce-22.3.3-b1-java17_1.10.7_3.3.5
+    container_name: scala-mail-service
+    working_dir: /app
+    volumes:
+      - ./BackEnd/notifications-service:/app
+      - ./.env:/app/.env
+    env_file:
+      - .env  
+    command: ["/bin/sh", "-c", "sbt reload && sbt compile && sbt run -deprecation "]
+    ports:
+      - "${NOTIFICATIONS_PORT}:${NOTIFICATIONS_PORT}"
+    networks:
+      - mail_network
+
+networks:
+  mail_network:
+    driver: bridge
