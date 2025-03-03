@@ -1,6 +1,8 @@
 package repository
 
 import (
+	"log"
+	"strings"
 	"time"
 
 	"github.com/gocql/gocql"
@@ -12,7 +14,7 @@ type ScyllaDB struct {
 
 func NewScyllaDB(hosts string, keyspace string) (*ScyllaDB, error) {
 
-	cluster := gocql.NewCluster(hosts)
+	cluster := gocql.NewCluster(strings.Split(hosts, ",")...)
 	cluster.Keyspace = keyspace
 	cluster.Consistency = gocql.Quorum
 	cluster.ConnectTimeout = time.Second * 10
@@ -21,6 +23,11 @@ func NewScyllaDB(hosts string, keyspace string) (*ScyllaDB, error) {
 
 	session, err := cluster.CreateSession()
 	if err != nil {
+		log.Printf("Failed to connect to ScyllaDB: %v", err)
+
+		if session != nil {
+			session.Close()
+		}
 		return nil, err
 	}
 
