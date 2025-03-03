@@ -1,0 +1,46 @@
+version: "3.8"
+
+services:
+  fastapi:
+    build: .
+    container_name: fastapi_app
+    restart: always
+    env_file: .env
+    ports:
+      - "8000:8000"
+    depends_on:
+      - mongodb
+      - redis
+
+
+  mongodb:
+    image: mongo:5
+    container_name: mongodb
+    restart: always
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    env_file: .env
+
+  redis:
+    image: redis:7
+    container_name: redis_cache
+    restart: always
+    ports:
+      - "6379:6379"
+
+
+  celery_worker:
+    build: .
+    container_name: celery_worker
+    restart: always
+    env_file: .env
+    depends_on:
+      - fastapi
+      - redis
+    command: ["celery", "-A", "app.celery.celery", "worker", "--loglevel=info"]
+
+volumes:
+  mongodb_data:
+    driver: local
