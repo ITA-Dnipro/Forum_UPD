@@ -1,25 +1,43 @@
 package models
 
-import "time"
+import (
+    "time"
+    "gorm.io/gorm"
+)
 
-// Role описує роль користувача
-type Role struct {
-    ID          uint      `gorm:"primaryKey"`
-    Name        string    `gorm:"unique;not null"`
-    Description string
-    CreatedAt   time.Time
-}
-
-// Permission описує дозвол користувача
 type Permission struct {
-    ID          uint      `gorm:"primaryKey"`
+    gorm.Model
     Name        string    `gorm:"unique;not null"`
     Description string
     CreatedAt   time.Time
+    UpdatedAt   time.Time
+    DeletedAt   gorm.DeletedAt
 }
 
-// RolePermission зв’язує роль з дозволом (багато-до-багатьох)
+type Role struct {
+    gorm.Model
+    Name        string    `gorm:"size:255;not null"`
+    Description string
+    CreatedAt   time.Time
+    UpdatedAt   time.Time
+    DeletedAt   gorm.DeletedAt
+}
+
 type RolePermission struct {
-    RoleID       uint `gorm:"primaryKey"`
-    PermissionID uint `gorm:"primaryKey"`
+    gorm.Model
+    RoleID       uint `gorm:"foreignKey"`
+    PermissionID uint `gorm:"foreignKey"`
+}
+
+func GetUserRoles(db *gorm.DB, _ string) ([]string, error) {
+    var roles []Role
+    if err := db.Find(&roles).Error; err != nil {
+        return nil, err
+    }
+
+    var roleNames []string
+    for _, role := range roles {
+        roleNames = append(roleNames, role.Name)
+    }
+    return roleNames, nil
 }

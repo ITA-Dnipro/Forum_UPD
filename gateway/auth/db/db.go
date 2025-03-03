@@ -20,11 +20,16 @@ func InitDB() {
         log.Println("No .env file found, using system environment variables")
     }
 
-    dbUser := os.Getenv("DB_USER")
-    dbPassword := os.Getenv("DB_PASSWORD")
-    dbHost := os.Getenv("DB_HOST")
-    dbPort := os.Getenv("DB_PORT")
-    dbName := os.Getenv("DB_NAME")
+    dbUser, ok1 := os.LookupEnv("DB_USER")
+    dbPassword, ok2 := os.LookupEnv("DB_PASSWORD")
+    dbHost, ok3 := os.LookupEnv("DB_HOST")
+    dbPort, ok4 := os.LookupEnv("DB_PORT")
+    dbName, ok5 := os.LookupEnv("DB_NAME")
+
+    // Check if any variable is missing
+    if !ok1 || !ok2 || !ok3 || !ok4 || !ok5 {
+        log.Fatalf("Error: Missing required database environment variables.")
+    }
 
     dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable",
         dbHost, dbUser, dbPassword, dbName, dbPort)
@@ -120,13 +125,24 @@ func SeedOrUpdateDB() {
     for roleName, permList := range rolePerms {
         var role models.Role
         if err := DB.Where("name = ?", roleName).First(&role).Error; err != nil {
-            log.Printf("Cannot find role %s: %v\n", roleName, err)
-            continue
+            if err == gorm.ErrRecordNotFound {
+                log.Printf("Role '%s' not found, creating it...", roleName)
+                role = models.Role{Name: roleName}
+                DB.Create(&role)
+            } else {
+                log.Printf("Error retrieving role %s: %v", roleName, err)
+                continue
+            }
         }
         for _, permName := range permList {
             var perm models.Permission
-            if err := DB.Where("name = ?", permName).First(&perm).Error; err != nil {
-                log.Printf("Cannot find permission %s: %v\n", permName, err)
+            err := DB.Where("name = ?", permName).First(&perm).Error
+            if err == gorm.ErrRecordNotFound {
+                log.Printf("Permission '%s' not found, creating it...", permName)
+                perm = models.Permission{Name: permName}
+                DB.Create(&perm)
+            } else {
+                log.Printf("Error retrieving permission %s: %v", permName, err)
                 continue
             }
             upsertRolePermission(DB, role.ID, perm.ID)
@@ -137,49 +153,27 @@ func SeedOrUpdateDB() {
 }
 
 // upsertRole creates or updates
-func upsertRole(db *gorm.DB, newRole models.Role) {
+func upsertRole(db *gorm.DB, role models.Role) {
     var existing models.Role
-    err := db.Where("name = ?", newRole.Name).First(&existing).Error
-    if err != nil {
-        if err == gorm.ErrRecordNotFound {
-            if err := db.Create(&newRole).Error; err != nil {
-                log.Printf("Error creating role %s: %v\n", newRole.Name, err)
-            } else {
-                log.Printf("Created new role: %s\n", newRole.Name)
-            }
-        } else {
-            log.Printf("Error checking role %s: %v\n", newRole.Name, err)
-        }
+    result := db.Where("name = ?", role.Name).FirstOrCreate(&existing, role)
+    if result.Error != nil {
+        log.Printf("Error upserting role %s: %v", role.Name, result.Error)
+    } else if result.RowsAffected > 0 {
+        log.Printf("Created role: %s", role.Name)
     } else {
-        existing.Description = newRole.Description
-        if err := db.Save(&existing).Error; err != nil {
-            log.Printf("Error updating role %s: %v\n", newRole.Name, err)
-        } else {
-            log.Printf("Updated existing role: %s\n", existing.Name)
-        }
+        log.Printf("Role already exists: %s", role.Name)
     }
 }
 
-func upsertPermission(db *gorm.DB, newPerm models.Permission) {
+func upsertPermission(db *gorm.DB, perm models.Permission) {
     var existing models.Permission
-    err := db.Where("name = ?", newPerm.Name).First(&existing).Error
-    if err != nil {
-        if err == gorm.ErrRecordNotFound {
-            if err := db.Create(&newPerm).Error; err != nil {
-                log.Printf("Error creating permission %s: %v\n", newPerm.Name, err)
-            } else {
-                log.Printf("Created new permission: %s\n", newPerm.Name)
-            }
-        } else {
-            log.Printf("Error checking permission %s: %v\n", newPerm.Name, err)
-        }
+    result := db.Where("name = ?", perm.Name).FirstOrCreate(&existing, perm)
+    if result.Error != nil {
+        log.Printf("Error upserting permission %s: %v", perm.Name, result.Error)
+    } else if result.RowsAffected > 0 {
+        log.Printf("Created permission: %s", perm.Name)
     } else {
-        existing.Description = newPerm.Description
-        if err := db.Save(&existing).Error; err != nil {
-            log.Printf("Error updating permission %s: %v\n", newPerm.Name, err)
-        } else {
-            log.Printf("Updated existing permission: %s\n", existing.Name)
-        }
+        log.Printf("Permission already exists: %s", perm.Name)
     }
 }
 

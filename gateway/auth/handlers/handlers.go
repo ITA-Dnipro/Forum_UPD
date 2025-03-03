@@ -6,10 +6,10 @@ import (
     "net/http"
     "strings"
 
-    "github.com/golang-jwt/jwt/v4"
+    jwt "github.com/golang-jwt/jwt/v4"
     "github.com/user/forumupd/gateway/auth/db"
     "github.com/user/forumupd/gateway/auth/models"
-    "github.com/user/forumupd/gateway/auth/jwt"
+    authjwt "github.com/user/forumupd/gateway/auth/jwt"
 
 )
 
@@ -20,34 +20,45 @@ func CheckPermissionsHandler(w http.ResponseWriter, r *http.Request) {
         return
     }
 
-    tokenStr, err := jwt.ExtractBearerToken(authHeader)
+    tokenStr, err := authjwt.ExtractBearerToken(authHeader)
     if err != nil {
         http.Error(w, "Invalid Authorization header", http.StatusUnauthorized)
         return
     }
 
-    claims, err := jwt.ParseToken(tokenStr)
+    token, err := authjwt.ParseToken(tokenStr)
     if err != nil {
         log.Println("ParseToken error:", err)
         http.Error(w, "Invalid or expired token", http.StatusUnauthorized)
         return
     }
 
+    claims, ok := token.Claims.(jwt.MapClaims)
+    if !ok {
+        http.Error(w, "Invalid token claims", http.StatusUnauthorized)
+        return
+    }
+
     userID, ok := claims["sub"].(string)
-    if !ok || userID == "" {
-        http.Error(w, "Invalid token claims: no user ID", http.StatusBadRequest)
+    if !ok {
+        log.Println("Invalid token claims: 'sub' is missing or not a string")
+        http.Error(w, "Invalid token claims", http.StatusBadRequest)
         return
     }
 
     roles, err := models.GetUserRoles(db.DB, userID)
     if err != nil {
-        log.Println("GetUserRoles error:", err)
-        http.Error(w, "Failed to get user roles", http.StatusInternalServerError)
+        if err == gorm.ErrRecordNotFound {
+            http.Error(w, "User not found", http.StatusNotFound)
+        } else {
+            log.Println("Database error fetching roles:", err)
+            http.Error(w, "Database error", http.StatusInternalServerError)
+        }
         return
     }
 
-    hasStartup := contains(roles, "стартап")
-    hasInvestor := contains(roles, "інвестор")
+    hasStartup := contains(roles, "IsStartup")
+    hasInvestor := contains(roles, "IsInvestor")
 
     if !hasStartup && !hasInvestor {
         http.Error(w, "Forbidden", http.StatusForbidden)
@@ -55,9 +66,9 @@ func CheckPermissionsHandler(w http.ResponseWriter, r *http.Request) {
     }
 
     resp := map[string]interface{}{
-        "message":  "Access granted",
-        "roles":    roles,
-        "user_id":  userID,
+        "message":    "Access granted",
+        "roles":      roles,
+        "user_id":    userID,
         "isStartup":  hasStartup,
         "isInvestor": hasInvestor,
     }

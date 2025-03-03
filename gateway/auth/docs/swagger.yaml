@@ -1,0 +1,37 @@
+basePath: /
+info:
+  contact: {}
+  description: This service provides validation JWT-token
+  title: Authorization Service API
+  version: "1.0"
+paths:
+  /check:
+    get:
+      consumes:
+      - application/json
+      description: Отримує JWT-токен із заголовка і перевіряє роль користувача
+      parameters:
+      - description: Bearer <token>
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 'User role: стартап (1) / інвестор (2)'
+          schema:
+            type: string
+        "401":
+          description: Missing Authorization header / Invalid or expired token
+          schema:
+            type: string
+        "403":
+          description: No or invalid 'role' claim found / Unknown role
+          schema:
+            type: string
+      summary: Перевірка JWT
+      tags:
+      - auth
+swagger: "2.0"
