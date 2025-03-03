@@ -1,0 +1,25 @@
+version: '3.9'
+
+services:
+  scala-mail-service:
+    image: sbtscala/scala-sbt:graalvm-ce-22.3.3-b1-java17_1.10.7_3.3.5
+    container_name: scala-mail-service
+    working_dir: /app
+    volumes:
+      - ./BackEnd/notifications-service:/app
+    env_file:
+      - .env  
+    command: ["sbt", "clean", "compile", "run"]
+    ports:
+      - "${NOTIFICATIONS_PORT}:${NOTIFICATIONS_PORT}"
+    networks:
+      - mail_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:${NOTIFICATIONS_PORT}/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      
+networks:
+  mail_network:
+    driver: bridge
