@@ -7,15 +7,19 @@ services:
     working_dir: /app
     volumes:
       - ./BackEnd/notifications-service:/app
-      - ./.env:/app/.env
     env_file:
       - .env  
-    command: ["/bin/sh", "-c", "sbt reload && sbt compile && sbt run -deprecation "]
+    command: ["sbt", "clean", "compile", "run"]
     ports:
       - "${NOTIFICATIONS_PORT}:${NOTIFICATIONS_PORT}"
     networks:
       - mail_network
-
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:${NOTIFICATIONS_PORT}/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      
 networks:
   mail_network:
     driver: bridge

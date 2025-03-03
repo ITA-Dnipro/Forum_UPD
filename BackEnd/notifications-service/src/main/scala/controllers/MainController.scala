@@ -1,5 +1,5 @@
 package com.mycompany  
 
-class MainController {   
+final class MainController {   
 		def sayHello(): String = "Hello, this is your first microservice with Akka HTTP!" 
 	}
