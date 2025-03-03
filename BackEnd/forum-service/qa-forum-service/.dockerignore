@@ -1,0 +1,34 @@
+# Ignore Git-related files
+.git
+.gitignore
+
+# Ignore build artifacts and binaries
+main
+*.exe
+*.o
+*.so
+
+# Ignore dependency and test files
+vendor/
+*.test
+*.out
+
+# Ignore logs and temporary files
+*.log
+tmp/
+temp/
+
+# Ignore documentation and miscellaneous
+README.md
+LICENSE
+*.md
+
+# Ignore Docker-related files (if not needed in the container)
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# Ignore IDE-specific files
+.vscode/
+.idea/
+*.swp
