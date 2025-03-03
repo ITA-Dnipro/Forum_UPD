@@ -3,6 +3,7 @@ from fastapi import APIRouter, Depends
 from schemas.profiles import Profile
 from crud.profiles import ProfileRepository
 from dependencies import profile_create_dependency
+from fastapi import HTTPException
 
 router = APIRouter(
     tags=["Profiles"]
@@ -28,7 +29,11 @@ async def create_profile(
 
 @router.get("/{profile_id}", status_code=200)
 async def profiles_detail(profile_id: int):
-    profile = await ProfileRepository.get_by_id_or_404(profile_id)
+    profile = await ProfileRepository.get_by_id(profile_id)
+    if not profile:
+        raise HTTPException(
+            status_code=404, detail="Profile not found"
+            )
     return profile
 
 
@@ -36,12 +41,21 @@ async def profiles_detail(profile_id: int):
 async def profile_update(
     profile_id: int, profile_data: Annotated[Profile, Depends(dependency=profile_create_dependency)]
     ):
-    profile = await ProfileRepository.update_or_404(profile_id, profile_data)
+    profile = await ProfileRepository.update(profile_id, profile_data)
+    if not profile:
+        raise HTTPException(
+            status_code=404, detail="Profile not found"
+            )
     return profile
+
 
 @router.delete("/{profile_id}")
 async def profile_delete(
     profile_id: int
     ):
-    profile = await ProfileRepository.delete_or_404(profile_id)
+    profile = await ProfileRepository.delete(profile_id)
+    if not profile:
+        raise HTTPException(
+            status_code=404, detail="Profile not found"
+            )
     return profile
