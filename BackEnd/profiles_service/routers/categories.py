@@ -39,6 +39,7 @@ async def category_update(
     category = await CategoryRepository.update_or_404(category_id, category_data)
     return category
 
+
 @router.delete("/{category_id}")
 async def category_delete(
     category_id: int

@@ -36,14 +36,18 @@ class RegionRepository:
             return region
     
     @staticmethod
-    async def get_by_id_list(region_id: list[int]):
+    async def get_list_by_ids(regions_id: list[int]):
+        """
+        Takes list of region ids and returns list of respective RegionOrm objects
+        """
         async with new_session() as session:
-            region = await session.get(RegionOrm, region_id)
-            if not region:
-                raise HTTPException(
-                    status_code=404, detail="region not found"
-                    )
-            return region
+            regions = await session.execute(
+            select(RegionOrm).where(RegionOrm.id.in_(regions_id))
+            )
+            regions = regions.scalars().all()
+            if not regions:
+                raise HTTPException(status_code=400, detail="Invalid region IDs")
+            return regions
         
             
     @staticmethod

@@ -2,6 +2,7 @@ from sqlalchemy import select
 from database import new_session
 from models.profiles import ProfileOrm
 from crud.categories import CategoryRepository
+from crud.regions import RegionRepository
 from schemas.profiles import Profile
 from fastapi import HTTPException
 
@@ -10,9 +11,10 @@ class ProfileRepository:
     async def add_one(data: Profile):
         async with new_session() as session:
             profile_dict = data.model_dump()
-            categories_id = profile_dict["profile_categories"]
-            categories = await CategoryRepository.get_list_by_ids(categories_id)
+            categories = await CategoryRepository.get_list_by_ids(profile_dict["profile_categories"])
             profile_dict["profile_categories"] = categories
+            regions = await RegionRepository.get_list_by_ids(profile_dict["profile_regions"])
+            profile_dict["profile_regions"] = regions
             profile = ProfileOrm(**profile_dict)
             session.add(profile)
             await session.flush()

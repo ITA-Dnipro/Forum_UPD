@@ -21,3 +21,4 @@ class ProfileOrm(Model):
         back_populates="region_profiles", 
         secondary="profile_region"
         )
+    
