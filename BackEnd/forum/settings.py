@@ -53,6 +53,7 @@ INSTALLED_APPS = [
     "daphne",
     "channels",
     "chat.apps.ChatConfig",
+    "chat_notifications.apps.ChatNotificationsConfig",
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.sessions",
