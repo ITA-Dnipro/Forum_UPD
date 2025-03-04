@@ -1,8 +1,8 @@
 from typing import Annotated
 from fastapi import APIRouter, Depends
-from schemas.profiles import Profile
+from schemas.profiles import ProfileOptional, Profile
 from crud.profiles import ProfileRepository
-from dependencies import profile_create_dependency
+from dependencies import profile_create_dependency, profile_optional_create_dependency
 from fastapi import HTTPException
 
 router = APIRouter(
@@ -42,6 +42,18 @@ async def profile_update(
     profile_id: int, profile_data: Annotated[Profile, Depends(dependency=profile_create_dependency)]
     ):
     profile = await ProfileRepository.update(profile_id, profile_data)
+    if not profile:
+        raise HTTPException(
+            status_code=404, detail="Profile not found"
+            )
+    return profile
+
+
+@router.patch("/{profile_id}")
+async def profile_partial_update(
+    profile_id: int, profile_data: Annotated[ProfileOptional, Depends(dependency=profile_optional_create_dependency)]
+    ):
+    profile = await ProfileRepository.partial_update(profile_id, profile_data)
     if not profile:
         raise HTTPException(
             status_code=404, detail="Profile not found"
