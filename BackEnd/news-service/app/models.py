@@ -11,10 +11,19 @@ class NewsBase(BaseModel):
     link: str
     published_at: datetime = Field(default_factory=datetime.now)
 
+    class Config:
+        """Pydantic configuration to ensure correct serialization."""
+        json_encoders = {
+            ObjectId: str,
+        }
+        from_attributes = True
 
 class NewsModel(NewsBase, Document):
     """MongoDB document model for news storage."""
-    id: str = Field(default_factory=lambda: str(ObjectId()), alias="_id")
+    id: ObjectId = Field(default_factory=ObjectId, alias="_id")
 
-    class Settings:
+    class Config:
         collection = "news"
+        json_encoders = {
+            ObjectId: str,
+        }
