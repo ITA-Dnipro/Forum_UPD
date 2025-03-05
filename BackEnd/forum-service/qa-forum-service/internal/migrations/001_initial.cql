@@ -1,8 +1,7 @@
-
 -- Визначення типу для відповіді на питання
 CREATE TYPE IF NOT EXISTS answer_reply (
     id uuid,
-    author_id uuid,
+    author_id int, 
     author_name text,
     content text,
     created_at timestamp,
@@ -14,7 +13,7 @@ CREATE TYPE IF NOT EXISTS answer_reply (
 
 CREATE TYPE IF NOT EXISTS question_answer (
     id uuid,
-    author_id uuid,
+    author_id int,
     author_name text,
     content text,
     created_at timestamp,
@@ -28,7 +27,7 @@ CREATE TYPE IF NOT EXISTS question_answer (
 -- Таблиця для запитань
 CREATE TABLE IF NOT EXISTS questions (
     question_id uuid PRIMARY KEY,
-    author_id uuid,
+    author_id int,
     title text,
     description text,
     status text,
@@ -45,7 +44,7 @@ CREATE TABLE IF NOT EXISTS questions (
 
 -- Таблиця для індексації за автором
 CREATE TABLE IF NOT EXISTS questions_by_author (
-    author_id uuid,
+    author_id int, 
     created_at timestamp,
     question_id uuid,
     title text,
@@ -61,7 +60,7 @@ CREATE TABLE IF NOT EXISTS questions_by_status (
     created_at timestamp,
     question_id uuid,
     title text,
-    author_id uuid,
+    author_id int,
     likes_count int,
     saves_count int,
     PRIMARY KEY (status, created_at, question_id)
@@ -70,14 +69,14 @@ CREATE TABLE IF NOT EXISTS questions_by_status (
 -- Таблиця для реакцій до запитань
 CREATE TABLE IF NOT EXISTS question_reactions (
     question_id uuid,
-    user_id uuid,
+    user_id int,
     is_like boolean,
     created_at timestamp,
     PRIMARY KEY (question_id, user_id)
 );
 
 CREATE TABLE IF NOT EXISTS saved_questions (
-    user_id uuid,
+    user_id int,
     question_id uuid,
     saved_at timestamp,
     PRIMARY KEY (user_id, question_id)
