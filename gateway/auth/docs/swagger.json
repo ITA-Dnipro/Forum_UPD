@@ -1,0 +1,56 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "This service provides validation JWT-token",
+        "title": "Authorization Service API",
+        "contact": {},
+        "version": "1.0"
+    },
+    "basePath": "/",
+    "paths": {
+        "/check": {
+            "get": {
+                "description": "Отримує JWT-токен із заголовка і перевіряє роль користувача",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Перевірка JWT",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Bearer \u003ctoken\u003e",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "User role: стартап (1) / інвестор (2)",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "401": {
+                        "description": "Missing Authorization header / Invalid or expired token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "403": {
+                        "description": "No or invalid 'role' claim found / Unknown role",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
