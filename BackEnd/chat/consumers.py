@@ -48,11 +48,17 @@ class ChatConsumer(AsyncWebsocketConsumer):
             return
 
         # Serialize and validate the incoming message
+        try:
+            # Parse the incoming text data as JSON
+            data = json.loads(text_data)
+        except json.JSONDecodeError:
+            logger.error("Invalid JSON format in incoming message.")
+            return
         serializer = MessageSerializer(
             data={
                 "room": self.room.id,
                 "sender_id": self.scope["user"].id,
-                "text": text_data,
+                "text": data.get("text"),
             }
         )
 
@@ -88,7 +94,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
     @database_sync_to_async
     def save_message(self, serializer):
         """Save the message to the database."""
-        serializer.save()
+        if serializer.is_valid():
+            serializer.save()
 
     async def chat_message(self, event):
         """Send the message to the client."""
@@ -96,16 +103,26 @@ class ChatConsumer(AsyncWebsocketConsumer):
         sender_id = event["sender_id"]
 
         # Avoid sending the message back to the sender
-        if sender_id != self.scope["user"].id:
-            await self.send(
-                text_data=json.dumps(
-                    {"message": message, "sender_id": sender_id}
+        try:
+            if sender_id != self.scope["user"].id:
+                await self.send(
+                    text_data=json.dumps(
+                        {"message": message, "sender_id": sender_id}
+                    )
                 )
-            )
+        except Exception as e:
+            logger.error(f"Error sending message: {str(e)}")
 
     async def disconnect(self, close_code):
         """Handle the disconnect event."""
-        await self.channel_layer.group_discard(self.room_id, self.channel_name)
+        if self.channel_layer is not None:
+            try:
+                await self.channel_layer.group_discard(
+                    self.room_id, self.channel_name
+                )
+            except Exception as e:
+                logger.error(f"Error in group_discard: {e}")
+
         logger.info(
             f"User {self.scope['user']} disconnected from room {self.room_id}."
         )
