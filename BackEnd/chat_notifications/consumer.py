@@ -4,7 +4,6 @@ import json
 
 class NotificationConsumer(AsyncWebsocketConsumer):
     async def connect(self):
-        print("trying to connect")
         self.room_group_name = f'notifications_{self.scope["user"].id}'
 
         # Join room group
