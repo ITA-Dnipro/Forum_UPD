@@ -15,7 +15,7 @@ class CategoryRepository:
         category = CategoryOrm(**category_dict)
         session.add(category)
         await session.commit()
-        return category.id
+        return category
 
 
     @staticmethod
@@ -77,5 +77,4 @@ class CategoryRepository:
         category = await session.get(CategoryOrm, category_id)
         await session.delete(category)
         await session.commit()
-        return category
             

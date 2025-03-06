@@ -15,7 +15,7 @@ class RegionRepository:
         region = RegionOrm(**region_dict)
         session.add(region)
         await session.commit()
-        return region.id
+        return region
 
 
     @staticmethod
@@ -75,5 +75,4 @@ class RegionRepository:
         region = cls.get_by_id(region_id, session=session)
         await session.delete(region)
         await session.commit()
-        return region
             

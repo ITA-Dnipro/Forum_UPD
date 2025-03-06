@@ -78,5 +78,4 @@ class ProfileRepository:
         profile = cls.get_by_id(profile_id, session=session)
         await session.delete(profile)
         await session.commit()
-        return profile
             

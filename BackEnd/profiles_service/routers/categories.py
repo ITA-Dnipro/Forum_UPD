@@ -1,5 +1,5 @@
 from typing import Annotated
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Response
 from crud import NotFoundError
 from schemas.categories import Category
 from crud.categories import CategoryRepository
@@ -23,11 +23,9 @@ async def create_category(
     category: Annotated[Category, Depends()],
     session: AsyncSession = Depends(get_async_session)
     ):
-    category_id = await CategoryRepository.add_one(category, session=session)
+    category = await CategoryRepository.add_one(category, session=session)
     
-    return {
-        "message": "ok",
-        "category_id": category_id}
+    return category
 
 
 @router.get("/{category_id}", status_code=200)
@@ -70,4 +68,4 @@ async def category_delete(
         raise HTTPException(
             status_code=404, detail=f"{e}"
             )
-    return category
+    return Response(status_code=204)

@@ -1,5 +1,5 @@
 from typing import Annotated
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Response
 from crud import NotFoundError
 from schemas.profiles import ProfileOptional, Profile
 from crud.profiles import ProfileRepository
@@ -76,9 +76,10 @@ async def profile_delete(
     profile_id: int,
     session: AsyncSession = Depends(get_async_session)
     ):
-    profile = await ProfileRepository.delete(profile_id, session=session)
-    if not profile:
+    try:
+        await ProfileRepository.partial_update(profile_id, session)
+    except NotFoundError as e:
         raise HTTPException(
-            status_code=404, detail="Profile not found"
+            status_code=404, detail=f"{e}"
             )
-    return profile
+    return Response(status_code=204)

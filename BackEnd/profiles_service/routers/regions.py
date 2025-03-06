@@ -1,5 +1,5 @@
 from typing import Annotated
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Response
 from crud import NotFoundError
 from schemas.regions import Region
 from crud.regions import RegionRepository
@@ -22,11 +22,9 @@ async def create_region(
     region: Annotated[Region, Depends()],
     session: AsyncSession = Depends(get_async_session)
     ):
-    region_id = await RegionRepository.add_one(region, session=session)
+    region = await RegionRepository.add_one(region, session=session)
     
-    return {
-        "message": "ok",
-        "region_id": region_id}
+    return region
 
 
 @router.get("/{region_id}", status_code=200)
@@ -64,9 +62,9 @@ async def region_delete(
     session: AsyncSession = Depends(get_async_session)
     ):
     try:
-        region = await RegionRepository.delete(region_id, session=session)
+        await RegionRepository.delete(region_id, session=session)
     except NotFoundError as e:
         raise HTTPException(
             status_code=404, detail=f"{e}"
             )
-    return region
+    return Response(status_code=204)
