@@ -25,14 +25,14 @@ func (db *ScyllaDB) CreateQuestion(q *models.Question) error {
 
 	mainQuery := `INSERT INTO questions (
         question_id, author_id, title, description, status, 
-        views_count, likes_count, dislikes_count, saves_count,
-        accepted_answer_id, created_at, updated_at, profile_url, answers
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+        likes_count, dislikes_count, saves_count,
+        accepted_answer_id, created_at, updated_at, answers
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
 
 	if err := db.session.Query(mainQuery,
 		q.ID, q.AuthorID, q.Title, q.Description, q.Status,
-		q.ViewsCount, q.LikesCount, q.DislikesCount, q.SavesCount,
-		q.AcceptedAnswer, q.CreatedAt, q.UpdatedAt, q.ProfileURL, q.Answers).Exec(); err != nil {
+		q.LikesCount, q.DislikesCount, q.SavesCount,
+		q.AcceptedAnswer, q.CreatedAt, q.UpdatedAt, q.Answers).Exec(); err != nil {
 		return err
 	}
 
@@ -56,20 +56,19 @@ func (db *ScyllaDB) CreateQuestion(q *models.Question) error {
 
 	return nil
 }
-
 func (db *ScyllaDB) GetQuestionByID(id gocql.UUID) (*models.Question, error) {
 	var q models.Question
 	var answers []models.QuestionAnswer
 
 	query := `SELECT question_id, author_id, title, description, status, 
-              views_count, likes_count, dislikes_count, saves_count,
-              accepted_answer_id, created_at, updated_at, profile_url, answers
+              likes_count, dislikes_count, saves_count,
+              accepted_answer_id, created_at, updated_at, answers
               FROM questions WHERE question_id = ?`
 
 	if err := db.session.Query(query, id).Scan(
 		&q.ID, &q.AuthorID, &q.Title, &q.Description, &q.Status,
-		&q.ViewsCount, &q.LikesCount, &q.DislikesCount, &q.SavesCount,
-		&q.AcceptedAnswer, &q.CreatedAt, &q.UpdatedAt, &q.ProfileURL, &answers); err != nil {
+		&q.LikesCount, &q.DislikesCount, &q.SavesCount,
+		&q.AcceptedAnswer, &q.CreatedAt, &q.UpdatedAt, &answers); err != nil {
 		if err == gocql.ErrNotFound {
 			return nil, nil
 		}
@@ -84,8 +83,8 @@ func (db *ScyllaDB) GetAllQuestions() ([]models.Question, error) {
 	var questions []models.Question
 
 	query := `SELECT question_id, author_id, title, description, status, 
-              views_count, likes_count, dislikes_count, saves_count,
-              accepted_answer_id, created_at, updated_at, profile_url, answers
+              likes_count, dislikes_count, saves_count,
+              accepted_answer_id, created_at, updated_at, answers
               FROM questions`
 
 	iter := db.session.Query(query).Iter()
@@ -93,14 +92,13 @@ func (db *ScyllaDB) GetAllQuestions() ([]models.Question, error) {
 	var answers []models.QuestionAnswer
 	for iter.Scan(
 		&q.ID, &q.AuthorID, &q.Title, &q.Description, &q.Status,
-		&q.ViewsCount, &q.LikesCount, &q.DislikesCount, &q.SavesCount,
-		&q.AcceptedAnswer, &q.CreatedAt, &q.UpdatedAt, &q.ProfileURL, &answers) {
+		&q.LikesCount, &q.DislikesCount, &q.SavesCount,
+		&q.AcceptedAnswer, &q.CreatedAt, &q.UpdatedAt, &answers) {
 		q.Answers = answers
 		questions = append(questions, q)
 	}
 	return questions, iter.Close()
 }
-
 func (db *ScyllaDB) GetQuestionsByAuthor(authorID int) ([]models.Question, error) {
 	var questions []models.Question
 
@@ -168,18 +166,17 @@ func (db *ScyllaDB) GetQuestionsByStatus(status string) ([]models.Question, erro
 	}
 	return questions, nil
 }
-
 func (db *ScyllaDB) UpdateQuestion(q *models.Question) error {
 	q.UpdatedAt = time.Now()
 
 	query := `UPDATE questions 
              SET title = ?, description = ?, status = ?, updated_at = ?, 
-             profile_url = ?, likes_count = ?, dislikes_count = ?, saves_count = ?
+             likes_count = ?, dislikes_count = ?, saves_count = ?
              WHERE question_id = ?`
 
 	if err := db.session.Query(query,
 		q.Title, q.Description, q.Status, q.UpdatedAt,
-		q.ProfileURL, q.LikesCount, q.DislikesCount, q.SavesCount, q.ID).Exec(); err != nil {
+		q.LikesCount, q.DislikesCount, q.SavesCount, q.ID).Exec(); err != nil {
 		return err
 	}
 

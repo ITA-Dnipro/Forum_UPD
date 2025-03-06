@@ -139,6 +139,7 @@ func (h *Handler) DeleteQuestion(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"message": "Question deleted successfully"})
 }
+
 func (h *Handler) SaveQuestion(c *gin.Context) {
 	questionId, err := gocql.ParseUUID(c.Param("id"))
 	if err != nil {
