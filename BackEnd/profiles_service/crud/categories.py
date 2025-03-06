@@ -44,56 +44,37 @@ class CategoryRepository:
 
 
     @staticmethod
-    async def get_by_id_or_404(
+    async def get_by_id(
         category_id: int,
         session: AsyncSession
         ):
         category = await session.get(CategoryOrm, category_id)
         if not category:
-            raise HTTPException(
-                status_code=404, detail="Category not found"
-                )
-        return category
-    
-
-    @staticmethod
-    async def get_by_id_list(
-        category_id: list[int],
-        session: AsyncSession
-        ):
-        category = await session.get(CategoryOrm, category_id)
-        if not category:
-            raise HTTPException(
-                status_code=404, detail="Category not found"
-                )
+            raise NotFoundError('Region not found')
         return category
     
             
-    @staticmethod
-    async def update_or_404(category_id: int,
-                            data: Category,
-                            session: AsyncSession
-                            ):
-        category = await session.get(CategoryOrm, category_id)
-        if not category:
-            raise HTTPException(
-                status_code=404, detail="Category not found"
-                )
+    @classmethod
+    async def update(
+        cls,
+        category_id: int,
+        data: Category,
+        session: AsyncSession
+        ):
+        category = cls.get_by_id(category_id, session=session)
         category.__dict__.update(data)
         await session.commit()
         return category
     
     
-    @staticmethod
-    async def delete_or_404(
+    @classmethod
+    async def delete(
+        cls,
         category_id: int, 
         session: AsyncSession
         ):
+        category = cls.get_by_id(category_id, session=session)
         category = await session.get(CategoryOrm, category_id)
-        if not category:
-            raise HTTPException(
-                status_code=404, detail="Category not found"
-                )
         await session.delete(category)
         await session.commit()
         return category

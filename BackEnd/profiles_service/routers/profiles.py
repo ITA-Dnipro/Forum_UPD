@@ -47,25 +47,14 @@ async def profile_update(
     profile_data: Annotated[Profile, Depends(dependency=profile_create_dependency)],
     session: AsyncSession = Depends(get_async_session)
     ):
-    profile = await ProfileRepository.update(profile_id, profile_data, session)
-    if not profile:
+    try:
+        profile = await ProfileRepository.partial_update(profile_id, profile_data, session)
+    except NotFoundError as e:
         raise HTTPException(
-            status_code=404, detail="Profile not found"
+            status_code=404, detail=f"{e}"
             )
     return profile
 
-
-# @router.patch("/{profile_id}")
-# async def profile_partial_update(
-#     profile_id: int, profile_data: Annotated[ProfileOptional, Depends(dependency=profile_optional_create_dependency)]
-#     ):
-#     try:
-#         profile = await ProfileRepository.partial_update(profile_id, profile_data)
-#     except NotFoundError as e:
-#         raise HTTPException(
-#             status_code=404, detail=f"{e}"
-#             )
-#     return profile
 
 @router.patch("/{profile_id}")
 async def profile_partial_update(

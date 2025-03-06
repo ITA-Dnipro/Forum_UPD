@@ -1,5 +1,6 @@
 from typing import Annotated
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
+from crud import NotFoundError
 from schemas.categories import Category
 from crud.categories import CategoryRepository
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -34,7 +35,12 @@ async def categorys_detail(
     category_id: int,
     session: AsyncSession = Depends(get_async_session)
     ):
-    category = await CategoryRepository.get_by_id_or_404(category_id, session=session)
+    try:
+        category = await CategoryRepository.get_by_id(category_id, session=session)
+    except NotFoundError as e:
+        raise HTTPException(
+            status_code=404, detail=f"{e}"
+            )
     return category
 
 
@@ -44,7 +50,12 @@ async def category_update(
     category_data: Annotated[Category, Depends()],
     session: AsyncSession = Depends(get_async_session)
     ):
-    category = await CategoryRepository.update_or_404(category_id, category_data, session=session)
+    try:
+        category = await CategoryRepository.update(category_id, category_data, session=session)
+    except NotFoundError as e:
+        raise HTTPException(
+            status_code=404, detail=f"{e}"
+            )
     return category
 
 
@@ -53,5 +64,10 @@ async def category_delete(
     category_id: int,
     session: AsyncSession = Depends(get_async_session)
     ):
-    category = await CategoryRepository.delete_or_404(category_id, session=session)
+    try:
+        category = await CategoryRepository.delete(category_id, session=session)
+    except NotFoundError as e:
+        raise HTTPException(
+            status_code=404, detail=f"{e}"
+            )
     return category

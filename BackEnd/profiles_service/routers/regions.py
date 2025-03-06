@@ -1,5 +1,6 @@
 from typing import Annotated
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
+from crud import NotFoundError
 from schemas.regions import Region
 from crud.regions import RegionRepository
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -33,7 +34,12 @@ async def regions_detail(
     region_id: int,
     session: AsyncSession = Depends(get_async_session)
     ):
-    region = await RegionRepository.get_by_id_or_404(region_id, session=session)
+    try:
+        region = await RegionRepository.get_by_id(region_id, session=session)
+    except NotFoundError as e:
+        raise HTTPException(
+            status_code=404, detail=f"{e}"
+            )
     return region
 
 
@@ -43,13 +49,24 @@ async def region_update(
     region_data: Annotated[Region, Depends()],
     session: AsyncSession = Depends(get_async_session)
     ):
-    region = await RegionRepository.update_or_404(region_id, region_data, session=session)
+    try:
+        region = await RegionRepository.update(region_id, region_data, session=session)
+    except NotFoundError as e:
+        raise HTTPException(
+            status_code=404, detail=f"{e}"
+            )
     return region
+
 
 @router.delete("/{region_id}")
 async def region_delete(
     region_id: int,
     session: AsyncSession = Depends(get_async_session)
     ):
-    region = await RegionRepository.delete_or_404(region_id, session=session)
+    try:
+        region = await RegionRepository.delete(region_id, session=session)
+    except NotFoundError as e:
+        raise HTTPException(
+            status_code=404, detail=f"{e}"
+            )
     return region

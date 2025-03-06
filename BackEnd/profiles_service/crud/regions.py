@@ -2,7 +2,6 @@ from sqlalchemy import select
 from crud import NotFoundError
 from models.regions import RegionOrm
 from schemas.regions import Region
-from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession 
 
 
@@ -28,15 +27,13 @@ class RegionRepository:
 
 
     @staticmethod
-    async def get_by_id_or_404(
+    async def get_by_id(
         region_id: int,
         session: AsyncSession
         ):
         region = await session.get(RegionOrm, region_id)
         if not region:
-            raise HTTPException(
-                status_code=404, detail="region not found"
-                )
+            raise NotFoundError('Region not found')
         return region
     
 
@@ -56,32 +53,26 @@ class RegionRepository:
         return regions
         
             
-    @staticmethod
-    async def update_or_404(
+    @classmethod
+    async def update(
+        cls,
         region_id: int,
         data: Region,
         session: AsyncSession
         ):
-        region = await session.get(RegionOrm, region_id)
-        if not region:
-            raise HTTPException(
-                status_code=404, detail="region not found"
-                )
+        region = cls.get_by_id(region_id, session=session)
         region.__dict__.update(data)
         await session.commit()
         return region
     
 
-    @staticmethod
-    async def delete_or_404(
+    @classmethod
+    async def delete(
+        cls,
         region_id: int,
         session: AsyncSession
         ):
-        region = await session.get(RegionOrm, region_id)
-        if not region:
-            raise HTTPException(
-                status_code=404, detail="region not found"
-                )
+        region = cls.get_by_id(region_id, session=session)
         await session.delete(region)
         await session.commit()
         return region

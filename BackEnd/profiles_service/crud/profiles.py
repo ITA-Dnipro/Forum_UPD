@@ -43,31 +43,23 @@ class ProfileRepository:
         return profile
         
             
-    @staticmethod
-    async def update(profile_id: int, data: Profile, session: AsyncSession):
+    @classmethod
+    async def update(cls, profile_id: int, data: Profile, session: AsyncSession):
+        profile = await cls.get_by_id(profile_id, session=session)
         profile_dict = data.model_dump()
-        profile = await session.get(ProfileOrm, profile_id)
-        if not profile:
-            raise NotFoundError("Profile not foud")
         categories = await CategoryRepository.get_list_by_ids(profile_dict["profile_categories"], session=session)
-        regions = await RegionRepository.get_list_by_ids(profile_dict["profile_regions"], session=session)
         profile_dict["profile_categories"] = categories
+        regions = await RegionRepository.get_list_by_ids(profile_dict["profile_regions"], session=session)
         profile_dict["profile_regions"] = regions
         profile.__dict__.update(profile_dict)
         await session.commit()
         return profile
        
 
-    @staticmethod
-    async def partial_update(profile_id: int, data: ProfileOptional, session: AsyncSession): 
+    @classmethod
+    async def partial_update(cls, profile_id: int, data: ProfileOptional, session: AsyncSession): 
+        profile = await cls.get_by_id(profile_id, session=session)
         update_fields : dict = data.model_dump(exclude_unset=True, exclude_defaults=True)
-        query = select(ProfileOrm).where(ProfileOrm.id == profile_id)\
-        .options(selectinload(ProfileOrm.profile_categories))\
-        .options(selectinload(ProfileOrm.profile_regions))
-        result = await session.execute(query)
-        profile = result.scalars().first()
-        if not profile:
-            raise NotFoundError("Profile not foud")
         
         if update_fields.get("profile_categories") is not None: 
             update_fields["profile_categories"] = await CategoryRepository.get_list_by_ids(update_fields["profile_categories"], session=session)
@@ -81,12 +73,9 @@ class ProfileRepository:
         return profile
 
 
-
-    @staticmethod
-    async def delete(profile_id: int, session: AsyncSession):
-        profile = await session.get(ProfileOrm, profile_id)
-        if not profile:
-            raise NotFoundError("Profile not foud")
+    @classmethod
+    async def delete(cls, profile_id: int, session: AsyncSession):
+        profile = cls.get_by_id(profile_id, session=session)
         await session.delete(profile)
         await session.commit()
         return profile
