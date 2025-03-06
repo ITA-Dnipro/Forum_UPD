@@ -1,5 +1,5 @@
 from sqlalchemy import select
-from crud import NotFoundError
+from exceptions import NotFoundError
 from models.regions import RegionOrm
 from schemas.regions import Region
 from sqlalchemy.ext.asyncio import AsyncSession 

@@ -1,6 +1,6 @@
 from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, Response
-from crud import NotFoundError
+from exceptions import NotFoundError
 from schemas.categories import Category
 from crud.categories import CategoryRepository
 from sqlalchemy.ext.asyncio import AsyncSession

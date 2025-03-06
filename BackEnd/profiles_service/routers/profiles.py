@@ -1,6 +1,6 @@
 from typing import Annotated
 from fastapi import APIRouter, Depends, Response
-from crud import NotFoundError
+from exceptions import NotFoundError
 from schemas.profiles import ProfileOptional, Profile
 from crud.profiles import ProfileRepository
 from dependencies import profile_create_dependency, profile_optional_create_dependency, get_async_session

@@ -1,8 +1,7 @@
 from sqlalchemy import select
 from models.categories import CategoryOrm
 from schemas.categories import Category
-from fastapi import HTTPException
-from crud import NotFoundError
+from exceptions import NotFoundError
 from sqlalchemy.ext.asyncio import AsyncSession 
 
 class CategoryRepository:
@@ -50,7 +49,7 @@ class CategoryRepository:
         ):
         category = await session.get(CategoryOrm, category_id)
         if not category:
-            raise NotFoundError('Region not found')
+            raise NotFoundError('Category not found')
         return category
     
             

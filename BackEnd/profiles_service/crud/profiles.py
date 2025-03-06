@@ -5,7 +5,7 @@ from models.profiles import ProfileOrm
 from crud.categories import CategoryRepository
 from crud.regions import RegionRepository
 from schemas.profiles import Profile, ProfileOptional
-from crud import NotFoundError
+from exceptions import NotFoundError
 
 class ProfileRepository:
     @staticmethod
