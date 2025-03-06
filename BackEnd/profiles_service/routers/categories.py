@@ -2,6 +2,8 @@ from typing import Annotated
 from fastapi import APIRouter, Depends
 from schemas.categories import Category
 from crud.categories import CategoryRepository
+from sqlalchemy.ext.asyncio import AsyncSession
+from dependencies import get_async_session
 
 
 router = APIRouter(
@@ -10,16 +12,17 @@ router = APIRouter(
 
 
 @router.get("/", status_code=200)
-async def categories_list():
-    categories = await CategoryRepository.get_all()
+async def categories_list(session: AsyncSession = Depends(get_async_session)):
+    categories = await CategoryRepository.get_all(session=session)
     return categories
 
 
 @router.post("/", status_code=201)
 async def create_category(
-    category: Annotated[Category, Depends()]
+    category: Annotated[Category, Depends()],
+    session: AsyncSession = Depends(get_async_session)
     ):
-    category_id = await CategoryRepository.add_one(category)
+    category_id = await CategoryRepository.add_one(category, session=session)
     
     return {
         "message": "ok",
@@ -27,22 +30,28 @@ async def create_category(
 
 
 @router.get("/{category_id}", status_code=200)
-async def categorys_detail(category_id: int):
-    category = await CategoryRepository.get_by_id_or_404(category_id)
+async def categorys_detail(
+    category_id: int,
+    session: AsyncSession = Depends(get_async_session)
+    ):
+    category = await CategoryRepository.get_by_id_or_404(category_id, session=session)
     return category
 
 
 @router.put("/{category_id}")
 async def category_update(
-    category_id: int, category_data: Annotated[Category, Depends()]
+    category_id: int, 
+    category_data: Annotated[Category, Depends()],
+    session: AsyncSession = Depends(get_async_session)
     ):
-    category = await CategoryRepository.update_or_404(category_id, category_data)
+    category = await CategoryRepository.update_or_404(category_id, category_data, session=session)
     return category
 
 
 @router.delete("/{category_id}")
 async def category_delete(
-    category_id: int
+    category_id: int,
+    session: AsyncSession = Depends(get_async_session)
     ):
-    category = await CategoryRepository.delete_or_404(category_id)
+    category = await CategoryRepository.delete_or_404(category_id, session=session)
     return category

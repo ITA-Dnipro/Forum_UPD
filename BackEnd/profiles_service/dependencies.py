@@ -1,6 +1,8 @@
 from fastapi import Body
+from sqlalchemy.ext.asyncio import AsyncSession
 from schemas.profiles import Profile, StatusEnum, ProfileOptional
 from typing import List
+from database import new_session
 
 def profile_create_dependency(
     name: str = Body(...),
@@ -40,3 +42,8 @@ def profile_optional_create_dependency(
         profile_categories = profile_categories,
         profile_regions = profile_regions
     )
+
+
+async def get_async_session() -> AsyncSession:
+    async with new_session() as session:
+        yield session
