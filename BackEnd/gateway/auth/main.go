@@ -12,6 +12,7 @@ import (
 
     httpSwagger "github.com/swaggo/http-swagger"
 
+    // local packages
     "github.com/user/forumupd/gateway/auth/db"
     "github.com/user/forumupd/gateway/auth/models"
     localjwt "github.com/user/forumupd/gateway/auth/jwt"
@@ -39,15 +40,16 @@ func main() {
 }
 
 // checkHandler godoc
-// @Summary Checking JWT
-// @Description Get JWT-token from header and check the user's role
+// @Summary JWT validation
+// @Description Retrieves a JWT token from the Authorization header and optionally checks the user's role.
 // @Tags auth
 // @Accept  json
 // @Produce  json
 // @Param Authorization header string true "Bearer <token>"
-// @Success 200 {string} string "User role: IsStartup  / IsInvestor / Both"
-// @Failure 401 {string} string "Missing Authorization header / Invalid or expired token"
-// @Failure 403 {string} string "No or invalid 'role' claim found / Unknown role"
+// @Param requiredRole query string false "Role to check" Enums(Public,NotValidated,IsActive,IsStartup,IsInvestor)
+// @Success 200 {string} string "User role: <roleClaim>"
+// @Failure 401 {string} string "Missing Authorization header or invalid/expired token"
+// @Failure 403 {string} string "Forbidden for this role"
 // @Router /check [get]
 func checkHandler(w http.ResponseWriter, r *http.Request) {
     authHeader := r.Header.Get("Authorization")
@@ -74,15 +76,19 @@ func checkHandler(w http.ResponseWriter, r *http.Request) {
         return
     }
 
-    switch roleClaim {
-    case "IsStartup":
-        fmt.Fprintln(w, "User role: IsStartup")
-    case "IsInvestor":
-        fmt.Fprintln(w, "User role: IsInvestor")
-    case "Both":
-        fmt.Fprintln(w, "User roles: IsStartup and IsInvestor")
-    default:
-        http.Error(w, "Unknown role", http.StatusForbidden)
-    }
-}
+    // Read the optional query parameter 'requiredRole'
+    requiredRole := r.URL.Query().Get("requiredRole")
 
+    // If requiredRole is provided, compare it to the user's role
+    if requiredRole != "" {
+        // if role in token != requiredRole, returns 403
+        if roleClaim != requiredRole {
+            http.Error(w, "Forbidden for this role", http.StatusForbidden)
+            return
+        }
+    }
+
+    // If everything is fine, return 200 OK and show the user's role
+    w.WriteHeader(http.StatusOK)
+    fmt.Fprintf(w, "User role: %s\n", roleClaim)
+}
