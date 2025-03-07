@@ -8,8 +8,8 @@ router = APIRouter()
 
 
 @router.get("/news")
-async def get_news():
-    news = await NewsModel.find_all().to_list()
+async def get_news(skip: int = 0, limit: int = 3):
+    news = await NewsModel.find_all().skip(skip).limit(limit).to_list()
     if not news:
         raise HTTPException(status_code=404, detail="News not found")
 
@@ -18,7 +18,7 @@ async def get_news():
 
 @router.get("/news/{news_id}")
 async def get_article(news_id: PydanticObjectId):
-    news = await NewsModel.get(str(news_id))
+    news = await NewsModel.get(news_id)
     
     if not news:
         raise HTTPException(status_code=404, detail="News not found")
@@ -29,7 +29,7 @@ async def get_article(news_id: PydanticObjectId):
 async def scrape_and_store_news():
     """Scrapes the latest 5 news articles and stores them in MongoDB if not duplicates."""
     
-    latest_news = scrape_news()
+    latest_news = await scrape_news()
     
     if not latest_news:
         raise HTTPException(status_code=404, detail="No news found")
@@ -60,13 +60,13 @@ async def scrape_and_store_news():
 
 @router.delete("/news/{news_id}")
 async def delete_news(news_id: PydanticObjectId):
-    news = await NewsModel.get(str(news_id))
+    news = await NewsModel.get(news_id)
 
     if news:
         await news.delete()
         return {"message": "News deleted"}
     
-    raise HTTPException(status_code=404, detail="News not found")
+    raise HTTPException(status_code=204, detail="News not found")
 
 
 

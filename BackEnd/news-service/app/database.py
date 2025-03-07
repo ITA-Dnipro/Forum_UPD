@@ -1,7 +1,6 @@
 # database.py
 from beanie import init_beanie
-from motor.motor_asyncio import AsyncIOMotorClient, NetworkTimeout
-from pymongo.errors import ConnectionError, ConfigurationError
+from motor.motor_asyncio import AsyncIOMotorClient
 import logging
 import os
 from app.models import NewsModel
@@ -29,14 +28,7 @@ async def init_db():
         db = client[MONGO_DB_NAME]
         await init_beanie(database=db, document_models=[NewsModel])
         logger.info("Database connection established and Beanie initialized successfully.")
-    
-    except (ConnectionError, NetworkTimeout) as e:
-        logger.error(f"Connection error occurred: {e}")
-        raise Exception("Could not connect to the MongoDB server. Please check the connection.")
-    
-    except ConfigurationError as e:
-        logger.error(f"Configuration error: {e}")
-        raise Exception("There was a configuration error with the MongoDB connection.")
+        
     
     except Exception as e:
         logger.error(f"Unexpected error occurred: {e}")

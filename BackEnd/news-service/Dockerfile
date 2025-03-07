@@ -29,4 +29,4 @@ EXPOSE ${APP_PORT:-8000}
 ENV PYTHONUNBUFFERED=1
 
 # Run Gunicorn with Uvicorn workers
-CMD ["gunicorn", "-w", "4", "-k", "uvicorn.workers.UvicornWorker", "--bind", "0.0.0.0:${APP_PORT:-8000}", "app.main:app"]
+CMD ["sh", "-c", "gunicorn -w 4 -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:${APP_PORT} app.main:app"]

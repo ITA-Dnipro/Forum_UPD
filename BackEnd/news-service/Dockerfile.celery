@@ -1,0 +1,29 @@
+# Use official Python image as base
+FROM python:3.11-slim
+
+# Create a non-root user
+RUN useradd --create-home celeryuser
+
+# Set working directory
+WORKDIR /app
+
+# Switch to the new user before installing packages
+USER celeryuser
+
+# Ensure ~/.local/bin exists and set PATH
+ENV PATH="/home/celeryuser/.local/bin:$PATH"
+
+# Copy dependencies file
+COPY --chown=celeryuser:celeryuser requirements.txt . 
+
+# Install only necessary dependencies
+RUN pip install --no-cache-dir --user -r requirements.txt
+
+# Copy application files (only Celery-related)
+COPY --chown=celeryuser:celeryuser app/ ./app
+
+# Set working directory for Celery
+WORKDIR /app/app
+
+# Run Celery worker
+CMD ["sh", "-c", "celery -A app.celery.celery worker --loglevel=info"]

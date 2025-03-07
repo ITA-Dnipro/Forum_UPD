@@ -27,3 +27,5 @@ class NewsModel(NewsBase, Document):
         json_encoders = {
             ObjectId: str,
         }
+        arbitrary_types_allowed = True
+

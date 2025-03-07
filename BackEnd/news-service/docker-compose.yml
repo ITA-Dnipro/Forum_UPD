@@ -1,5 +1,9 @@
 version: "3.8"
 
+networks:
+  app_network:
+    driver: bridge
+
 services:
   fastapi:
     build: .
@@ -7,10 +11,15 @@ services:
     restart: always
     env_file: .env
     ports:
-      - "${APP_PORT}:${APP_PORT}"
+      - "${APP_PORT:-8000}:8000"
+    networks:
+      - app_network
     depends_on:
-      - mongodb
-      - redis
+      mongodb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    
 
 
   mongodb:
@@ -22,6 +31,14 @@ services:
     volumes:
       - mongodb_data:/data/db
     env_file: .env
+    networks:
+      - app_network
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
   redis:
     image: redis:7
@@ -29,17 +46,31 @@ services:
     restart: always
     ports:
       - "6379:6379"
+    networks:
+      - app_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
 
 
   celery_worker:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile.celery  # Use dedicated Celery Dockerfile
     container_name: celery_worker
     restart: always
     env_file: .env
     depends_on:
-      - fastapi
-      - redis
-    command: ["celery", "-A", "app.celery.celery", "worker", "--loglevel=info"]
+      fastapi:
+        condition: service_started
+      redis:
+        condition: service_healthy
+    networks:
+      - app_network
+  
 
 volumes:
   mongodb_data:
