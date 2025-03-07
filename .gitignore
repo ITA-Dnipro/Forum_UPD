@@ -4,9 +4,12 @@
 /.idea
 /venv
 /.venv
+.venv
 /.env
 env
+.env
 /.vscode
+.vscode
 /*/.env
 /.DS_Store
 __pycache__/

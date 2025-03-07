@@ -14,10 +14,6 @@ from validation.validate_phone_number import (
     validate_phone_number_is_digit,
 )
 
-import logging
-
-logger = logging.getLogger(__name__)
-
 
 class Region(models.Model):
     id = models.AutoField(primary_key=True)
@@ -146,7 +142,7 @@ class Profile(models.Model):
             f"is_deleted_{now().strftime('%Y%m%d%H%M%S')}_{user.email}"
         )
         user.save()
-        logger.info(f"Profile {self.name} (ID: {self.pk}) was deleted.")
+
     class Meta:
         indexes = [
             models.Index(fields=('name',)),
@@ -160,7 +156,6 @@ class Profile(models.Model):
 
         ordering = ['-created_at']   # ordering by date of creation (newest first)
 
-    
 
 class Activity(models.Model):
     id = models.AutoField(primary_key=True)

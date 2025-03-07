@@ -4,7 +4,6 @@ from django.utils.functional import cached_property
 from django.utils.timezone import now
 from django.shortcuts import get_object_or_404
 import django_filters
-from djoser import utils as djoser_utils
 from rest_framework.generics import (
     CreateAPIView,
     ListCreateAPIView,
@@ -211,7 +210,7 @@ class ProfileDetail(RetrieveUpdateDestroyAPIView):
         user = self.request.user
         with transaction.atomic():
             instance.soft_delete(user)
-            djoser_utils.logout_user(self.request)
+            # djoser_utils.logout_user(self.request)
         logger.info("Profile deleted")
 
     def perform_update(self, serializer):

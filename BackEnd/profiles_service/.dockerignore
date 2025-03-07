@@ -1,0 +1,4 @@
+.env
+profiles.db
+.venv
+.vscode
