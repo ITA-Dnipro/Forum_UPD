@@ -70,6 +70,7 @@ INSTALLED_APPS = [
     "administration",
     "search",
     "images",
+    "django_cryptography",
 ]
 
 
@@ -153,7 +154,10 @@ mongo_password = os.getenv("MONGO_PASSWORD")
 mongo_host = os.getenv("MONGO_HOST", "localhost")
 mongo_port = int(os.getenv("MONGO_PORT", 27017))
 mongo_authentication_source = os.getenv("MONGO_AUTHENTICATION_SOURCE", "admin")
+CRYPTOGRAPHY_KEY = os.environ.get("CRYPTOGRAPHY_KEY")
 
+if CRYPTOGRAPHY_KEY is None:
+    raise ValueError("CRYPTOGRAPHY_KEY environment variable is not set.")
 
 try:
     # Attempt to connect to MongoDB with values from environment variables

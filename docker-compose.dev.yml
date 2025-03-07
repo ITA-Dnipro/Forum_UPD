@@ -55,7 +55,8 @@ services:
       - MONGO_HOST=${MONGO_HOST}
       - MONGO_PORT=${MONGO_PORT}
       - MONGO_AUTHENTICATION_SOURCE=${MONGO_AUTHENTICATION_SOURCE}
-      - ENSURE_INDEXES = ${ENSURE_INDEXES}
+      - ENSURE_INDEXES=${ENSURE_INDEXES}
+      - CRYPTOGRAPHY_KEY=${CRYPTOGRAPHY_KEY}
     networks:
       - forum_network
   frontend:
@@ -114,6 +115,7 @@ services:
       - MONGO_PORT=${MONGO_PORT}
       - MONGO_AUTHENTICATION_SOURCE=${MONGO_AUTHENTICATION_SOURCE}
       - ENSURE_INDEXES = ${ENSURE_INDEXES}
+      - CRYPTOGRAPHY_KEY=${CRYPTOGRAPHY_KEY}
     networks:
       - forum_network
   celery_beat:
@@ -153,6 +155,7 @@ services:
       - MONGO_PORT=${MONGO_PORT}
       - MONGO_AUTHENTICATION_SOURCE=${MONGO_AUTHENTICATION_SOURCE}
       - ENSURE_INDEXES = ${ENSURE_INDEXES}
+      - CRYPTOGRAPHY_KEY=${CRYPTOGRAPHY_KEY}
     networks:
       - forum_network
 

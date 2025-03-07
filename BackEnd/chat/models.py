@@ -9,6 +9,9 @@ from mongoengine.fields import (
 )
 from django.utils import timezone
 from chat_notifications.signals import notification_signal
+from .validators import custom_validator_that_escapes_xss
+from django_cryptography.fields import encrypt
+from utils.encryption_utils import encrypt_text, decrypt_text
 
 
 class Room(Document):
@@ -64,7 +67,9 @@ class Message(Document):
 
     room = ReferenceField(Room, required=True)
     sender_id = IntField(required=True)
-    text = StringField(required=True)
+    text = StringField(
+        required=True, validators=[custom_validator_that_escapes_xss]
+    )
     timestamp = DateTimeField(default=lambda: timezone.now())
     meta = {
         "indexes": [
@@ -87,6 +92,8 @@ class Message(Document):
         """Update the room's updated_at field when a new message is created."""
         if not self.pk:
             self.room.update(set__updated_at=timezone.now())
+        self.text = encrypt_text(self.text)
+
         message = super().save(*args, **kwargs)
         notification_signal.send(
             sender=self.__class__,
@@ -100,3 +107,10 @@ class Message(Document):
             created=True,
         )
         return message
+
+    def set_text(self, plain_text: str):
+        self.text = encrypt_text(plain_text)
+
+    # Custom method to get the decrypted text
+    def get_text(self):
+        return decrypt_text(self.text)

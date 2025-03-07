@@ -3,6 +3,8 @@ from django.utils import timezone
 from bson import ObjectId
 import json
 from .models import Message, Room
+from .validators import custom_validator_that_escapes_xss
+from utils.encryption_utils import decrypt_text
 
 
 class RoomSerializer(serializers.Serializer):
@@ -48,7 +50,9 @@ class RoomSerializer(serializers.Serializer):
 class MessageSerializer(serializers.Serializer):
     room = serializers.PrimaryKeyRelatedField(queryset=Room.objects.all())
     sender_id = serializers.IntegerField()
-    text = serializers.CharField()
+    text = serializers.CharField(
+        validators=[custom_validator_that_escapes_xss]
+    )
     timestamp = serializers.DateTimeField(default=timezone.now)
 
     def create(self, validated_data):
@@ -90,5 +94,13 @@ class MessageSerializer(serializers.Serializer):
         for field, value in representation.items():
             if isinstance(value, ObjectId):
                 representation[field] = str(value)
-
+        print(f"representation: {representation}")
+        print(f"instance: {instance}")
+        try:
+            representation["text"] = (
+                decrypt_text(instance.text) if instance.text else ""
+            )
+        except Exception as e:
+            representation["text"] = "[Decryption Error]"
+            print(f"Error decrypting message: {str(e)}")
         return representation

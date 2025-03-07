@@ -14,7 +14,6 @@ from authentication.authentication import JWTAuthMiddlewareStack
 combined_websocket_urlpatterns = list(
     chain(chat_websocket_urlpatterns, notification_websocket_urlpatterns)
 )
-print(f"Combined websocket url patterns: {combined_websocket_urlpatterns}")
 application = ProtocolTypeRouter(
     {
         "http": django_asgi_app,
