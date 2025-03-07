@@ -36,7 +36,7 @@ SECRET_KEY = config("SECRET_KEY")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config("DEBUG", cast=bool)
 
-FRONTEND_URL="http://localhost:8080"
+FRONTEND_URL = "http://localhost:8080"
 
 ALLOWED_HOSTS = [
     "localhost",
@@ -45,12 +45,14 @@ ALLOWED_HOSTS = [
     "0.0.0.0",
     config("ALLOWED_ENV_HOST"),
 ]
+# ALLOWED_HOSTS = ["*"]
 
 # Application definition
 
 INSTALLED_APPS = [
     "daphne",
     "channels",
+    "chat.apps.ChatConfig",
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.sessions",
@@ -67,7 +69,6 @@ INSTALLED_APPS = [
     "administration",
     "search",
     "images",
-    "chat",
 ]
 
 

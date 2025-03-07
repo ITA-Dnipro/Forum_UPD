@@ -4,7 +4,6 @@ import JoinUs from './JoinUs/JoinUs';
 import MainAboutSection from './AboutSection/About';
 import css from './MainPage.module.css';
 import PropTypes from 'prop-types';
-
 const MainPage = ({ isAuthorized }) => {
   MainPage.propTypes = {
     isAuthorized: PropTypes.bool,
