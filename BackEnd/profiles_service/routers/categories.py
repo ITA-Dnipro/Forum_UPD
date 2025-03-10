@@ -1,5 +1,5 @@
 from typing import Annotated
-from fastapi import APIRouter, Depends, HTTPException, Response
+from fastapi import APIRouter, Depends, HTTPException
 from exceptions import NotFoundError
 from schemas.categories import Category
 from crud.categories import CategoryRepository
@@ -56,16 +56,3 @@ async def category_update(
             )
     return category
 
-
-@router.delete("/{category_id}")
-async def category_delete(
-    category_id: int,
-    session: AsyncSession = Depends(get_async_session)
-    ):
-    try:
-        category = await CategoryRepository.delete(category_id, session=session)
-    except NotFoundError as e:
-        raise HTTPException(
-            status_code=404, detail=f"{e}"
-            )
-    return Response(status_code=204)

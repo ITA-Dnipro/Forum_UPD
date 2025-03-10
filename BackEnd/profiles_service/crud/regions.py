@@ -64,15 +64,4 @@ class RegionRepository:
         region.__dict__.update(data)
         await session.commit()
         return region
-    
-
-    @classmethod
-    async def delete(
-        cls,
-        region_id: int,
-        session: AsyncSession
-        ):
-        region = cls.get_by_id(region_id, session=session)
-        await session.delete(region)
-        await session.commit()
             

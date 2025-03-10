@@ -65,15 +65,5 @@ class CategoryRepository:
         await session.commit()
         return category
     
-    
-    @classmethod
-    async def delete(
-        cls,
-        category_id: int, 
-        session: AsyncSession
-        ):
-        category = cls.get_by_id(category_id, session=session)
-        category = await session.get(CategoryOrm, category_id)
-        await session.delete(category)
-        await session.commit()
+
             

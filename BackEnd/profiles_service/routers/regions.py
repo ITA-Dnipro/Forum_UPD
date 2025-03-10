@@ -1,5 +1,5 @@
 from typing import Annotated
-from fastapi import APIRouter, Depends, HTTPException, Response
+from fastapi import APIRouter, Depends, HTTPException
 from exceptions import NotFoundError
 from schemas.regions import Region
 from crud.regions import RegionRepository
@@ -55,16 +55,3 @@ async def region_update(
             )
     return region
 
-
-@router.delete("/{region_id}")
-async def region_delete(
-    region_id: int,
-    session: AsyncSession = Depends(get_async_session)
-    ):
-    try:
-        await RegionRepository.delete(region_id, session=session)
-    except NotFoundError as e:
-        raise HTTPException(
-            status_code=404, detail=f"{e}"
-            )
-    return Response(status_code=204)
