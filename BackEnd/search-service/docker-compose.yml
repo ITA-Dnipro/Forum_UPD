@@ -1,0 +1,31 @@
+services:
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.17.0
+    container_name: elasticsearch
+    environment:
+      - discovery.type=${ES_DISCOVERY_TYPE}
+      - xpack.security.enabled=${ES_XPACK_SECURITY}
+    ports:
+      - "9200:9200"
+    volumes:
+      - elastic_search_data:/usr/share/elasticsearch/data
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:9200" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  search-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: search_service
+    env_file: .env
+    ports:
+      - "8000:8000"
+    depends_on:
+      - elasticsearch
+
+volumes:
+  elastic_search_data:
