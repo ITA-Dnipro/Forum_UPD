@@ -15,6 +15,7 @@ class ProfileRepository:
         profile_dict["profile_categories"] = categories
         regions = await RegionRepository.get_list_by_ids(profile_dict["profile_regions"], session=session)
         profile_dict["profile_regions"] = regions
+        profile_dict["is_deleted"] = False
         profile = ProfileOrm(**profile_dict)
         session.add(profile)
         await session.commit()
@@ -23,7 +24,7 @@ class ProfileRepository:
 
     @staticmethod
     async def get_all(session: AsyncSession):
-        query = select(ProfileOrm)\
+        query = select(ProfileOrm).where(ProfileOrm.is_deleted == False)\
         .options(selectinload(ProfileOrm.profile_categories))\
         .options(selectinload(ProfileOrm.profile_regions))
         result = await session.execute(query)
@@ -33,7 +34,7 @@ class ProfileRepository:
 
     @staticmethod
     async def get_by_id(profile_id: int, session: AsyncSession):
-        query = select(ProfileOrm).where(ProfileOrm.id == profile_id)\
+        query = select(ProfileOrm).where(ProfileOrm.id == profile_id, ProfileOrm.is_deleted == False)\
         .options(selectinload(ProfileOrm.profile_categories))\
         .options(selectinload(ProfileOrm.profile_regions))
         result = await session.execute(query)
@@ -75,7 +76,7 @@ class ProfileRepository:
 
     @classmethod
     async def delete(cls, profile_id: int, session: AsyncSession):
-        profile = cls.get_by_id(profile_id, session=session)
-        await session.delete(profile)
+        profile: ProfileOrm = await cls.get_by_id(profile_id, session=session)
+        profile.is_deleted = True
         await session.commit()
             

@@ -1,4 +1,5 @@
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy import text
 from models import Model
 from schemas.profiles import StatusEnum
 
@@ -13,6 +14,7 @@ class ProfileOrm(Model):
     is_registered: Mapped[bool]
     is_startup: Mapped[bool]
     is_fop: Mapped[bool]
+    is_deleted: Mapped[bool] = mapped_column(default=False, server_default=text("FALSE"))
     profile_categories: Mapped[list["CategoryOrm"]] = relationship( # type: ignore
         back_populates="category_profiles", 
         secondary="profile_category"
