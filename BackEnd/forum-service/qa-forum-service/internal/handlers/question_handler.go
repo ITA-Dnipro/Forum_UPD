@@ -27,9 +27,14 @@ func (h *Handler) CreateQuestion(c *gin.Context) {
 		return
 	}
 
+	if question.Title == "" || question.Description == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Title and Description are required"})
+		return
+	}
+
 	if err := h.repo.CreateQuestion(&question); err != nil {
 		log.Printf("Error creating question: %v", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 		return
 	}
 
@@ -94,6 +99,7 @@ func (h *Handler) GetQuestion(c *gin.Context) {
 	}
 
 	question, err := h.repo.GetQuestionByID(id)
+
 	if err != nil {
 		log.Printf("Error fetching question: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -116,9 +122,10 @@ func (h *Handler) UpdateQuestion(c *gin.Context) {
 	}
 
 	question, err := h.repo.GetQuestionByID(id)
+
 	if err != nil {
 		log.Printf("Error fetching question for update: %v", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 		return
 	}
 
@@ -130,6 +137,11 @@ func (h *Handler) UpdateQuestion(c *gin.Context) {
 	var updateData models.Question
 	if err := c.ShouldBindJSON(&updateData); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	if updateData.Title == "" || updateData.Description == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Title and Description are required"})
 		return
 	}
 
@@ -172,7 +184,7 @@ func (h *Handler) SaveQuestion(c *gin.Context) {
 	question, err := h.repo.GetQuestionByID(questionId)
 	if err != nil {
 		log.Printf("Error fetching question for save: %v", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 		return
 	}
 	if question == nil {
@@ -239,11 +251,13 @@ func (h *Handler) UnsaveQuestion(c *gin.Context) {
 	}
 
 	question, err := h.repo.GetQuestionByID(questionId)
+
 	if err != nil {
 		log.Printf("Error fetching question for unsave: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
+
 	if question == nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Question not found"})
 		return

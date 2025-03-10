@@ -87,44 +87,45 @@ func (db *ScyllaDB) GetAllQuestions(limit int, pagingState []byte) ([]models.Que
               FROM questions_by_status
               WHERE status = ?`
 
-	q := db.session.Query(query, "open").
-		PageSize(limit).
-		PageState(pagingState)
-
+	q := db.session.Query(query, "open").PageSize(limit).PageState(pagingState)
 	iter := q.Iter()
 
-	for {
-		var basicInfo struct {
-			QuestionID gocql.UUID `cql:"question_id"`
-			Title      string     `cql:"title"`
-			AuthorID   int        `cql:"author_id"`
-			Status     string     `cql:"status"`
-			LikesCount int        `cql:"likes_count"`
-			SavesCount int        `cql:"saves_count"`
-			CreatedAt  time.Time  `cql:"created_at"`
-		}
-		if !iter.Scan(
-			&basicInfo.QuestionID,
-			&basicInfo.Title,
-			&basicInfo.AuthorID,
-			&basicInfo.Status,
-			&basicInfo.LikesCount,
-			&basicInfo.SavesCount,
-			&basicInfo.CreatedAt,
-		) {
-			break
-		}
+	var basicInfo struct {
+		QuestionID gocql.UUID `cql:"question_id"`
+		Title      string     `cql:"title"`
+		AuthorID   int        `cql:"author_id"`
+		Status     string     `cql:"status"`
+		LikesCount int        `cql:"likes_count"`
+		SavesCount int        `cql:"saves_count"`
+		CreatedAt  time.Time  `cql:"created_at"`
+	}
 
-		fullQuestion, err := db.GetQuestionByID(basicInfo.QuestionID)
-		if err == nil && fullQuestion != nil {
-			questions = append(questions, *fullQuestion)
-		}
+	for iter.Scan(
+		&basicInfo.QuestionID, &basicInfo.Title, &basicInfo.AuthorID, &basicInfo.Status,
+		&basicInfo.LikesCount, &basicInfo.SavesCount, &basicInfo.CreatedAt,
+	) {
+		questions = append(questions, models.Question{
+			ID:         basicInfo.QuestionID,
+			Title:      basicInfo.Title,
+			AuthorID:   basicInfo.AuthorID,
+			Status:     basicInfo.Status,
+			LikesCount: basicInfo.LikesCount,
+			SavesCount: basicInfo.SavesCount,
+			CreatedAt:  basicInfo.CreatedAt,
+			UpdatedAt:  basicInfo.CreatedAt,
+		})
 	}
 
 	newPagingState := iter.PageState()
-
 	if err := iter.Close(); err != nil {
 		return nil, nil, err
+	}
+
+	for i := range questions {
+		fullQuestion, err := db.GetQuestionByID(questions[i].ID)
+		if err == nil && fullQuestion != nil {
+			questions[i] = *fullQuestion
+		}
 	}
 
 	return questions, newPagingState, nil
@@ -230,13 +231,20 @@ func (db *ScyllaDB) GetQuestionsByStatus(status string, limit int, pagingState [
 }
 
 func (db *ScyllaDB) UpdateQuestion(q *models.Question) error {
+	oldQuestion, err := db.GetQuestionByID(q.ID)
+	if err != nil {
+		return err
+	}
+	if oldQuestion == nil {
+		return fmt.Errorf("question not found")
+	}
+
 	q.UpdatedAt = time.Now()
 
 	query := `UPDATE questions 
              SET title = ?, description = ?, status = ?, updated_at = ?, 
              likes_count = ?, dislikes_count = ?, saves_count = ?
              WHERE question_id = ?`
-
 	if err := db.session.Query(query,
 		q.Title, q.Description, q.Status, q.UpdatedAt,
 		q.LikesCount, q.DislikesCount, q.SavesCount, q.ID).Exec(); err != nil {
@@ -251,12 +259,30 @@ func (db *ScyllaDB) UpdateQuestion(q *models.Question) error {
 		return err
 	}
 
-	statusQuery := `UPDATE questions_by_status 
-                   SET likes_count = ?, saves_count = ? 
-                   WHERE status = ? AND created_at = ? AND question_id = ?`
-	if err := db.session.Query(statusQuery,
-		q.LikesCount, q.SavesCount, q.Status, q.CreatedAt, q.ID).Exec(); err != nil {
-		return err
+	if oldQuestion.Status != q.Status {
+
+		deleteQuery := `DELETE FROM questions_by_status 
+                        WHERE status = ? AND created_at = ? AND question_id = ?`
+		if err := db.session.Query(deleteQuery, oldQuestion.Status, oldQuestion.CreatedAt, q.ID).Exec(); err != nil {
+			return err
+		}
+
+		statusQuery := `INSERT INTO questions_by_status 
+                        (status, created_at, question_id, title, author_id, likes_count, saves_count)
+                        VALUES (?, ?, ?, ?, ?, ?, ?)`
+		if err := db.session.Query(statusQuery,
+			q.Status, q.CreatedAt, q.ID, q.Title, q.AuthorID, q.LikesCount, q.SavesCount).Exec(); err != nil {
+			return err
+		}
+	} else {
+
+		statusQuery := `UPDATE questions_by_status 
+                       SET likes_count = ?, saves_count = ? 
+                       WHERE status = ? AND created_at = ? AND question_id = ?`
+		if err := db.session.Query(statusQuery,
+			q.LikesCount, q.SavesCount, q.Status, q.CreatedAt, q.ID).Exec(); err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -268,13 +294,18 @@ func (db *ScyllaDB) DeleteQuestion(id gocql.UUID) error {
 }
 
 func (db *ScyllaDB) SaveQuestion(userID int, questionID gocql.UUID) error {
-
 	checkQuery := `SELECT user_id FROM saved_questions WHERE user_id = ? AND question_id = ? LIMIT 1`
 	iter := db.session.Query(checkQuery, userID, questionID).Iter()
-	if iter.NumRows() > 0 {
-		iter.Close()
+
+	var existingUserID int
+
+	if iter.Scan(&existingUserID) {
+		if err := iter.Close(); err != nil {
+			return err
+		}
 		return fmt.Errorf("question already saved by user")
 	}
+
 	if err := iter.Close(); err != nil {
 		return err
 	}
@@ -290,20 +321,7 @@ func (db *ScyllaDB) SaveQuestion(userID int, questionID gocql.UUID) error {
 		return err
 	}
 	if question != nil {
-		updateQuery := `UPDATE questions SET saves_count = ? WHERE question_id = ?`
-		if err := db.session.Query(updateQuery, question.SavesCount+1, questionID).Exec(); err != nil {
-			return err
-		}
-
-		authorQuery := `UPDATE questions_by_author SET saves_count = ? 
-                        WHERE author_id = ? AND created_at = ? AND question_id = ?`
-		if err := db.session.Query(authorQuery, question.SavesCount+1, question.AuthorID, question.CreatedAt, questionID).Exec(); err != nil {
-			return err
-		}
-
-		statusQuery := `UPDATE questions_by_status SET saves_count = ? 
-                        WHERE status = ? AND created_at = ? AND question_id = ?`
-		if err := db.session.Query(statusQuery, question.SavesCount+1, question.Status, question.CreatedAt, questionID).Exec(); err != nil {
+		if err := db.updateSavesCount(questionID, question.SavesCount+1); err != nil {
 			return err
 		}
 	}
@@ -358,9 +376,25 @@ func (db *ScyllaDB) UnsaveQuestion(userID int, questionID gocql.UUID) error {
 		newSavesCount = 0
 	}
 
+	if err := db.updateSavesCount(questionID, newSavesCount); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (db *ScyllaDB) updateSavesCount(questionID gocql.UUID, newSavesCount int) error {
 	updateQuery := `UPDATE questions SET saves_count = ? WHERE question_id = ?`
 	if err := db.session.Query(updateQuery, newSavesCount, questionID).Exec(); err != nil {
 		return err
+	}
+
+	question, err := db.GetQuestionByID(questionID)
+	if err != nil {
+		return err
+	}
+	if question == nil {
+		return fmt.Errorf("question not found")
 	}
 
 	authorQuery := `UPDATE questions_by_author SET saves_count = ? 
