@@ -72,6 +72,25 @@ services:
       - app_network
   
 
+  celery_beat:
+    build:
+      context: .
+      dockerfile: Dockerfile  # Using the same Dockerfile as celery_worker
+    container_name: celery_beat
+    restart: always
+    env_file: .env
+    volumes:
+      - celery_beat_data:/app  # Make sure Celery Beat has write access
+    depends_on:
+      - celery_worker
+      - redis
+    networks:
+      - app_network
+    command: ["sh", "-c", "celery -A app.celery beat --loglevel=info --scheduler redbeat.RedBeatScheduler"]
+
+
 volumes:
   mongodb_data:
+    driver: local
+  celery_beat_data:
     driver: local

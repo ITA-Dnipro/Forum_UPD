@@ -22,8 +22,7 @@ RUN pip install --no-cache-dir --user -r requirements.txt
 # Copy application files (only Celery-related)
 COPY --chown=celeryuser:celeryuser app/ ./app
 
-# Set working directory for Celery
-WORKDIR /app/app
+ENV PYTHONUNBUFFERED=1
 
 # Run Celery worker
 CMD ["sh", "-c", "celery -A app.celery.celery worker --loglevel=info"]

@@ -1,5 +1,6 @@
 import aiohttp
 import asyncio
+from fastapi import HTTPException
 from bs4 import BeautifulSoup
 from datetime import datetime
 from app.models import NewsModel
@@ -113,3 +114,29 @@ async def scrape_article(session, article_url):
     except Exception as e:
         logger.error(f"Error scraping article {article_url}: {e}", exc_info=True)
         return None  # Ensure it returns None on failure
+    
+async def scrape_and_store_news():
+    """Scrapes the latest 5 news articles and stores them in MongoDB if not duplicates."""
+    latest_news = await scrape_news()
+    if not latest_news:
+        raise HTTPException(status_code=404, detail="No news found")
+
+    saved_news = []
+    skipped_news = []
+
+    for news in latest_news:
+        existing = await NewsModel.find_one({"link": news.link})
+        if existing:
+            skipped_news.append(news)
+            continue
+        inserted = await NewsModel.insert_one(news)
+        if inserted.id:
+            saved_news.append(news)
+
+    return {
+        "message": "Scraping completed",
+        "saved_news_count": len(saved_news),
+        "skipped_news_count": len(skipped_news),
+        "saved_news": saved_news,
+        "skipped_news": skipped_news
+    }
