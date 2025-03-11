@@ -6,7 +6,7 @@ class EventCreate(BaseModel):
     title: str
     description: Optional[str] = None
     date: date
-    time: time
+    starting_time: time
     location: Optional[str] = None
     capacity: int
     available_slots: int
@@ -16,12 +16,12 @@ class EventCreate(BaseModel):
     summary: Optional[str] = None
 
 class EventUpdate(BaseModel):
-    title: Optional[str] = None
-    description: Optional[str] = None
-    location: Optional[str] = None
-    date: Optional[str] = None
-    time: Optional[str] = None
-    capacity: Optional[int] = None
+    title: str
+    description: str
+    location: str
+    date: date
+    starting_time: time
+    capacity: int
 
     class Config:
         orm_mode = True
