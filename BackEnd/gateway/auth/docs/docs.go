@@ -17,7 +17,7 @@ const docTemplate = `{
     "paths": {
         "/check": {
             "get": {
-                "description": "Отримує JWT-токен із заголовка і перевіряє роль користувача",
+                "description": "Retrieves a JWT token from the Authorization header and optionally checks the user's role.",
                 "consumes": [
                     "application/json"
                 ],
@@ -27,7 +27,7 @@ const docTemplate = `{
                 "tags": [
                     "auth"
                 ],
-                "summary": "Перевірка JWT",
+                "summary": "JWT validation",
                 "parameters": [
                     {
                         "type": "string",
@@ -35,23 +35,36 @@ const docTemplate = `{
                         "name": "Authorization",
                         "in": "header",
                         "required": true
+                    },
+                    {
+                        "enum": [
+                            "Public",
+                            "NotValidated",
+                            "IsActive",
+                            "IsStartup",
+                            "IsInvestor"
+                        ],
+                        "type": "string",
+                        "description": "Role to check",
+                        "name": "requiredRole",
+                        "in": "query"
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "User role: стартап (1) / інвестор (2)",
+                        "description": "User role: \u003croleClaim\u003e",
                         "schema": {
                             "type": "string"
                         }
                     },
                     "401": {
-                        "description": "Missing Authorization header / Invalid or expired token",
+                        "description": "Missing Authorization header or invalid/expired token",
                         "schema": {
                             "type": "string"
                         }
                     },
                     "403": {
-                        "description": "No or invalid 'role' claim found / Unknown role",
+                        "description": "Forbidden for this role",
                         "schema": {
                             "type": "string"
                         }

@@ -8,7 +8,7 @@ from .views import (
     CustomTokenObtainPairView,
     PasswordResetRequestView,
     PasswordResetConfirmView,
-    PasswordChangeView
+    PasswordChangeView,
     UserRegistrationView,
     LogoutView,
     AccountActivationView,
