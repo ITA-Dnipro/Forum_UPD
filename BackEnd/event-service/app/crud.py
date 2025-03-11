@@ -20,16 +20,12 @@ async def get_active_objects(db: AsyncSession, model: Type[T], obj_id: int = Non
         return result.scalars().all()
 
 async def soft_delete(db: AsyncSession, model: Type[T], obj_id: int) -> bool:
+    obj_to_delete = await db.get(model, obj_id)
+    if not obj_to_delete or obj_to_delete.status == StatusEnum.deleted:
+        return False
+    
+    obj_to_delete.status = StatusEnum.deleted
     try:
-        obj_to_delete = select(model).where(model.id == obj_id, model.status != StatusEnum.deleted)
-        result = await db.execute(obj_to_delete)
-        obj = result.scalar_one_or_none()
-        
-        if not obj:
-            return False
-        
-        setattr(obj, "status", StatusEnum.deleted)
-
         await db.commit()
         return True
     
