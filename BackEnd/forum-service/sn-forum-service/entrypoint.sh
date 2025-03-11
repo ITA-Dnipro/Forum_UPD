@@ -2,8 +2,9 @@
 
 echo "Waiting for Cassandra to be ready..."
 
-until nc -z cassandra 9042; do
-  echo "Cassandra is not ready yet, waiting..."
+until nc -z cassandra 9042; 
+do
+ echo "Cassandra is not ready yet, waiting..."
   sleep 5
 done
 
