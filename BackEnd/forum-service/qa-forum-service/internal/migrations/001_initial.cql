@@ -1,27 +1,23 @@
 -- Визначення типу для відповіді на питання
 CREATE TYPE IF NOT EXISTS answer_reply (
     id uuid,
-    author_id int, 
-    author_name text,
+    author_id int,
     content text,
     created_at timestamp,
     updated_at timestamp,
     likes int,
-    dislikes int,
-    profile_url text
+    dislikes int
 );
 
 CREATE TYPE IF NOT EXISTS question_answer (
     id uuid,
     author_id int,
-    author_name text,
     content text,
     created_at timestamp,
     updated_at timestamp,
     likes_count int,
     dislikes_count int,
-    replies list<frozen<answer_reply>>,
-    profile_url text
+    replies list<frozen<answer_reply>>
 );
 
 -- Таблиця для запитань
@@ -31,20 +27,18 @@ CREATE TABLE IF NOT EXISTS questions (
     title text,
     description text,
     status text,
-    views_count int,
     likes_count int,
     dislikes_count int,
     saves_count int,
     answers list<frozen<question_answer>>,
     accepted_answer_id uuid,
     created_at timestamp,
-    updated_at timestamp,
-    profile_url text
+    updated_at timestamp
 );
 
 -- Таблиця для індексації за автором
 CREATE TABLE IF NOT EXISTS questions_by_author (
-    author_id int, 
+    author_id int,
     created_at timestamp,
     question_id uuid,
     title text,
