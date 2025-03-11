@@ -1,0 +1,52 @@
+version: '3.8'
+
+services:
+    event-api:
+      container_name: event_api
+      build: .
+      command: bash -c 'while !</dev/tcp/db/5432; do sleep 1; done; uvicorn app.main:app --host 0.0.0.0 --reload'
+      depends_on:
+        - db
+        - event-redis
+      volumes:
+        - .:/src
+      ports:
+        - ${APP_HOST_PORT}:8000
+      restart: always
+      env_file:
+        - .env
+      environment:
+        - DATABASE_URL=${DATABASE_URL_DOCKER}
+        - PYTHONPATH=/src/app
+        
+    db:
+      image: postgres:13
+      ports:
+        - 5432:5432
+      environment:
+        - POSTGRES_DB=${POSTGRES_DB}
+        - POSTGRES_USER=${POSTGRES_USER}
+        - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+        - PGDATA=/var/lib/.postgres/data/pgdata
+      volumes:
+        - postgres_data:/var/lib/.postgres/data/ # .postgres folder for saving data
+      env_file:
+        - .env
+      restart: unless-stopped
+      healthcheck:
+        test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+        interval: 10s
+        timeout: 5s
+        retries: 5
+
+
+    event-redis:
+      image: redis:6.2-alpine
+      ports:
+        - "6379:6379"
+      env_file:
+        - .env
+
+volumes:
+  postgres_data:
+    name: postgres_data
