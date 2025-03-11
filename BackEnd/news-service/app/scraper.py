@@ -45,6 +45,7 @@ async def fetch(session, url, retries=5, backoff_factor=1):
 async def scrape_news():
     """Scrapes the latest business news from epravda.com.ua asynchronously"""
     try:
+        print('enter scrape_news')
         async with aiohttp.ClientSession() as session:
             html = await fetch(session, URL)
             if not html:
@@ -117,7 +118,9 @@ async def scrape_article(session, article_url):
     
 async def scrape_and_store_news():
     """Scrapes the latest 5 news articles and stores them in MongoDB if not duplicates."""
+    print('enter scraper')
     latest_news = await scrape_news()
+    print('scrape successfully')
     if not latest_news:
         raise HTTPException(status_code=404, detail="No news found")
 
@@ -132,7 +135,7 @@ async def scrape_and_store_news():
         inserted = await NewsModel.insert_one(news)
         if inserted.id:
             saved_news.append(news)
-
+    print('error before')
     return {
         "message": "Scraping completed",
         "saved_news_count": len(saved_news),
