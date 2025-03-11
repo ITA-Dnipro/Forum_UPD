@@ -21,7 +21,6 @@ from drf_spectacular.utils import(
 from ratelimit.decorators import RateLimitDecorator
 from rest_framework.views import APIView
 from django.contrib.auth import authenticate, get_user_model, logout
-from django_ratelimit.decorators import ratelimit
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework_simplejwt.views import TokenObtainPairView
@@ -45,7 +44,8 @@ from .serializers import (
 from validation.validate_password import (
     validate_password_long,
     validate_password_include_symbols,
-    validate_password_strength)
+    validate_password_strength
+)
 
 logger = logging.getLogger(__name__)
 
@@ -153,7 +153,7 @@ class AccountActivationView(APIView):
         try:
             uid = signer.unsign(token, max_age=3600)
 
-            user = User().objects.get(pk=uid)
+            user = User.objects.get(pk=uid)
 
             user.is_active = True
             user.save()
@@ -312,7 +312,7 @@ class PasswordResetRequestView(APIView):
             ),
         }
     )
-    @method_decorator(ratelimit(key=get_email_from_request, rate="1/m", method='POST', block=False))
+    @RateLimitDecorator(calls=1, period=60)
     def post(self, request):
         if getattr(request, 'limited', False):
             return Response({"error": "Too many requests. Please, try again later."},

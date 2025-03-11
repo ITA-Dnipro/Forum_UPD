@@ -16,6 +16,7 @@ services:
     # Run both Gunicorn and Daphne
     volumes:
       # - ./:/Forum
+      - ./BackEnd:/home/forum/app
       - static:/home/forum/app/public/static
       - media:/home/forum/app/public/media
       - ./logs/django.log:/home/forum/app/django.log
@@ -106,6 +107,13 @@ services:
       - REDIS_URL=${REDIS_URL}
       - RECAPTCHA_V2_PRIVATE_KEY=${RECAPTCHA_V2_PRIVATE_KEY}
       - RECAPTCHA_URL=${RECAPTCHA_URL}
+      - MONGO_DB_NAME=${MONGO_DB_NAME}
+      - MONGO_USERNAME=${MONGO_USERNAME}
+      - MONGO_PASSWORD=${MONGO_PASSWORD}
+      - MONGO_HOST=${MONGO_HOST}
+      - MONGO_PORT=${MONGO_PORT}
+      - MONGO_AUTHENTICATION_SOURCE=${MONGO_AUTHENTICATION_SOURCE}
+      - ENSURE_INDEXES = ${ENSURE_INDEXES}
     networks:
       - forum_network
   celery_beat:
@@ -138,6 +146,13 @@ services:
       - REDIS_URL=${REDIS_URL}
       - RECAPTCHA_V2_PRIVATE_KEY=${RECAPTCHA_V2_PRIVATE_KEY}
       - RECAPTCHA_URL=${RECAPTCHA_URL}
+      - MONGO_DB_NAME=${MONGO_DB_NAME}
+      - MONGO_USERNAME=${MONGO_USERNAME}
+      - MONGO_PASSWORD=${MONGO_PASSWORD}
+      - MONGO_HOST=${MONGO_HOST}
+      - MONGO_PORT=${MONGO_PORT}
+      - MONGO_AUTHENTICATION_SOURCE=${MONGO_AUTHENTICATION_SOURCE}
+      - ENSURE_INDEXES = ${ENSURE_INDEXES}
     networks:
       - forum_network
 
