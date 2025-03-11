@@ -4,6 +4,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 
 from .config import settings
+from .es_config.es_client import elasticsearch_init
 from .routes.search import search_router
 
 logging.basicConfig(level=logging.INFO)
@@ -17,9 +18,17 @@ def register_routes(app: FastAPI):
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    """Context manager to handle startup and shutdown tasks."""
     logger.info("Startup: initializing service...")
-    yield
-    logger.info("Shutdown: cleaning up...")
+    try:
+        es_client = await elasticsearch_init()
+        app.state.es_client = es_client
+        yield
+    except Exception as e:
+        logger.exception("Startup failed. Shutting down search service...")
+        raise
+    finally:
+        logger.info("Shutdown: cleaning up...")
 
 
 app = FastAPI(
