@@ -75,7 +75,7 @@ class ProfileRepository:
 
 
     @classmethod
-    async def delete(cls, profile_id: int, session: AsyncSession):
+    async def soft_delete(cls, profile_id: int, session: AsyncSession):
         profile: ProfileOrm = await cls.get_by_id(profile_id, session=session)
         profile.is_deleted = True
         await session.commit()

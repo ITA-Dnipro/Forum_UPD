@@ -77,7 +77,7 @@ async def profile_delete(
     session: AsyncSession = Depends(get_async_session)
     ):
     try:
-        await ProfileRepository.delete(profile_id, session)
+        await ProfileRepository.soft_delete(profile_id, session)
     except NotFoundError as e:
         raise HTTPException(
             status_code=404, detail=f"{e}"
