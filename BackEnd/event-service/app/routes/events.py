@@ -19,7 +19,7 @@ async def create_event(event: EventCreate, db: AsyncSession = Depends(get_async_
     db.add(db_event)
     await db.commit()
     await db.refresh(db_event)
-    return {"message": "Event created successfully", "event": event}
+    return {"message": "Event created successfully", "event": db_event}
 
 @router.get("/{event_id}", summary="Get an event")
 async def get_event(event_id: int, db: AsyncSession = Depends(get_async_session)):
@@ -28,14 +28,14 @@ async def get_event(event_id: int, db: AsyncSession = Depends(get_async_session)
         raise HTTPException(status_code=404, detail="Event not found")
     return event
 
-@router.delete("/events/{event_id}", summary="Delete an event")
+@router.delete("/{event_id}", summary="Delete an event")
 async def delete_event(event_id: int, db: AsyncSession = Depends(get_async_session)):
     success = await soft_delete(db=db, model=Event, obj_id=event_id)
     if not success:
         raise HTTPException(status_code=404, detail="Event not found")
     return {"message": "Event deleted successfully"}
 
-@router.put("/events/{event_id}", summary="Update an event")
+@router.put("/{event_id}", summary="Update an event")
 async def update_event(event_id: int, event_data: EventUpdate, db: AsyncSession = Depends(get_async_session)):
     event = await get_active_objects(db=db, model=Event, obj_id=event_id)
     if not event:
