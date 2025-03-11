@@ -1,17 +1,11 @@
 import asyncio
-import logging
 
 from dotenv import load_dotenv
 from elasticsearch import ConnectionError
 from elasticsearch_dsl import connections
 
-from ..config import settings
+from ..config import settings, logger
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
-
-logging.getLogger("elastic_transport").setLevel(logging.CRITICAL)
-logging.getLogger("urllib3").setLevel(logging.CRITICAL)
 
 load_dotenv()
 

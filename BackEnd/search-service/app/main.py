@@ -1,14 +1,17 @@
-import logging
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
+from fastapi.responses import PlainTextResponse
 
-from .config import settings
+from slowapi import Limiter
+from slowapi.errors import RateLimitExceeded
+from slowapi.util import get_remote_address
+
+from .config import settings, logger
 from .es_config.es_client import elasticsearch_init
 from .routes.search import search_router
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+limiter = Limiter(key_func=get_remote_address)
 
 
 def register_routes(app: FastAPI):
@@ -36,5 +39,12 @@ app = FastAPI(
     title=settings.service_name,
     debug=settings.debug,
 )
+
+
+@app.exception_handler(RateLimitExceeded)
+async def rate_limit_error(request, exc):
+    return PlainTextResponse("Rate limit exceeded", status_code=429)
+
+app.state.limiter = limiter
 
 register_routes(app)
