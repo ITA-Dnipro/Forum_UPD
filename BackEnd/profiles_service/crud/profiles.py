@@ -70,7 +70,7 @@ class ProfileRepository:
 
         for key, value in update_fields.items():
             setattr(profile, key, value)
-        session.commit()
+        await session.commit()
         return profile
 
 
