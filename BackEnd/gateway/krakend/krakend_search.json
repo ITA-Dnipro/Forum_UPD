@@ -1,0 +1,32 @@
+{
+  "version": 3,
+  "name": "Search Gateway",
+  "port": 8080,
+
+  "endpoints": [
+    {
+      "endpoint": "/search",
+      "method": "GET",
+      "backend": [
+        {
+          "host": [
+            "http://search-service:8000"
+          ],
+          "url_pattern": "/search"
+        }
+      ]
+    },
+    {
+      "endpoint": "/search/{service}",
+      "method": "GET",
+      "backend": [
+        {
+          "host": [
+            "http://search-service:8000"
+          ],
+          "url_pattern": "/search/{service}"
+        }
+      ]
+    }
+  ]
+}

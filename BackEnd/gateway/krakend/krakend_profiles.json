@@ -1,0 +1,368 @@
+{
+  "version": 3,
+  "name": "Profile Service Gateway",
+  "endpoints": [
+    {
+      "endpoint": "/api/v1/profiles",
+      "method": "GET",
+      "extra_config": {
+        "auth/validator": {
+          "endpoint": "/check?requiredRole=Public",
+          "method": "GET",
+          "host": ["http://auth-service:8080"],
+          "header": "Authorization",
+          "response_codes": [200],
+          "cache": false
+        }
+      },
+      "backend": [
+        {
+          "host": ["http://profile-service:9000"],
+          "url_pattern": "/api/v1/profiles"
+        }
+      ]
+    },
+    {
+      "endpoint": "/api/v1/profiles/{id}",
+      "method": "GET",
+      "extra_config": {
+        "auth/validator": {
+          "endpoint": "/check?requiredRole=Public",
+          "method": "GET",
+          "host": ["http://auth-service:8080"],
+          "header": "Authorization",
+          "response_codes": [200],
+          "cache": false
+        }
+      },
+      "backend": [
+        {
+          "host": ["http://profile-service:9000"],
+          "url_pattern": "/api/v1/profiles/{id}"
+        }
+      ]
+    },
+    {
+      "endpoint": "/api/v1/profiles",
+      "method": "POST",
+      "extra_config": {
+        "auth/validator": {
+          "endpoint": "/check?requiredRole=IsActive",
+          "method": "GET",
+          "host": ["http://auth-service:8080"],
+          "header": "Authorization",
+          "response_codes": [200],
+          "cache": false
+        }
+      },
+      "backend": [
+        {
+          "host": ["http://profile-service:9000"],
+          "url_pattern": "/api/v1/profiles"
+        }
+      ]
+    },
+    {
+      "endpoint": "/api/v1/profiles/{id}",
+      "method": "PUT",
+      "extra_config": {
+        "auth/validator": {
+          "endpoint": "/check?requiredRole=IsStartup",
+          "method": "GET",
+          "host": ["http://auth-service:8080"],
+          "header": "Authorization",
+          "response_codes": [200],
+          "cache": false
+        }
+      },
+      "backend": [
+        {
+          "host": ["http://profile-service:9000"],
+          "url_pattern": "/api/v1/profiles/{id}"
+        }
+      ]
+    },
+    {
+      "endpoint": "/api/v1/profiles/{id}",
+      "method": "PATCH",
+      "extra_config": {
+        "auth/validator": {
+          "endpoint": "/check?requiredRole=IsStartup",
+          "method": "GET",
+          "host": ["http://auth-service:8080"],
+          "header": "Authorization",
+          "response_codes": [200],
+          "cache": false
+        }
+      },
+      "backend": [
+        {
+          "host": ["http://profile-service:9000"],
+          "url_pattern": "/api/v1/profiles/{id}"
+        }
+      ]
+    },
+    {
+      "endpoint": "/api/v1/profiles/{id}",
+      "method": "DELETE",
+      "extra_config": {
+        "auth/validator": {
+          "endpoint": "/check?requiredRole=IsStartup",
+          "method": "GET",
+          "host": ["http://auth-service:8080"],
+          "header": "Authorization",
+          "response_codes": [200],
+          "cache": false
+        }
+      },
+      "backend": [
+        {
+          "host": ["http://profile-service:9000"],
+          "url_pattern": "/api/v1/profiles/{id}"
+        }
+      ]
+    },
+
+    {
+      "endpoint": "/api/v1/categories",
+      "method": "GET",
+      "extra_config": {
+        "auth/validator": {
+          "endpoint": "/check?requiredRole=Public",
+          "method": "GET",
+          "host": ["http://auth-service:8080"],
+          "header": "Authorization",
+          "response_codes": [200],
+          "cache": false
+        }
+      },
+      "backend": [
+        {
+          "host": ["http://profile-service:9000"],
+          "url_pattern": "/api/v1/categories"
+        }
+      ]
+    },
+    {
+      "endpoint": "/api/v1/categories/{id}",
+      "method": "GET",
+      "extra_config": {
+        "auth/validator": {
+          "endpoint": "/check?requiredRole=Public",
+          "method": "GET",
+          "host": ["http://auth-service:8080"],
+          "header": "Authorization",
+          "response_codes": [200],
+          "cache": false
+        }
+      },
+      "backend": [
+        {
+          "host": ["http://profile-service:9000"],
+          "url_pattern": "/api/v1/categories/{id}"
+        }
+      ]
+    },
+    {
+      "endpoint": "/api/v1/categories",
+      "method": "POST",
+      "extra_config": {
+        "auth/validator": {
+          "endpoint": "/check?requiredRole=Admin",
+          "method": "GET",
+          "host": ["http://auth-service:8080"],
+          "header": "Authorization",
+          "response_codes": [200],
+          "cache": false
+        }
+      },
+      "backend": [
+        {
+          "host": ["http://profile-service:9000"],
+          "url_pattern": "/api/v1/categories"
+        }
+      ]
+    },
+    {
+      "endpoint": "/api/v1/categories/{id}",
+      "method": "PUT",
+      "extra_config": {
+        "auth/validator": {
+          "endpoint": "/check?requiredRole=Admin",
+          "method": "GET",
+          "host": ["http://auth-service:8080"],
+          "header": "Authorization",
+          "response_codes": [200],
+          "cache": false
+        }
+      },
+      "backend": [
+        {
+          "host": ["http://profile-service:9000"],
+          "url_pattern": "/api/v1/categories/{id}"
+        }
+      ]
+    },
+    {
+      "endpoint": "/api/v1/categories/{id}",
+      "method": "PATCH",
+      "extra_config": {
+        "auth/validator": {
+          "endpoint": "/check?requiredRole=Admin",
+          "method": "GET",
+          "host": ["http://auth-service:8080"],
+          "header": "Authorization",
+          "response_codes": [200],
+          "cache": false
+        }
+      },
+      "backend": [
+        {
+          "host": ["http://profile-service:9000"],
+          "url_pattern": "/api/v1/categories/{id}"
+        }
+      ]
+    },
+    {
+      "endpoint": "/api/v1/categories/{id}",
+      "method": "DELETE",
+      "extra_config": {
+        "auth/validator": {
+          "endpoint": "/check?requiredRole=Admin",
+          "method": "GET",
+          "host": ["http://auth-service:8080"],
+          "header": "Authorization",
+          "response_codes": [200],
+          "cache": false
+        }
+      },
+      "backend": [
+        {
+          "host": ["http://profile-service:9000"],
+          "url_pattern": "/api/v1/categories/{id}"
+        }
+      ]
+    },
+
+    {
+      "endpoint": "/api/v1/regions",
+      "method": "GET",
+      "extra_config": {
+        "auth/validator": {
+          "endpoint": "/check?requiredRole=Public",
+          "method": "GET",
+          "host": ["http://auth-service:8080"],
+          "header": "Authorization",
+          "response_codes": [200],
+          "cache": false
+        }
+      },
+      "backend": [
+        {
+          "host": ["http://profile-service:9000"],
+          "url_pattern": "/api/v1/regions"
+        }
+      ]
+    },
+    {
+      "endpoint": "/api/v1/regions/{id}",
+      "method": "GET",
+      "extra_config": {
+        "auth/validator": {
+          "endpoint": "/check?requiredRole=Public",
+          "method": "GET",
+          "host": ["http://auth-service:8080"],
+          "header": "Authorization",
+          "response_codes": [200],
+          "cache": false
+        }
+      },
+      "backend": [
+        {
+          "host": ["http://profile-service:9000"],
+          "url_pattern": "/api/v1/regions/{id}"
+        }
+      ]
+    },
+    {
+      "endpoint": "/api/v1/regions",
+      "method": "POST",
+      "extra_config": {
+        "auth/validator": {
+          "endpoint": "/check?requiredRole=Admin",
+          "method": "GET",
+          "host": ["http://auth-service:8080"],
+          "header": "Authorization",
+          "response_codes": [200],
+          "cache": false
+        }
+      },
+      "backend": [
+        {
+          "host": ["http://profile-service:9000"],
+          "url_pattern": "/api/v1/regions"
+        }
+      ]
+    },
+    {
+      "endpoint": "/api/v1/regions/{id}",
+      "method": "PUT",
+      "extra_config": {
+        "auth/validator": {
+          "endpoint": "/check?requiredRole=Admin",
+          "method": "GET",
+          "host": ["http://auth-service:8080"],
+          "header": "Authorization",
+          "response_codes": [200],
+          "cache": false
+        }
+      },
+      "backend": [
+        {
+          "host": ["http://profile-service:9000"],
+          "url_pattern": "/api/v1/regions/{id}"
+        }
+      ]
+    },
+    {
+      "endpoint": "/api/v1/regions/{id}",
+      "method": "PATCH",
+      "extra_config": {
+        "auth/validator": {
+          "endpoint": "/check?requiredRole=Admin",
+          "method": "GET",
+          "host": ["http://auth-service:8080"],
+          "header": "Authorization",
+          "response_codes": [200],
+          "cache": false
+        }
+      },
+      "backend": [
+        {
+          "host": ["http://profile-service:9000"],
+          "url_pattern": "/api/v1/regions/{id}"
+        }
+      ]
+    },
+    {
+      "endpoint": "/api/v1/regions/{id}",
+      "method": "DELETE",
+      "extra_config": {
+        "auth/validator": {
+          "endpoint": "/check?requiredRole=Admin",
+          "method": "GET",
+          "host": ["http://auth-service:8080"],
+          "header": "Authorization",
+          "response_codes": [200],
+          "cache": false
+        }
+      },
+      "backend": [
+        {
+          "host": ["http://profile-service:9000"],
+          "url_pattern": "/api/v1/regions/{id}"
+        }
+      ]
+    }
+  ]
+}
