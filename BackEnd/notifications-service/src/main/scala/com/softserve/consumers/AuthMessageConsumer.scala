@@ -19,7 +19,7 @@ object AuthMessageConsumer {
           ConsumerSettings(bootstrapServers).withGroupId("notifications-app")
         )
         _ <- consumer
-          .plainStream(Subscription.topics(TopicConstants.Authentication), Serde.string, AuthMessageSerde.serde)
+          .plainStream(Subscription.topics(TopicConstants.AUTHENTICATION), Serde.string, AuthMessageSerde.serde)
           .tap { r =>
             val authMessage: AuthMessage = r.value
             val validationErrors = authMessage.validate
@@ -29,15 +29,14 @@ object AuthMessageConsumer {
             val email = authMessage.email
             val link = authMessage.activationLink
             val name = authMessage.name
-            val sourceDataPath = new File(s"${EmailTemplates.TemplatesPath}/${EmailTemplates.ConfirmName}").getCanonicalPath
+            val sourceDataPath = new File(s"${EmailConstants.EmailTemplates.TEMPLATES_PATH}/${EmailConstants.EmailTemplates.CONFIRM_NAME}").getCanonicalPath
             val someAttributes = Map("name" -> name, "link" -> link)
             val temp = templateEngine.layout(sourceDataPath, someAttributes).toString()
             SmtpEmailSender.sendEmail(
               List(email),
-              EmailConstants.ConfirmEmailSubject,
+              EmailConstants.CONFIRM_EMAIL_SUBJECT,
               temp)
               val endTime = LocalDateTime.now()
-            Console.printLine(s"Mail send!")
             }
           }
           .map(_.offset)

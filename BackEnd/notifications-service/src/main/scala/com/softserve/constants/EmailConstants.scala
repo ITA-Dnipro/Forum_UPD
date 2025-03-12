@@ -1,27 +1,32 @@
 package com.softserve.constants
+import zio._
+
+case class EmailConfig(
+    EMAIL_HOST_USER: String,
+    EMAIL_HOST: String,
+    EMAIL_PORT: String,
+    EMAIL_HOST_PASSWORD: String
+  )
 
 object EmailConstants {
-  final val ConfirmEmailSubject: String = "Confirm your e-mail"
-  final val MissingRequiredEnvVariable: String = "Missing required environment variable:"
-  final val requiredEnvVars = Map(
-    "EMAIL_HOST_USER" -> "Email host user",
-    "EMAIL_HOST" -> "Email host",
-    "EMAIL_PORT" -> "Email port",
-    "EMAIL_HOST_PASSWORD" -> "Email host password"
-    )
-    final val envVars: Map[String, String] = requiredEnvVars.map { case (key, description) =>
-      key -> sys.env.getOrElse(key, throw new RuntimeException(MissingRequiredEnvVariable + s"$key ($description)"))
-    }
-    final val EmailSentSuccessfulyTo: String = "Email sent successfully to"
-    final val ErrorSendingEmail: String = "Error sending email"
-    final val SMTPAuthFailed: String = "SMTP authentication failed"
-    
-  }   
+  final lazy val CONFIRM_EMAIL_SUBJECT: String = "Confirm your e-mail"
+  final lazy val MISSING_REQUIRED_ENV_VAR: String = "Missing required environment variable:"
+  final lazy val EMAIL_SENT_SUCCESSFULLY_TO: String = "Email sent successfully to"
+  final lazy val ERROR_SENDING_EMAIL: String = "Error sending email"
+  final lazy val SMTP_AUTH_FAILED: String = "SMTP authentication failed"
+  val emailConfig: EmailConfig = EmailConfig(
+    EMAIL_HOST_USER = sys.env.getOrElse("EMAIL_HOST_USER", throw new RuntimeException("Missing EMAIL_HOST_USER")),
+    EMAIL_HOST = sys.env.getOrElse("EMAIL_HOST", throw new RuntimeException("Missing EMAIL_HOST")),
+    EMAIL_PORT = sys.env.getOrElse("EMAIL_PORT", throw new RuntimeException("Missing EMAIL_PORT")),
+    EMAIL_HOST_PASSWORD = sys.env.getOrElse("EMAIL_HOST_PASSWORD", throw new RuntimeException("Missing EMAIL_HOST_PASSWORD"))
+  )
   object EmailTemplates {
-    final val TemplatesPath: String = "src/main/scala/com/softserve/email_templates"
-    final val ConfirmName: String = "ConfirmEmailTemplate.mustache"
-    final val EventName: String = "EventActionTemplate.mustache"
-    final val ResetPasswordName: String = "ResetPasswordTemplate.mustache"
+    final lazy val TEMPLATES_PATH: String = sys.env.getOrElse("EMAIL_TEMPLATES_PATH", "src/main/scala/com/softserve/email_templates") 
+    final lazy val CONFIRM_NAME: String = "ConfirmEmailTemplate.mustache"
+    final lazy val EVENT_NAME: String = "EventActionTemplate.mustache"
+    final lazy val RESET_PASSWORD_NAME: String = "ResetPasswordTemplate.mustache"
   }
+  }   
+
 
 

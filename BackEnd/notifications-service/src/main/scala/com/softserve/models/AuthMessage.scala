@@ -1,14 +1,20 @@
 package com.softserve.models
 
-import com.softserve.validations.ValidationUtils
+import zio._
 import zio.json._
+import com.softserve.validations._
 
 case class AuthMessage(email: String, actionType: String, name: String, activationLink: String) {
-  def validate: List[String] = {
-    ValidationUtils.validateEmail(email) ++
-    ValidationUtils.validateNonEmpty(actionType, "ActionType") ++
-    ValidationUtils.validateNonEmpty(name, "Name") ++
-    ValidationUtils.validateNonEmpty(activationLink, "ActivationLink")
+  def validate: List[ValidationUtils.ValidationError] = {
+    val errors = ValidationUtils.validateEmail(email) ++
+      ValidationUtils.validateString(actionType, "ActionType") ++
+      ValidationUtils.validateString(name, "Name") ++
+      ValidationUtils.validateString(activationLink, "ActivationLink")
+
+    if (errors.nonEmpty) Unsafe.unsafe { implicit u =>
+      Runtime.default.unsafe.run(ZIO.logError(s"Validation failed: ${errors.mkString(", ")}"))
+    }
+    errors
   }
 }
 

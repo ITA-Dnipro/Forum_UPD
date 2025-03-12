@@ -1,4 +1,5 @@
 package com.softserve
+
 import zio._
 import org.apache.kafka.clients.producer.ProducerRecord
 import zio.json._
@@ -16,22 +17,12 @@ import com.softserve.models._
 import com.softserve.serde._
 
 object Main extends ZIOAppDefault {
-  val bootstrapServers = List("kafka:9092")
+  val bootstrapServers = sys.env.getOrElse("KAFKA_BROKER", "kafka:9092").split(",").toList
   val templateEngine = new TemplateEngine()
-  val topic = TopicConstants.Authentication
+  val topic = TopicConstants.AUTHENTICATION
 
-  override def run: ZIO[Any, Throwable, Unit] = {
-    try {
-     
-    for {
-      // in need to produce
-      // _ <- AuthMessageProducer.produce(bootstrapServers, topic, message)
+  override def run: ZIO[Any, Throwable, Unit] = 
+    (for {
       _ <- AuthMessageConsumer.run(bootstrapServers, templateEngine)
-
-    } yield ()
-  }
-  catch {
-      case ex: Exception => Console.printLine(s"${ex.getMessage}")
-    } 
-}
+    } yield ()).tapError(err => Console.printLine(s"Error: ${err.getMessage}"))
 }
