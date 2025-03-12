@@ -17,13 +17,7 @@ url = reverse('authentication:activate')
 
 class AccountActivationAPITests(APITestCase):
     def setUp(self):
-        patcher = patch(
-            "authentication.serializers.verify_recaptcha", return_value=True
-        )
-        self.mock_verify_recaptcha = patcher.start()
-        self.addCleanup(patcher.stop)
         self.test_user = UserFactory.create(is_active=False)
-
         self.signer = TimestampSigner()
 
     def test_account_activation_success(self):
@@ -50,7 +44,7 @@ class AccountActivationAPITests(APITestCase):
         self.assertEqual(response.json(), {"error": "Invalid or expired token."})
 
     def test_account_activation_user_not_found(self):
-        invalid_token = self.signer.sign("999")
+        invalid_token = self.signer.sign("-999")
         response = self.client.get(f"{url}?token={invalid_token}")
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -63,9 +57,10 @@ class AccountActivationAPITests(APITestCase):
         expired_time = timezone.now() - timedelta(hours=2)
 
         with patch('django.core.signing.TimestampSigner.unsign') as mock_unsign:
-            mock_unsign.side_effect = BadSignature
+            mock_unsign.side_effect = lambda token, max_age: BadSignature() if max_age < 3600 else str(self.test_user.pk)
 
             response = self.client.get(f"{url}?token={expired_token}")
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(response.json(), {"error": "Invalid or expired token."})
+

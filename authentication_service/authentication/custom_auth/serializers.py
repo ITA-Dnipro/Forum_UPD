@@ -14,12 +14,12 @@ from ratelimit.decorators import RateLimitDecorator
 from ratelimit.exception import RateLimitException
 from rest_framework_simplejwt.tokens import RefreshToken, AccessToken
 
-from validate_password import (
+from .validate_password import (
     validate_password_long,
     validate_password_include_symbols,
     validate_password_strength,
 )
-from validate_recaptcha import verify_recaptcha
+from .validate_recaptcha import verify_recaptcha
 
 import logging
 
@@ -120,7 +120,7 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         )
         user.set_password(validated_data["password"])
         logger.info(f"Saving user {user.email}")
-        user.save()
+        user.save(update_fields=["password"])
         return user
 
 
@@ -144,6 +144,10 @@ class LogoutSerializer(serializers.Serializer):
     def validate(self, data):
         request = self.context.get('request')
         auth_header = request.headers.get('Authorization', '')
+
+        if not auth_header or len(auth_header.split()) < 2:
+            raise serializers.ValidationError({"error": "Authorization header is missing or incorrectly formatted."})
+
         access_token = auth_header.split()[1]
         refresh_token = data.get('refresh')
 
@@ -225,8 +229,12 @@ class PasswordResetConfirmSerializer(serializers.Serializer):
         try:
             decoded_uid_bytes = urlsafe_base64_decode(data["uid"])
             decoded_uid = force_str(decoded_uid_bytes)
-        except Exception:
-            raise serializers.ValidationError({"uid": "Invalid uid provided."})
+        except TypeError:
+            raise serializers.ValidationError({"uid": "UID format is incorrect."})
+        except ValueError:
+            raise serializers.ValidationError({"uid": "UID contains invalid characters."})
+        except UnicodeDecodeError:
+            raise serializers.ValidationError({"uid": "UID decoding failed due to an invalid encoding."})
 
         try:
             user = User.objects.get(pk=decoded_uid)
@@ -280,7 +288,7 @@ class PasswordChangeSerializer(serializers.Serializer):
                 errors.append(error.message)
 
         if errors:
-            raise serializers.ValidationError({"new_password": errors})
+            raise serializers.ValidationError(errors)
 
         return value
 
@@ -288,9 +296,10 @@ class PasswordChangeSerializer(serializers.Serializer):
         user = self.context["request"].user
         if user.check_password(attrs["new_password"]):
             raise serializers.ValidationError(
-                {"new_password": "New password must be different from the current password."})
+                {"new_password": ["New password must be different from the current password."]}
+            )
         if attrs["new_password"] != attrs["confirm_password"]:
-            raise serializers.ValidationError({"confirm_password": "Passwords do not match."})
+            raise serializers.ValidationError({"confirm_password": ["Passwords do not match."]})
         return attrs
 
     def save(self, **kwargs):

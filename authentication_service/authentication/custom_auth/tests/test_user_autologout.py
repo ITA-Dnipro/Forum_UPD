@@ -1,4 +1,6 @@
 from datetime import timedelta
+from django.utils.timezone import now
+
 from unittest.mock import patch
 
 from rest_framework import status
@@ -30,20 +32,26 @@ class UserLogoutAPITests(APITestCase):
         self.user.set_password("Test1234")
         self.user.save()
 
-        self.test_user_token = self.client.post(
+        response = self.client.post(
             path="/api/auth/token/login/",
             data={
                 "email": "test@test.com",
                 "password": "Test1234",
                 "captcha": "dummy_captcha",
             },
-        ).data["auth_token"]
-        token = Token.objects.get(key=self.test_user_token)
-        token.created -= timedelta(days=15)
-        token.save()
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK, "Login failed")
+        self.assertIn("auth_token", response.data, "auth_token missing in response")
+
+        self.test_user_token = response.data["auth_token"]
+
+        Token.objects.filter(key=self.test_user_token).update(created=now()  - timedelta(days=15))
+
         self.client.credentials(
             HTTP_AUTHORIZATION=f"Token {self.test_user_token}"
         )
+
         response = self.client.get(path="/api/auth/users/me/")
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
         self.assertEqual(
@@ -63,9 +71,13 @@ class UserLogoutAPITests(APITestCase):
                 "captcha": "dummy_captcha",
             },
         ).data["auth_token"]
-        token = Token.objects.get(key=self.test_user_token)
-        token.created -= timedelta(days=10)
-        token.save()
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK, "Login failed")
+        self.assertIn("auth_token", response.data, "auth_token missing in response")
+
+        self.test_user_token = response.data["auth_token"]
+
+        Token.objects.filter(key=self.test_user_token).update(created=now() - timedelta(days=10))
         self.client.credentials(
             HTTP_AUTHORIZATION=f"Token {self.test_user_token}"
         )

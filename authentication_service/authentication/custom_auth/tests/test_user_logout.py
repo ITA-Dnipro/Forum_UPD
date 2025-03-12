@@ -18,6 +18,10 @@ class UserLogoutAPITests(APITestCase):
                 "password": "Test1234",
             },
         )
+
+        self.assertIn("access", login_response.data)
+        self.assertIn("refresh", login_response.data)
+
         access_token = login_response.data["access"]
         refresh_token = login_response.data["refresh"]
 
@@ -62,6 +66,8 @@ class UserLogoutAPITests(APITestCase):
             path="/api/auth/login/",
             data={"email": "test@test.com", "password": "Test1234"},
         )
+        self.assertIn("refresh", login_response.data)
+
         refresh_token = login_response.data["refresh"]
         self.client.post(
             path="/api/auth/logout/",

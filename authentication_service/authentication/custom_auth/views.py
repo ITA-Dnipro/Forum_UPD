@@ -41,7 +41,7 @@ from .serializers import (
     PasswordChangeSerializer,
     signer
 )
-from validate_password import (
+from .validate_password import (
     validate_password_long,
     validate_password_include_symbols,
     validate_password_strength

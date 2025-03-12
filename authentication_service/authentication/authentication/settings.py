@@ -10,13 +10,17 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 import os
+from dotenv import load_dotenv
 from datetime import timedelta
 from pathlib import Path
 from corsheaders.defaults import default_headers
 from decouple import config
 import logging
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -64,6 +68,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
+    "debug_toolbar.middleware.DebugToolbarMiddleware",
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -75,18 +80,11 @@ MIDDLEWARE = [
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_ALL_ORIGINS = False
 
-CORS_ORIGIN_WHITELIST = [
-    "http://localhost:8080",
-    "http://127.0.0.1",
-    "http://0.0.0.0",
-    config("CORS_ORIGIN_WHITELIST"),
-]
-
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:8080",
     "http://127.0.0.1",
     "http://0.0.0.0",
-]
+] + config("CORS_ALLOWED_ORIGINS", cast=list, default=[])
 
 CORS_ALLOW_HEADERS = list(default_headers) + [
     "Access-Control-Expose-Headers",
@@ -94,7 +92,6 @@ CORS_ALLOW_HEADERS = list(default_headers) + [
     "Access-Control-Allow-Origin",
     "Content-Type",
 ]
-
 ROOT_URLCONF = "authentication.urls"
 
 TEMPLATES = [
@@ -120,9 +117,13 @@ WSGI_APPLICATION = "authentication.wsgi.application"
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
 DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': os.getenv('POSTGRES_DB', 'auth_db'),
+        'USER': os.getenv('POSTGRES_USER', 'auth_user'),
+        'PASSWORD': os.getenv('POSTGRES_PASSWORD', 'auth_password'),
+        'HOST': os.getenv('POSTGRES_HOST', 'postgres'),
+        'PORT': os.getenv('POSTGRES_PORT', '5432'),
     }
 }
 
@@ -207,12 +208,12 @@ SPECTACULAR_SETTINGS = {
 TOKEN_EXPIRATION_TIME = timedelta(days=14)
 
 # SMTP
-EMAIL_BACKEND = config("EMAIL_BACKEND")
-EMAIL_HOST = config("EMAIL_HOST")
-EMAIL_PORT = config("EMAIL_PORT")
-EMAIL_USE_TLS = config("EMAIL_USE_TLS")
-EMAIL_HOST_USER = config("EMAIL_HOST_USER")
-EMAIL_HOST_PASSWORD = config("EMAIL_HOST_PASSWORD")
+EMAIL_BACKEND = config("EMAIL_BACKEND", default="django.core.mail.backends.smtp.EmailBackend")
+EMAIL_HOST = config("EMAIL_HOST", default="localhost")
+EMAIL_PORT = config("EMAIL_PORT", default=1025)
+EMAIL_USE_TLS = config("EMAIL_USE_TLS", default=True)
+EMAIL_HOST_USER = config("EMAIL_HOST_USER", default="")
+EMAIL_HOST_PASSWORD = config("EMAIL_HOST_PASSWORD", default="")
 
 DELAY_FOR_LOGIN = 600  # delay time for login in seconds
 ATTEMPTS_FOR_LOGIN = 10  # attempts for login during delay for login

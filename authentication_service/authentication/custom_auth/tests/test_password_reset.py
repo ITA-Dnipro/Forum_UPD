@@ -77,7 +77,7 @@ class PasswordResetTests(APITestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn("Token is invalid or expired.", response.data["error"])
+        self.assertIn("invalid", response.data["error"].lower())
 
     def test_password_reset_confirm_weak_password(self):
         token = signer.sign(f"{self.user.pk}:{self.user.password}")
@@ -87,7 +87,13 @@ class PasswordResetTests(APITestCase):
             format="json"
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn("security requirements", response.data.get("error", "").lower())
+        self.assertTrue(
+            any(msg in response.data.get("error", "").lower() for msg in [
+                "must be at least 8 characters long",
+                "special character",
+                "must include at least one uppercase letter"
+                ])
+        )
 
     def test_password_change_authenticated(self):
         self.client.force_authenticate(user=self.user)

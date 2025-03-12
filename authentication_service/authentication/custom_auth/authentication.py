@@ -20,6 +20,10 @@ class CustomJWTAuthentication(JWTAuthentication):
 
         try:
             validated_token = self.get_validated_token(raw_token)
+        except (InvalidToken, TokenError) as e:
+            raise AuthenticationFailed(f"Invalid or expired token: {str(e)}")
+
+        try:
             user = self.get_user(validated_token)
 
             if not user.is_active:
@@ -27,9 +31,5 @@ class CustomJWTAuthentication(JWTAuthentication):
 
             return user, validated_token
 
-        except (InvalidToken, TokenError) as e:
-            raise AuthenticationFailed(f"Invalid or expired token: {str(e)}")
         except AuthenticationFailed as e:
             raise AuthenticationFailed(f"Authentication failed. Please log in again: {str(e)}")
-        except Exception as e:
-            raise AuthenticationFailed(f"An error occurred during authentication: {str(e)}")

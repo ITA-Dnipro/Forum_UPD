@@ -5,7 +5,7 @@ class CustomUserManager(BaseUserManager):
     def create_user(self, email, password, **extra_fields):
         """
         Creates and returns a regular user.
-        
+
         :param email (str): The email address of the user.
         :param password (str): The user's password.
         :param **extra_fields: Additional user fields.
@@ -14,7 +14,14 @@ class CustomUserManager(BaseUserManager):
             CustomUser: The created user instance.
         """
 
+        if not email:
+            raise ValueError("The Email field must be set")
+
         email = self.normalize_email(email)
+
+        if password is None:
+            raise ValueError("The Password field cannot be None")
+
         user = self.model(email=email, **extra_fields)
         user.set_password(password)
         user.full_clean()
@@ -24,7 +31,7 @@ class CustomUserManager(BaseUserManager):
     def create_superuser(self, email, password, **extra_fields):
         """
         Creates and returns a superuser with elevated permissions.
-        
+
         :param email (str): The email address of the superuser.
         :param password (str): The superuser's password.
         :param **extra_fields: Additional superuser fields.
@@ -33,7 +40,6 @@ class CustomUserManager(BaseUserManager):
             CustomUser: The created superuser instance.
         """
         extra_fields.setdefault('is_staff', True)
-        extra_fields.setdefault('is_active', True)
         extra_fields.setdefault('is_superuser', True)
         user = self.create_user(email, password=password, **extra_fields)
         user.is_active = True
