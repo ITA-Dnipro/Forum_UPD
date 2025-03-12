@@ -3,6 +3,8 @@ from fastapi import APIRouter, Query, HTTPException
 from app.models import NewsModel
 from app.celery import celery
 from beanie import PydanticObjectId
+from app.redis import redis
+import json
 
 router = APIRouter()
 
@@ -24,6 +26,13 @@ async def get_article(news_id: PydanticObjectId):
         raise HTTPException(status_code=404, detail="News not found")
 
     return news
+
+@router.get("/news/recent/")
+async def get_recent_news():
+    cached_news = await redis.get("recent_news")
+    if cached_news:
+        return json.loads(cached_news)
+    return {"message": "No recent news found in cache."}
 
 @router.post("/scrape/")
 async def trigger_scraping():

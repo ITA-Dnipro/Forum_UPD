@@ -4,8 +4,12 @@ from fastapi import HTTPException
 from bs4 import BeautifulSoup
 from datetime import datetime
 from app.models import NewsModel
+from app.redis import redis
+from app.utils import MongoJSONEncoder
+from datetime import timedelta
 import logging
 import random
+import json
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -45,7 +49,6 @@ async def fetch(session, url, retries=5, backoff_factor=1):
 async def scrape_news():
     """Scrapes the latest business news from epravda.com.ua asynchronously"""
     try:
-        print('enter scrape_news')
         async with aiohttp.ClientSession() as session:
             html = await fetch(session, URL)
             if not html:
@@ -61,7 +64,7 @@ async def scrape_news():
             latest_news = []
             article_urls = []
 
-            for article_section in articles.find_all("div", class_="article_news", limit=5):
+            for article_section in articles.find_all("div", class_="article_news", limit=8):
                 title_section = article_section.find("div", class_="article_title")
                 if not title_section:
                     continue
@@ -118,9 +121,7 @@ async def scrape_article(session, article_url):
     
 async def scrape_and_store_news():
     """Scrapes the latest 5 news articles and stores them in MongoDB if not duplicates."""
-    print('enter scraper')
     latest_news = await scrape_news()
-    print('scrape successfully')
     if not latest_news:
         raise HTTPException(status_code=404, detail="No news found")
 
@@ -135,7 +136,12 @@ async def scrape_and_store_news():
         inserted = await NewsModel.insert_one(news)
         if inserted.id:
             saved_news.append(news)
-    print('error before')
+
+    if saved_news:
+        await redis.setex(
+            "recent_news", int(timedelta(hours=24).total_seconds()), json.dumps([n.dict() for n in saved_news], cls=MongoJSONEncoder)
+        )
+
     return {
         "message": "Scraping completed",
         "saved_news_count": len(saved_news),

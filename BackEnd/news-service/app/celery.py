@@ -31,7 +31,7 @@ celery.conf.update(
 entry = RedBeatSchedulerEntry(
     "scrape_news_task",
     "app.tasks.scrape_news_task",
-    crontab(minute="*"),  # Runs every minute
+    crontab(minute=0, hour="*/3"),  # Runs every 3 hours
     app=celery,
 )
 entry.save()  # Save the task in Redis

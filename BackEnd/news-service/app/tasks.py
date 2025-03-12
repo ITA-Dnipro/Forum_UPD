@@ -16,7 +16,6 @@ def scrape_news_task(self):
         # Initialize Beanie before running the scraper
         loop.run_until_complete(init_db())
         loop.run_until_complete(scrape_and_store_news())
-        print('success')
     except Exception as e:
         logger.error(f"Error in scrape_news_task: {e}", exc_info=True)
         raise self.retry(exc=e)  # Retry the task if it fails
