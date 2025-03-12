@@ -6,6 +6,7 @@ from crud.categories import CategoryRepository
 from crud.regions import RegionRepository
 from schemas.profiles import Profile, ProfileOptional
 from exceptions import NotFoundError
+from datetime import datetime 
 
 class ProfileRepository:
     @staticmethod
@@ -53,6 +54,7 @@ class ProfileRepository:
         regions = await RegionRepository.get_list_by_ids(profile_dict["profile_regions"], session=session)
         profile_dict["profile_regions"] = regions
         profile.__dict__.update(profile_dict)
+        profile.updated_at(datetime.now())
         await session.commit()
         return profile
        

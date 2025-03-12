@@ -21,7 +21,7 @@ async def profiles_list(session: AsyncSession = Depends(get_async_session)):
 
 @router.post("/", status_code=201)
 async def create_profile(
-    profile: Annotated[Profile, Depends(dependency=profile_create_dependency)],
+    profile: Annotated[Profile, Depends()],
     session: AsyncSession = Depends(get_async_session)
     ):
     profile = await ProfileRepository.add_one(profile, session)
@@ -44,7 +44,7 @@ async def profiles_detail(
 @router.put("/{profile_id}")
 async def profile_update(
     profile_id: int, 
-    profile_data: Annotated[Profile, Depends(dependency=profile_create_dependency)],
+    profile_data: Annotated[Profile, Depends()],
     session: AsyncSession = Depends(get_async_session)
     ):
     try:
