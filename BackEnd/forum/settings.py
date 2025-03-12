@@ -336,12 +336,7 @@ LOGGING = {
             "handlers": ["file"],
             "level": "DEBUG",
             "propagate": False,
-        },
-        "utils_validation_service": {
-            "handlers": ["error_file"],
-            "level": "ERROR",
-            "propagate": False,
-        },
+        }
     },
 }
 
