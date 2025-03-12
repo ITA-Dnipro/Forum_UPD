@@ -1,5 +1,5 @@
 import logging.config
-from BackEnd.forum.settings import LOGGING
+from settings import LOGGING
 
 
 logging.config.dictConfig(LOGGING)
