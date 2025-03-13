@@ -11,7 +11,13 @@ class ConversationCreateView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request, format=None):
-
+        if request.user.id not in request.data["participant_ids"]:
+            return Response(
+                {
+                    "message": "Authenticated user is not in the participants list."
+                },
+                status=status.HTTP_403_FORBIDDEN,
+            )
         serializer = RoomSerializer(data=request.data)
         if serializer.is_valid():
             room = serializer.save()
