@@ -1,7 +1,7 @@
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession 
 from sqlalchemy.orm import selectinload
-from models.profiles import ProfileOrm
+from models.profiles import StartupProfileOrm
 from crud.categories import CategoryRepository
 from crud.regions import RegionRepository
 from schemas.profiles import Profile, ProfileOptional
@@ -17,7 +17,7 @@ class ProfileRepository:
         regions = await RegionRepository.get_list_by_ids(profile_dict["profile_regions"], session=session)
         profile_dict["profile_regions"] = regions
         profile_dict["is_deleted"] = False
-        profile = ProfileOrm(**profile_dict)
+        profile = StartupProfileOrm(**profile_dict)
         session.add(profile)
         await session.commit()
         return profile
@@ -25,9 +25,9 @@ class ProfileRepository:
 
     @staticmethod
     async def get_all(session: AsyncSession):
-        query = select(ProfileOrm).where(ProfileOrm.is_deleted == False)\
-        .options(selectinload(ProfileOrm.profile_categories))\
-        .options(selectinload(ProfileOrm.profile_regions))
+        query = select(StartupProfileOrm).where(StartupProfileOrm.is_deleted == False)\
+        .options(selectinload(StartupProfileOrm.profile_categories))\
+        .options(selectinload(StartupProfileOrm.profile_regions))
         result = await session.execute(query)
         profile_models = result.scalars().all()
         return profile_models
@@ -35,9 +35,9 @@ class ProfileRepository:
 
     @staticmethod
     async def get_by_id(profile_id: int, session: AsyncSession):
-        query = select(ProfileOrm).where(ProfileOrm.id == profile_id, ProfileOrm.is_deleted == False)\
-        .options(selectinload(ProfileOrm.profile_categories))\
-        .options(selectinload(ProfileOrm.profile_regions))
+        query = select(StartupProfileOrm).where(StartupProfileOrm.id == profile_id, StartupProfileOrm.is_deleted == False)\
+        .options(selectinload(StartupProfileOrm.profile_categories))\
+        .options(selectinload(StartupProfileOrm.profile_regions))
         result = await session.execute(query)
         profile = result.scalars().first()
         if not profile:
@@ -78,7 +78,7 @@ class ProfileRepository:
 
     @classmethod
     async def soft_delete(cls, profile_id: int, session: AsyncSession):
-        profile: ProfileOrm = await cls.get_by_id(profile_id, session=session)
+        profile: StartupProfileOrm = await cls.get_by_id(profile_id, session=session)
         profile.is_deleted = True
         await session.commit()
             

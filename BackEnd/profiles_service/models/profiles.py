@@ -6,8 +6,8 @@ from datetime import datetime
 
 
 
-class ProfileOrm(Model):
-    __tablename__ = "profiles"
+class StartupProfileOrm(Model):
+    __tablename__ = "startup_profiles"
 
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(nullable=False)

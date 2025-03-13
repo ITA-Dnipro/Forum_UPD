@@ -5,7 +5,7 @@ from enum import Enum
 
 class StatusEnum(Enum):
   UNDEFINED = "Undefined"
-  PENDING = "Pendingoderation"
+  PENDING = "Pending"
   BLOCKED = "Blocked"
   APPROVED = "Approved"
   AUTOAPPROVED = "Autopproved"
