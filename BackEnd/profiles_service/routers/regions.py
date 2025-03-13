@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from dependencies import get_async_session
 
 router = APIRouter(
-    tags=["regions"]
+    tags=["Regions"]
 )
 
 

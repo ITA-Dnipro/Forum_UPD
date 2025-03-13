@@ -3,24 +3,26 @@ from fastapi import APIRouter, Depends, Response
 from exceptions import NotFoundError
 from schemas.profiles import ProfileOptional, Profile
 from crud.profiles import ProfileRepository
-from dependencies import profile_create_dependency, profile_optional_create_dependency, get_async_session
+from dependencies import profile_optional_create_dependency, get_async_session
 from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 
 router = APIRouter(
-    tags=["Profiles"]
+    tags=["Startup_profiles"]
 )
 
 
 @router.get("/", status_code=200)
-async def profiles_list(session: AsyncSession = Depends(get_async_session)):
+async def startup_profiles_list(
+    session: AsyncSession = Depends(get_async_session)
+    ):
     profiles = await ProfileRepository.get_all(session=session)
     return profiles
 
 
 @router.post("/", status_code=201)
-async def create_profile(
+async def create_startup_profile(
     profile: Annotated[Profile, Depends()],
     session: AsyncSession = Depends(get_async_session)
     ):
@@ -29,7 +31,7 @@ async def create_profile(
 
 
 @router.get("/{profile_id}", status_code=200)
-async def profiles_detail(
+async def startup_profiles_detail(
     profile_id: int, 
     session: AsyncSession = Depends(get_async_session)):
     try:
@@ -42,7 +44,7 @@ async def profiles_detail(
 
 
 @router.put("/{profile_id}")
-async def profile_update(
+async def startup_profile_update(
     profile_id: int, 
     profile_data: Annotated[Profile, Depends()],
     session: AsyncSession = Depends(get_async_session)
@@ -57,7 +59,7 @@ async def profile_update(
 
 
 @router.patch("/{profile_id}")
-async def profile_partial_update(
+async def startup_profile_partial_update(
     profile_id: int, 
     profile_data: Annotated[ProfileOptional, Depends(dependency=profile_optional_create_dependency)],
     session: AsyncSession = Depends(get_async_session)
@@ -72,7 +74,7 @@ async def profile_partial_update(
 
 
 @router.delete("/{profile_id}")
-async def profile_delete(
+async def startup_profile_delete(
     profile_id: int,
     session: AsyncSession = Depends(get_async_session)
     ):
