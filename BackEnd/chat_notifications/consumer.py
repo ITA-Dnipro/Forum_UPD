@@ -2,6 +2,7 @@ from channels.generic.websocket import AsyncWebsocketConsumer
 import json
 import logging
 from channels.exceptions import ChannelFull
+import asyncio
 
 logger = logging.getLogger(__name__)
 
@@ -17,7 +18,9 @@ class NotificationConsumer(AsyncWebsocketConsumer):
         self.room_group_name = f'notifications_{self.scope["user"].id}'
 
         if self.channel_layer is None:
-            logger.error("channel_layer is not configured properly.")
+            logger.error(
+                "channel_layer is not configured properly. Ensure Django Channels is set up with a proper backend (e.g Redis)."
+            )
             await self.close()
             return
 
@@ -38,7 +41,7 @@ class NotificationConsumer(AsyncWebsocketConsumer):
 
     async def disconnect(self, close_code):
         """Handle WebSocket disconnection."""
-        if self.channel_layer is not None:
+        if hasattr(self, "room_group_name") and self.channel_layer is not None:
             try:
                 await self.channel_layer.group_discard(
                     self.room_group_name, self.channel_name
@@ -50,23 +53,44 @@ class NotificationConsumer(AsyncWebsocketConsumer):
                 logger.error(f"KeyError in group_discard: {str(e)}")
             except RuntimeError as e:
                 logger.error(f"Runtime error in group_discard: {str(e)}")
+            except Exception as e:
+                logger.error(f"Unexpected error in disconnect: {str(e)}")
 
     async def send_notification(self, event):
-        """Send notification to the WebSocket client."""
-        try:
-            notification = event.get(
-                "notification", "No notification data provided"
-            )
-            await self.send(
-                text_data=json.dumps({"notification": notification})
-            )
-        except json.JSONDecodeError as e:
-            logger.error(
-                f"JSON encoding error while sending notification: {str(e)}"
-            )
-        except ChannelFull as e:
-            logger.error(f"Channel layer is full, message dropped: {str(e)}")
-        except ConnectionError as e:
-            logger.error(
-                f"Connection error while sending notification: {str(e)}"
-            )
+        """Send notification to the WebSocket client with retries."""
+        notification = event.get(
+            "notification", "No notification data provided"
+        )
+        message = json.dumps({"notification": notification})
+
+        retries = 3
+        delay = 1
+
+        for attempt in range(retries):
+            try:
+                await self.send(text_data=message)
+                return
+
+            except json.JSONDecodeError as e:
+                logger.error(
+                    f"JSON encoding error while sending notification: {str(e)}"
+                )
+                return
+
+            except ChannelFull as e:
+                if attempt < retries - 1:
+                    logger.warning(
+                        f"Channel layer is full, retrying in {delay}s ({attempt + 1}/{retries}): {str(e)}"
+                    )
+                    await asyncio.sleep(delay)
+                    delay *= 2
+                else:
+                    logger.error(
+                        f"Channel layer is still full after {retries} retries, message dropped: {str(e)}"
+                    )
+
+            except ConnectionError as e:
+                logger.error(
+                    f"Connection error while sending notification: {str(e)}"
+                )
+                return

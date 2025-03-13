@@ -1,4 +1,4 @@
-from mongoengine import Document
+from mongoengine import Document, CASCADE
 from mongoengine.fields import (
     ReferenceField,
     IntField,
@@ -12,10 +12,12 @@ from chat.models import Message, Room
 
 class Notification(Document):
     recipient_id = IntField(required=True)
-    message = ReferenceField(Message, required=True, reverse_delete_rule=2)
+    message = ReferenceField(
+        Message, required=True, reverse_delete_rule=CASCADE
+    )
     is_read = BooleanField(default=False)
-    room = ReferenceField(Room, required=True, reverse_delete_rule=2)
-    created_at = DateTimeField(default=lambda: timezone.now())
+    room = ReferenceField(Room, required=True, reverse_delete_rule=CASCADE)
+    created_at = DateTimeField(default=timezone.now)
 
     meta = {
         "collection": "notifications",
