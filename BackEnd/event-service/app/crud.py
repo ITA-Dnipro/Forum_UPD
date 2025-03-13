@@ -2,8 +2,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import Depends, HTTPException
 from typing import List, Optional, Type, TypeVar
-from database import StatusEnum
-
+from enums import StatusEnum
 T = TypeVar("T")
 
 async def get_active_objects(db: AsyncSession, model: Type[T], obj_id: int = None, skip: int = 0, limit: int = 10) -> List[T]:

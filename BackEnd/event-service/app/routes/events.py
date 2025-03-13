@@ -1,9 +1,10 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
-from database import get_async_session, StatusEnum
+from database import get_async_session
 from models import Event
 from schemas import EventCreate, EventUpdate
 from crud import get_active_objects, soft_delete
+from enums import StatusEnum
 
 router = APIRouter(prefix="/events", tags=["Events"])
 
@@ -16,6 +17,7 @@ async def get_events(skip: int = 0, limit: int = 10, db: AsyncSession = Depends(
 async def create_event(event: EventCreate, db: AsyncSession = Depends(get_async_session)):
     db_event = Event(**event.dict())
     db_event.organizer_id = 1
+    db_event.status = StatusEnum.active
     db.add(db_event)
     await db.commit()
     await db.refresh(db_event)

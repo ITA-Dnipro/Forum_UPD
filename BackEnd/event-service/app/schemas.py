@@ -1,6 +1,7 @@
 from pydantic import BaseModel
 from typing import Optional
 from datetime import date, time
+from enums import TypeEnum
 
 class EventCreate(BaseModel):
     title: str
@@ -10,10 +11,12 @@ class EventCreate(BaseModel):
     location: Optional[str] = None
     capacity: int
     available_slots: int
-    category: str
-    type: str
+    type: TypeEnum
     image: Optional[str] = None
     summary: Optional[str] = None
+    
+    class Config:
+        use_enum_values = True
 
 class EventUpdate(BaseModel):
     title: str
