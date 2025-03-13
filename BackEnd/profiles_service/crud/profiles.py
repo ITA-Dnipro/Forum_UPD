@@ -54,7 +54,7 @@ class ProfileRepository:
         regions = await RegionRepository.get_list_by_ids(profile_dict["profile_regions"], session=session)
         profile_dict["profile_regions"] = regions
         profile.__dict__.update(profile_dict)
-        profile.updated_at(datetime.now())
+        profile.updated_at = datetime.now()
         await session.commit()
         return profile
        
@@ -72,6 +72,7 @@ class ProfileRepository:
 
         for key, value in update_fields.items():
             setattr(profile, key, value)
+        profile.updated_at = datetime.now()
         await session.commit()
         return profile
 

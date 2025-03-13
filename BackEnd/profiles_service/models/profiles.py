@@ -1,4 +1,4 @@
-from sqlalchemy import DateTime, String, func
+from sqlalchemy import DateTime, String, Text, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from models import Model
 from schemas.profiles import StatusEnum
@@ -24,10 +24,10 @@ class StartupProfileOrm(Model):
         back_populates="region_profiles", 
         secondary="profile_region"
         )
-    phone: Mapped[str] = mapped_column(String(12), default=None)
-    edrpou: Mapped[str] = mapped_column(String(10), default=None, unique=True)
-    rnokpp: Mapped[str] = mapped_column(String(10), default=None, unique=True)
+    phone: Mapped[str] = mapped_column(String(12), default=None, nullable=True)
+    edrpou: Mapped[str] = mapped_column(String(10), default=None, unique=True, nullable=True)
+    rnokpp: Mapped[str] = mapped_column(String(10), default=None, unique=True, nullable=True)
     founded: Mapped[int] = mapped_column(nullable=True)
-    startup_idea: Mapped[str] = mapped_column(String(10), default=None)
+    startup_idea: Mapped[str] = mapped_column(Text, default=None, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=func.now())
-    updated_at: Mapped[datetime] = mapped_column(DateTime) 
+    updated_at: Mapped[datetime] = mapped_column(DateTime, nullable=True) 
