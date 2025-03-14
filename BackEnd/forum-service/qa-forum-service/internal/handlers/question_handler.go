@@ -31,6 +31,10 @@ func (h *Handler) CreateQuestion(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Title and Description are required"})
 		return
 	}
+	if question.AuthorID <= 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Author ID must be a positive integer"})
+		return
+	}
 
 	if err := h.repo.CreateQuestion(&question); err != nil {
 		log.Printf("Error creating question: %v", err)
@@ -99,7 +103,6 @@ func (h *Handler) GetQuestion(c *gin.Context) {
 	}
 
 	question, err := h.repo.GetQuestionByID(id)
-
 	if err != nil {
 		log.Printf("Error fetching question: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -122,13 +125,11 @@ func (h *Handler) UpdateQuestion(c *gin.Context) {
 	}
 
 	question, err := h.repo.GetQuestionByID(id)
-
 	if err != nil {
-		log.Printf("Error fetching question for update: %v", err)
+		log.Printf("Error fetching question %v for update: %v", id, err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 		return
 	}
-
 	if question == nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Question not found"})
 		return
@@ -139,7 +140,6 @@ func (h *Handler) UpdateQuestion(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-
 	if updateData.Title == "" || updateData.Description == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Title and Description are required"})
 		return
@@ -150,7 +150,7 @@ func (h *Handler) UpdateQuestion(c *gin.Context) {
 	question.Status = updateData.Status
 
 	if err := h.repo.UpdateQuestion(question); err != nil {
-		log.Printf("Error updating question: %v", err)
+		log.Printf("Error updating question %v: %v", id, err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -199,14 +199,18 @@ func (h *Handler) SaveQuestion(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
+	if saveRequest.UserID <= 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "User ID must be a positive integer"})
+		return
+	}
 
 	if err := h.repo.SaveQuestion(saveRequest.UserID, questionId); err != nil {
 		if err.Error() == "question already saved by user" {
 			c.JSON(http.StatusConflict, gin.H{"error": "Question already saved"})
 			return
 		}
-		log.Printf("Error saving question: %v", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		log.Printf("Error saving question %v for user %d: %v", questionId, saveRequest.UserID, err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 		return
 	}
 

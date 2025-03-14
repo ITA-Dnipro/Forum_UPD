@@ -60,16 +60,17 @@ func (db *ScyllaDB) CreateQuestion(q *models.Question) error {
 func (db *ScyllaDB) GetQuestionByID(id gocql.UUID) (*models.Question, error) {
 	var q models.Question
 	var answers []models.QuestionAnswer
+	var acceptedAnswerIds []gocql.UUID
 
 	query := `SELECT question_id, author_id, title, description, status, 
               likes_count, dislikes_count, saves_count,
-              created_at, updated_at, answers
+              created_at, updated_at, answers, accepted_answer_ids
               FROM questions WHERE question_id = ?`
 
 	if err := db.session.Query(query, id).Scan(
 		&q.ID, &q.AuthorID, &q.Title, &q.Description, &q.Status,
 		&q.LikesCount, &q.DislikesCount, &q.SavesCount,
-		&q.CreatedAt, &q.UpdatedAt, &answers); err != nil {
+		&q.CreatedAt, &q.UpdatedAt, &answers, &acceptedAnswerIds); err != nil {
 		if err == gocql.ErrNotFound {
 			return nil, nil
 		}
@@ -77,6 +78,10 @@ func (db *ScyllaDB) GetQuestionByID(id gocql.UUID) (*models.Question, error) {
 	}
 
 	q.Answers = answers
+	q.AcceptedAnswers = acceptedAnswerIds
+
+	sortAnswers(&q)
+
 	return &q, nil
 }
 
@@ -124,6 +129,7 @@ func (db *ScyllaDB) GetAllQuestions(limit int, pagingState []byte) ([]models.Que
 	for i := range questions {
 		fullQuestion, err := db.GetQuestionByID(questions[i].ID)
 		if err == nil && fullQuestion != nil {
+			sortAnswers(fullQuestion)
 			questions[i] = *fullQuestion
 		}
 	}
@@ -169,6 +175,7 @@ func (db *ScyllaDB) GetQuestionsByAuthor(authorID int, limit int, pagingState []
 
 		fullQuestion, err := db.GetQuestionByID(basicInfo.QuestionID)
 		if err == nil && fullQuestion != nil {
+			sortAnswers(fullQuestion)
 			questions = append(questions, *fullQuestion)
 		}
 	}
@@ -218,6 +225,7 @@ func (db *ScyllaDB) GetQuestionsByStatus(status string, limit int, pagingState [
 
 		fullQuestion, err := db.GetQuestionByID(basicInfo.QuestionID)
 		if err == nil && fullQuestion != nil && fullQuestion.Status == status {
+			sortAnswers(fullQuestion)
 			questions = append(questions, *fullQuestion)
 		}
 	}
@@ -410,4 +418,22 @@ func (db *ScyllaDB) updateSavesCount(questionID gocql.UUID, newSavesCount int) e
 	}
 
 	return nil
+}
+
+func sortAnswers(question *models.Question) {
+	accepted := make(map[gocql.UUID]bool)
+	for _, aid := range question.AcceptedAnswers {
+		accepted[aid] = true
+	}
+
+	var acceptedAnswers, otherAnswers []models.QuestionAnswer
+	for _, ans := range question.Answers {
+		ans.IsAccepted = accepted[ans.ID]
+		if ans.IsAccepted {
+			acceptedAnswers = append(acceptedAnswers, ans)
+		} else {
+			otherAnswers = append(otherAnswers, ans)
+		}
+	}
+	question.Answers = append(acceptedAnswers, otherAnswers...)
 }
