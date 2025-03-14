@@ -31,7 +31,7 @@ CREATE TABLE IF NOT EXISTS questions (
     dislikes_count int,
     saves_count int,
     answers list<frozen<question_answer>>,
-    accepted_answer_id uuid,
+    accepted_answer_ids list<uuid>,
     created_at timestamp,
     updated_at timestamp
 );
