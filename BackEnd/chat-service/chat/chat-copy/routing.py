@@ -6,7 +6,7 @@ from . import consumers
 from django.urls import re_path
 
 
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "forum.settings")
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "chat.settings")
 
 
 websocket_urlpatterns = [

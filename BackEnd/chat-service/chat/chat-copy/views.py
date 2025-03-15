@@ -4,11 +4,11 @@ from .serializers import RoomSerializer, MessageSerializer
 from rest_framework import status
 from .models import Room, Message
 from rest_framework.permissions import IsAuthenticated
-from forum.pagination import ForumPagination
+from chat.pagination import ChatPagination
 
 
 class ConversationCreateView(APIView):
-    permission_classes = [IsAuthenticated]
+    # permission_classes = [IsAuthenticated]
 
     def post(self, request, format=None):
 
@@ -24,7 +24,7 @@ class ConversationCreateView(APIView):
 
 
 class MessageSendView(APIView):
-    permission_classes = [IsAuthenticated]
+    # permission_classes = [IsAuthenticated]
 
     def post(self, request, format=None):
 
@@ -50,8 +50,8 @@ class MessageSendView(APIView):
 
 
 class MessageListView(APIView):
-    permission_classes = [IsAuthenticated]
-    pagination_class = [ForumPagination]
+    # permission_classes = [IsAuthenticated]
+    pagination_class = [ChatPagination]
 
     def get(self, request, room_id, format=None):
         try:
