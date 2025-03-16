@@ -24,8 +24,8 @@ class StartupProfileOrm(Model):
         back_populates="region_profiles", 
         secondary="profile_region"
         )
-    phone: Mapped[str] = mapped_column(String(12), default=None, nullable=True)
-    edrpou: Mapped[str] = mapped_column(String(10), default=None, unique=True, nullable=True)
+    phone: Mapped[str] = mapped_column(String(15), default=None, nullable=True)
+    edrpou: Mapped[str] = mapped_column(String(8), default=None, unique=True, nullable=True)
     rnokpp: Mapped[str] = mapped_column(String(10), default=None, unique=True, nullable=True)
     founded: Mapped[int] = mapped_column(nullable=True)
     startup_idea: Mapped[str] = mapped_column(Text, default=None, nullable=True)

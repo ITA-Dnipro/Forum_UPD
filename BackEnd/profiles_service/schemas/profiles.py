@@ -1,7 +1,15 @@
-from typing import Optional
-from pydantic import BaseModel, conlist
+from typing import Annotated, Optional, Union
+from pydantic import BaseModel, conlist, field_validator
 from enum import Enum
+from pydantic_extra_types.phone_numbers import PhoneNumberValidator, PhoneNumber
 
+MyNumberType = Annotated[
+  Union[str, PhoneNumber],
+  PhoneNumberValidator(
+    default_region="UA",
+    number_format="E164"
+  )
+]
 
 class StatusEnum(Enum):
   UNDEFINED = "Undefined"
@@ -16,7 +24,7 @@ class Profile(BaseModel):
   is_registered: bool = False
   is_startup: bool = False
   is_fop: bool = False
-  phone: Optional[str] = None
+  phone: Optional[MyNumberType]
   edrpou: Optional[str] = None
   rnokpp: Optional[str] = None
   startup_idea: Optional[str] = None
@@ -24,7 +32,7 @@ class Profile(BaseModel):
   startup_idea: Optional[str] = None
   profile_categories: conlist(int, min_length=1)
   profile_regions: conlist(int, min_length=1)
-  
+
 
 class ProfileOptional(Profile):
     name: Optional[str] = None
