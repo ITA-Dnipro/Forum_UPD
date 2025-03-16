@@ -7,7 +7,6 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
-# Load environment variables
 REDIS_URL_BROKER = os.getenv("REDIS_URL_BROKER", "redis://redis_cache:6379/0")
 REDIS_URL_BACKEND = os.getenv("REDIS_URL_BACKEND", "redis://redis_cache:6379/1")
 
@@ -22,7 +21,7 @@ celery = Celery(
 celery.conf.update(
     {
         "beat_scheduler": "redbeat.RedBeatScheduler",  # Use RedBeat scheduler
-        "redbeat_redis_url": REDIS_URL_BROKER,  # Ensure RedBeat uses the broker Redis
+        "redbeat_redis_url": REDIS_URL_BROKER,  
         "timezone": "UTC",
     }
 )
@@ -31,7 +30,7 @@ celery.conf.update(
 entry = RedBeatSchedulerEntry(
     "scrape_news_task",
     "app.tasks.scrape_news_task",
-    crontab(minute=0, hour="*/3"),  # Runs every 3 hours
+    crontab(minute=0, hour='*/3'),  # Runs every 3 hours
     app=celery,
 )
-entry.save()  # Save the task in Redis
+entry.save()  

@@ -11,6 +11,7 @@ class NewsBase(BaseModel):
     content: str
     link: Annotated[str, Indexed(unique=True)]
     published_at: datetime = Field(default_factory=datetime.now)
+    deleted: bool = Field(default=False)
 
     class Config:
         """Pydantic configuration to ensure correct serialization."""

@@ -1,5 +1,5 @@
-from app.celery import celery  # Import Celery app instance
-from app.scraper import scrape_and_store_news  # Import your scraping function
+from app.celery import celery
+from app.scraper import scrape_and_store_news
 import logging
 import asyncio
 from app.database import init_db
@@ -13,11 +13,11 @@ def scrape_news_task(self):
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
 
-        # Initialize Beanie before running the scraper
         loop.run_until_complete(init_db())
+
         loop.run_until_complete(scrape_and_store_news())
     except Exception as e:
         logger.error(f"Error in scrape_news_task: {e}", exc_info=True)
-        raise self.retry(exc=e)  # Retry the task if it fails
+        raise self.retry(exc=e)  
     finally:
-        loop.close()  # Ensure the event loop is closed properly
+        loop.close()  

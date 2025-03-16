@@ -4,12 +4,8 @@ from fastapi import HTTPException
 from bs4 import BeautifulSoup
 from datetime import datetime
 from app.models import NewsModel
-from app.redis import redis
-from app.utils import MongoJSONEncoder
-from datetime import timedelta
 import logging
-import random
-import json
+from app.utils import update_news_cache
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -40,7 +36,7 @@ async def fetch(session, url, retries=5, backoff_factor=1):
         except aiohttp.ClientError as e:
             logger.error(f"Attempt {attempt + 1}: Error fetching {url} - {e}")
 
-        await asyncio.sleep(delay + random.uniform(0, 0.5))  # Random jitter
+        await asyncio.sleep(delay)
         delay *= 2  # Exponential backoff
 
     logger.error(f"Failed to fetch {url} after {retries} attempts.")
@@ -64,7 +60,7 @@ async def scrape_news():
             latest_news = []
             article_urls = []
 
-            for article_section in articles.find_all("div", class_="article_news", limit=8):
+            for article_section in articles.find_all("div", class_="article_news", limit=5):
                 title_section = article_section.find("div", class_="article_title")
                 if not title_section:
                     continue
@@ -119,6 +115,7 @@ async def scrape_article(session, article_url):
         logger.error(f"Error scraping article {article_url}: {e}", exc_info=True)
         return None  # Ensure it returns None on failure
     
+
 async def scrape_and_store_news():
     """Scrapes the latest 5 news articles and stores them in MongoDB if not duplicates."""
     latest_news = await scrape_news()
@@ -138,14 +135,15 @@ async def scrape_and_store_news():
             saved_news.append(news)
 
     if saved_news:
-        await redis.setex(
-            "recent_news", int(timedelta(hours=24).total_seconds()), json.dumps([n.dict() for n in saved_news], cls=MongoJSONEncoder)
-        )
+        await update_news_cache(saved_news)
 
-    return {
-        "message": "Scraping completed",
-        "saved_news_count": len(saved_news),
-        "skipped_news_count": len(skipped_news),
-        "saved_news": saved_news,
-        "skipped_news": skipped_news
-    }
+#   return {
+#       "message": "Scraping completed",
+#      "saved_news_count": len(saved_news),
+#      "skipped_news_count": len(skipped_news),
+#     "saved_news": saved_news,
+#      "skipped_news": skipped_news
+#   }
+
+
+
