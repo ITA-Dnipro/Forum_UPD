@@ -8,15 +8,15 @@ from chat.pagination import ChatPagination
 
 
 class ConversationCreateView(APIView):
-    # permission_classes = [IsAuthenticated]
-
     def post(self, request, format=None):
-
         serializer = RoomSerializer(data=request.data)
         if serializer.is_valid():
-            serializer.save()
+            room = serializer.save()
             return Response(
-                {"message": "Conversation was created"},
+                {
+                    "message": "Conversation was created",
+                    "room_id": str(room.id),
+                },
                 status=status.HTTP_201_CREATED,
             )
 
@@ -24,19 +24,8 @@ class ConversationCreateView(APIView):
 
 
 class MessageSendView(APIView):
-    # permission_classes = [IsAuthenticated]
 
     def post(self, request, format=None):
-
-        api_requested_sender_id = request.user.id
-
-        if api_requested_sender_id != request.data["sender_id"]:
-            return Response(
-                {
-                    "message": "Sender ID does not match the authenticated user."
-                },
-                status=status.HTTP_403_FORBIDDEN,
-            )
 
         serializer = MessageSerializer(data=request.data)
         if serializer.is_valid():
@@ -50,7 +39,6 @@ class MessageSendView(APIView):
 
 
 class MessageListView(APIView):
-    # permission_classes = [IsAuthenticated]
     pagination_class = [ChatPagination]
 
     def get(self, request, room_id, format=None):
