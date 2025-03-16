@@ -8,6 +8,7 @@ from mongoengine.fields import (
     ReferenceField,
 )
 from django.utils import timezone
+from chat_notifications.signals import notification_signal
 
 
 class Room(Document):
@@ -86,4 +87,16 @@ class Message(Document):
         """Update the room's updated_at field when a new message is created."""
         if not self.pk:
             self.room.update(set__updated_at=timezone.now())
-        return super().save(*args, **kwargs)
+        message = super().save(*args, **kwargs)
+        notification_signal.send(
+            sender=self.__class__,
+            message=message,
+            room=self.room,
+            recipient_ids=[
+                user_id
+                for user_id in self.room.participant_ids
+                if user_id != self.sender_id
+            ],
+            created=True,
+        )
+        return message
