@@ -28,8 +28,6 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.permissions import IsAuthenticated, AllowAny
-from drf_yasg.utils import swagger_auto_schema
-from drf_yasg import openapi
 
 from .serializers import (
     CustomTokenObtainPairSerializer,
@@ -169,19 +167,26 @@ class AccountActivationView(APIView):
 
 
 class LoginView(APIView):
-    @swagger_auto_schema(
-        operation_description="User login with email and password",
-        request_body=openapi.Schema(
-            type=openapi.TYPE_OBJECT,
-            properties={
-                'email': openapi.Schema(type=openapi.TYPE_STRING),
-                'password': openapi.Schema(type=openapi.TYPE_STRING),
-            },
-            required=['email', 'password'],
-        ),
+    @extend_schema(
+        description="User login with email and password.",
+        request=CustomTokenObtainPairSerializer,
         responses={
-            200: "Login successful",
-            400: "Invalid credentials",
+            200: OpenApiResponse(
+                description="Login successful",
+                examples={
+                    "application/json": {
+                        "message": "Login successful."
+                    }
+                }
+            ),
+            400: OpenApiResponse(
+                description="Invalid credentials",
+                examples={
+                    "application/json": {
+                        "error": "Invalid credentials."
+                    }
+                }
+            ),
         }
     )
     def post(self, request):
@@ -206,22 +211,26 @@ class LoginView(APIView):
 class LogoutView(APIView):
     permission_classes = [IsAuthenticated]
 
-    @swagger_auto_schema(
-        operation_description="Logout by blacklisting the provided refresh token.",
-        request_body=openapi.Schema(
-            type=openapi.TYPE_OBJECT,
-            properties={
-                'refresh': openapi.Schema(
-                    type=openapi.TYPE_STRING,
-                    description='Refresh token to be blacklisted',
-                    example='your_refresh_token_here',
-                ),
-            },
-            required=['refresh'],
-        ),
+    @extend_schema(
+        description="Logout by blacklisting the provided refresh token.",
+        request=LogoutSerializer,
         responses={
-            200: "Logout successful",
-            400: "Invalid or missing refresh token",
+            200: OpenApiResponse(
+                description="Logout successful",
+                examples={
+                    "application/json": {
+                        "message": "Logout successful."
+                    }
+                }
+            ),
+            400: OpenApiResponse(
+                description="Invalid or missing refresh token",
+                examples={
+                    "application/json": {
+                        "error": "Invalid or missing refresh token."
+                    }
+                }
+            ),
         }
     )
     def post(self, request):
@@ -276,33 +285,35 @@ class PasswordResetRequestView(APIView):
     """
     permission_classes = [AllowAny]
 
-    @swagger_auto_schema(
-        operation_description="Request a password reset by providing your email address.",
-        request_body=openapi.Schema(
-            type=openapi.TYPE_OBJECT,
-            properties={
-                'email': openapi.Schema(type=openapi.TYPE_STRING, format='email', description='User\'s email address'),
-            },
-            required=['email'],
-        ),
+    @extend_schema(
+        description="Request a password reset by providing your email address.",
+        request=PasswordResetRequestSerializer,
         responses={
-            200: openapi.Response(
+            200: OpenApiResponse(
                 description="Password reset email sent successfully",
                 examples={
                     "application/json": {
-                        "message": "The link for password reset was sent. Please, check your mail."
+                        "message": "If an account with that email exists, a password reset link was sent."
                     }
                 }
             ),
-            400: openapi.Response(
+            400: OpenApiResponse(
                 description="Invalid email or user not found",
                 examples={
                     "application/json": {
-                        "error": "User does not exist."
+                        "error": "Invalid request."
                     }
                 }
             ),
-            500: openapi.Response(
+            429: OpenApiResponse(
+                description="Too many requests, please try again later.",
+                examples={
+                    "application/json": {
+                        "error": "Too many requests. Please, try again later."
+                    }
+                }
+            ),
+            500: OpenApiResponse(
                 description="Internal server error",
                 examples={
                     "application/json": {
@@ -374,18 +385,11 @@ class PasswordResetConfirmView(APIView):
     """
     permission_classes = [AllowAny]
 
-    @swagger_auto_schema(
-        operation_description="Confirm password reset by providing the token and new password.",
-        request_body=openapi.Schema(
-            type=openapi.TYPE_OBJECT,
-            properties={
-                'token': openapi.Schema(type=openapi.TYPE_STRING, description='Reset token received via email'),
-                'new_password': openapi.Schema(type=openapi.TYPE_STRING, description='New password for the account'),
-            },
-            required=['token', 'new_password'],
-        ),
+    @extend_schema(
+        description="Confirm password reset by providing the token and new password.",
+        request=PasswordResetConfirmSerializer,  # Use the serializer here
         responses={
-            200: openapi.Response(
+            200: OpenApiResponse(
                 description="Password reset successful",
                 examples={
                     "application/json": {
@@ -393,7 +397,7 @@ class PasswordResetConfirmView(APIView):
                     }
                 }
             ),
-            400: openapi.Response(
+            400: OpenApiResponse(
                 description="Invalid or expired token",
                 examples={
                     "application/json": {
@@ -473,20 +477,11 @@ class PasswordChangeView(APIView):
     """
     permission_classes = [IsAuthenticated]
 
-    @swagger_auto_schema(
-        operation_description="Change the password of an authenticated user.",
-        request_body=openapi.Schema(
-            type=openapi.TYPE_OBJECT,
-            properties={
-                'old_password': openapi.Schema(type=openapi.TYPE_STRING, description='Current password'),
-                'new_password': openapi.Schema(type=openapi.TYPE_STRING, description='New password'),
-                'confirm_password': openapi.Schema(type=openapi.TYPE_STRING,
-                                                   description='Confirmation of the new password'),
-            },
-            required=['old_password', 'new_password', 'confirm_password'],
-        ),
+    @extend_schema(
+        description="Change the password of an authenticated user.",
+        request=PasswordChangeSerializer,
         responses={
-            200: openapi.Response(
+            200: OpenApiResponse(
                 description="Password changed successfully",
                 examples={
                     "application/json": {
@@ -494,11 +489,11 @@ class PasswordChangeView(APIView):
                     }
                 }
             ),
-            400: openapi.Response(
+            400: OpenApiResponse(
                 description="Invalid input or password mismatch",
                 examples={
                     "application/json": {
-                        "error": "Old password is incorrect."
+                        "error": "Old password is incorrect or passwords do not match."
                     }
                 }
             ),

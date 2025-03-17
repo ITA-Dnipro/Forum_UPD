@@ -14,6 +14,10 @@ class UserFactory(factory.django.DjangoModelFactory):
     password = factory.Faker("password")
 
     is_active = True
+    is_startup = False
+    is_investor = False
+    is_startup_valid = False
+    is_investor_valid = False
 
     @factory.lazy_attribute
     def set_password(self):

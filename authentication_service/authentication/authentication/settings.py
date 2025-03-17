@@ -84,7 +84,7 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:8080",
     "http://127.0.0.1",
     "http://0.0.0.0",
-] + config("CORS_ALLOWED_ORIGINS", cast=list, default=[])
+] + config("CORS_ALLOWED_ORIGINS", default="", cast=str).split(",")
 
 CORS_ALLOW_HEADERS = list(default_headers) + [
     "Access-Control-Expose-Headers",
@@ -200,8 +200,8 @@ SIMPLE_JWT = {
 }
 
 SPECTACULAR_SETTINGS = {
-    "TITLE": "Forum Project",
-    "DESCRIPTION": "Forum Project",
+    "TITLE": "Authentication Project",
+    "DESCRIPTION": "Authentication Project",
     "VERSION": "1.0.0",
     "SERVE_INCLUDE_SCHEMA": False,
 }
