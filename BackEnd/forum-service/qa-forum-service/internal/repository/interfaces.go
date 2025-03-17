@@ -26,10 +26,18 @@ type QuestionRepository interface {
 	RemoveReaction(userID, questionID gocql.UUID) error
 
 	GetReactions(questionID gocql.UUID) ([]models.ReactionDetail, error)
+	GetLikedQuestions(userID int, limit int, pagingState []byte) ([]models.Question, []byte, error)
+	GetDislikedQuestions(userID int, limit int, pagingState []byte) ([]models.Question, []byte, error)
 
 	AddReply(questionId, answerId gocql.UUID, reply *models.AnswerReply) error
 	UpdateReply(questionId, answerId, replyId gocql.UUID, updatedReply *models.AnswerReply) error
 	DeleteReply(questionId, answerId, replyId gocql.UUID) error
+
+	AddAnswerReaction(questionId, answerId gocql.UUID, userID int, isLike bool) error
+	DeleteAnswerReaction(questionId, answerId gocql.UUID, userID int) error
+
+	AddReplyReaction(questionId, answerId, replyId gocql.UUID, userID int, isLike bool) error
+	DeleteReplyReaction(questionId, answerId, replyId gocql.UUID, userID int) error
 
 	AcceptAnswer(questionId, answerId gocql.UUID, userID int) error
 	UnacceptAnswer(questionId, answerId gocql.UUID, userID int) error
