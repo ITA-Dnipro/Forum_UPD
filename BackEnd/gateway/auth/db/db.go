@@ -4,8 +4,10 @@ import (
     "fmt"
     "log"
     "os"
+
     "gorm.io/driver/postgres"
     "gorm.io/gorm"
+
     "github.com/joho/godotenv"
     "github.com/user/forumupd/gateway/auth/models"
 
@@ -43,12 +45,13 @@ func InitDB() {
 }
 
 
-
+// SeedOrUpdateDB initialize або updates data in database (roles, permissions, role_permissions)
 func SeedOrUpdateDB() {
     // Base Roles in the project
     roles := []models.Role{
-        {Name: "AllowAny", Description: "The role for all users even not authenticated"},
-        {Name: "IsAuthenticated", Description: "The role for only authenticated users"},
+        {Name: "Public", Description: "The role for all public users even not authenticated"},
+        {Name: "NotValidated", Description: "The role for registered but not validated yet"},
+        {Name: "IsActive", Description: "The role for validated and active users"},
         {Name: "IsStartup", Description: "The role for users who is startup"},
         {Name: "IsInvestor", Description: "The role for users who is investor"},
         {Name: "Admin", Description: "Admin of the system"},
@@ -70,9 +73,17 @@ func SeedOrUpdateDB() {
 
 
     rolePerms := map[string][]string{
-        "AllowAny":    {"read:projects", "read:events"},
+        "Public":    {"read:projects", "read:events"},
 
-        "IsAuthenticated":    {
+        "NotValidated":    {
+        "read:projects",
+        "read:events",
+        "create:profile",
+        "read:profile",
+        "update:profile",
+        },
+
+        "IsActive":    {
         "read:projects",
         "read:news",
         "read:events",
@@ -114,10 +125,12 @@ func SeedOrUpdateDB() {
         },
     }
 
+    // Create / Update data about roles
     for _, r := range roles {
         upsertRole(DB, r)
     }
 
+    // Create / Update data about permissions
     for _, p := range permissions {
         upsertPermission(DB, p)
     }
