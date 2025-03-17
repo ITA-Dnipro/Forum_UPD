@@ -34,7 +34,7 @@ async def global_search(request: Request, es_client=Depends(get_es_client)):
     return {"message": "Global search is working"}
 
 
-@search_router.get("service/{service_name}")
+@search_router.get("/service/{service_name}/")
 @limiter.limit("20/minute")
 async def search_by_service(request: Request,
                             service_name: str,
@@ -49,7 +49,7 @@ async def search_by_service(request: Request,
     return {"message": f"Search for service: {service_name} is working"}
 
 
-@search_router.get("/suggestions")
+@search_router.get("/suggestions/")
 @limiter.limit("20/minute")
 async def get_suggestions(request: Request, es_client=Depends(get_es_client)):
     """Endpoint for search suggestions."""

@@ -2,13 +2,18 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.responses import PlainTextResponse
-
 from slowapi import Limiter
 from slowapi.errors import RateLimitExceeded
 from slowapi.util import get_remote_address
 
 from .config import settings, logger
-from .es_config.es_client import elasticsearch_init
+from .es.es_client import elasticsearch_init
+from .indexes.event_service.events import EventDocument
+from .indexes.forum_service.blog_posts import BlogPostDocument
+from .indexes.forum_service.post_comments import PostCommentDocument
+from .indexes.forum_service.question_answers import QuestionAnswerDocument
+from .indexes.forum_service.questions import QuestionDocument
+from .indexes.news_service.news_article import NewsArticleDocument
 from .routes.search import search_router
 
 limiter = Limiter(key_func=get_remote_address)
@@ -26,10 +31,29 @@ async def lifespan(app: FastAPI):
     try:
         es_client = await elasticsearch_init()
         app.state.es_client = es_client
-        yield
     except Exception as e:
         logger.exception("Startup failed. Shutting down search service...")
         raise
+
+    index_classes = [
+        BlogPostDocument, PostCommentDocument, QuestionDocument, QuestionAnswerDocument,
+        NewsArticleDocument, EventDocument
+    ]
+
+    try:
+        for cls in index_classes:
+            index_name = cls.get_index_name()
+            if not es_client.indices.exists(index=index_name):
+                cls.init()
+                logger.info(f"Created index: {index_name}")
+            else:
+                logger.info(f"Index already exists: {index_name}")
+    except Exception as e:
+        logger.exception(f"Error setting up Elasticsearch indices: {str(e)}")
+        raise
+
+    try:
+        yield
     finally:
         logger.info("Shutdown: cleaning up...")
 
@@ -44,6 +68,7 @@ app = FastAPI(
 @app.exception_handler(RateLimitExceeded)
 async def rate_limit_error(request, exc):
     return PlainTextResponse("Rate limit exceeded", status_code=429)
+
 
 app.state.limiter = limiter
 
