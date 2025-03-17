@@ -139,3 +139,57 @@ func (db *ScyllaDB) GetReactions(questionID gocql.UUID) ([]models.ReactionDetail
 
 	return reactions, nil
 }
+
+func (db *ScyllaDB) GetLikedQuestions(userID int, limit int, pagingState []byte) ([]models.Question, []byte, error) {
+	var likedQuestions []models.Question
+
+	query := `SELECT question_id FROM question_reactions WHERE user_id = ? AND is_like = true ALLOW FILTERING`
+	iter := db.session.Query(query, userID).PageSize(limit).PageState(pagingState).Iter()
+
+	var questionID gocql.UUID
+	for iter.Scan(&questionID) {
+		question, err := db.GetQuestionByID(questionID)
+		if err != nil {
+
+			continue
+		}
+		if question != nil {
+			sortAnswers(question)
+			likedQuestions = append(likedQuestions, *question)
+		}
+	}
+
+	newPagingState := iter.PageState()
+	if err := iter.Close(); err != nil {
+		return nil, nil, err
+	}
+
+	return likedQuestions, newPagingState, nil
+}
+
+func (db *ScyllaDB) GetDislikedQuestions(userID int, limit int, pagingState []byte) ([]models.Question, []byte, error) {
+	var dislikedQuestions []models.Question
+
+	query := `SELECT question_id FROM question_reactions WHERE user_id = ? AND is_like = false ALLOW FILTERING`
+	iter := db.session.Query(query, userID).PageSize(limit).PageState(pagingState).Iter()
+
+	var questionID gocql.UUID
+	for iter.Scan(&questionID) {
+		question, err := db.GetQuestionByID(questionID)
+		if err != nil {
+
+			continue
+		}
+		if question != nil {
+			sortAnswers(question)
+			dislikedQuestions = append(dislikedQuestions, *question)
+		}
+	}
+
+	newPagingState := iter.PageState()
+	if err := iter.Close(); err != nil {
+		return nil, nil, err
+	}
+
+	return dislikedQuestions, newPagingState, nil
+}
