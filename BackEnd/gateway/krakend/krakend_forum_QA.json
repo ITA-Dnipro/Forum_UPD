@@ -11,7 +11,7 @@
       ],
       "extra_config": {
         "auth/validator": {
-          "endpoint": "/check?requiredRole=Public",    // Якщо потрібно, щоб авторизований користувач
+          "endpoint": "/check?requiredRole=Public",
           "method": "GET",
           "host": ["http://auth-service:8080"],
           "header": "Authorization",
