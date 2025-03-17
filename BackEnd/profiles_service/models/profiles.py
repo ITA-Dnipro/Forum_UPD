@@ -10,7 +10,7 @@ class StartupProfileOrm(Model):
     __tablename__ = "startup_profiles"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    name: Mapped[str] = mapped_column(nullable=False)
+    name: Mapped[str] = mapped_column(String(45), nullable=False)
     status: Mapped[StatusEnum]
     is_registered: Mapped[bool]
     is_startup: Mapped[bool]

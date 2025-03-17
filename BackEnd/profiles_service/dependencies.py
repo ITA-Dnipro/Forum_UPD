@@ -59,7 +59,8 @@ def profile_optional_create_dependency(
             startup_idea=startup_idea,
         )
     except ValidationError as e:
-        raise HTTPException(status_code=422, detail=e.errors())
+        error_messages = [error['msg'] for error in e.errors()]
+        raise HTTPException(status_code=422, detail=error_messages)
     return profile
 
 
