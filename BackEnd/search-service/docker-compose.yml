@@ -6,6 +6,7 @@ services:
     environment:
       - discovery.type=${ES_DISCOVERY_TYPE}
       - xpack.security.enabled=${ES_XPACK_SECURITY}
+      - ES_JAVA_OPTS=${ES_JAVA_OPTS}
     ports:
       - "9200:9200"
     volumes:

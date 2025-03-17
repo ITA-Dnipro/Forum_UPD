@@ -6,7 +6,6 @@ from elasticsearch_dsl import connections
 
 from ..config import settings, logger
 
-
 load_dotenv()
 
 
