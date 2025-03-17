@@ -11,11 +11,11 @@ from datetime import datetime
 class ProfileRepository:
     @staticmethod
     async def add_one(data: Profile, session: AsyncSession):
-        profile_dict = data.model_dump()
-        categories = await CategoryRepository.get_list_by_ids(profile_dict["profile_categories"], session=session)
-        profile_dict["profile_categories"] = categories
-        regions = await RegionRepository.get_list_by_ids(profile_dict["profile_regions"], session=session)
-        profile_dict["profile_regions"] = regions
+        profile_dict = data.model_dump(exclude_unset=True, exclude_none=True)
+        if profile_dict.get("profile_categories") is not None: 
+            profile_dict["profile_categories"] = await CategoryRepository.get_list_by_ids(profile_dict["profile_categories"], session=session)
+        if profile_dict.get("profile_regions") is not None: 
+            profile_dict["profile_regions"] = await RegionRepository.get_list_by_ids(profile_dict["profile_regions"], session=session)
         profile_dict["is_deleted"] = False
         profile = StartupProfileOrm(**profile_dict)
         session.add(profile)

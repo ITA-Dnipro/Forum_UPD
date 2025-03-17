@@ -25,13 +25,15 @@ class Profile(BaseModel):
   is_registered: bool = False
   is_startup: bool = False
   is_fop: bool = False
-  phone: Optional[MyNumberType]
+  phone: Optional[MyNumberType] = None
   edrpou: Optional[str] = None
   rnokpp: Optional[str] = None
   startup_idea: Optional[str] = None
   founded: Optional[int] = None
-  profile_categories: conlist(int, min_length=1)
-  profile_regions: conlist(int, min_length=1)
+  # profile_categories: conlist(int, min_length=1)
+  # profile_regions: conlist(int, min_length=1)
+  profile_categories: Optional[conlist(int, min_length=1)]
+  profile_regions: Optional[conlist(int, min_length=1)]
 
 
   @field_validator('edrpou', mode='after')
@@ -77,5 +79,5 @@ class Profile(BaseModel):
 class ProfileOptional(Profile):
   name: Optional[str] = None
   status: Optional[StatusEnum] = None
-  profile_categories: Optional[conlist(int, min_length=1)] = None
-  profile_regions: Optional[conlist(int, min_length=1)] = None
+  # profile_categories: Optional[conlist(int, min_length=1)] = None
+  # profile_regions: Optional[conlist(int, min_length=1)] = None

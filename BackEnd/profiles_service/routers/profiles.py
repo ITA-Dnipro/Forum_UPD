@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, Response
 from exceptions import NotFoundError
 from schemas.profiles import ProfileOptional, Profile
 from crud.profiles import ProfileRepository
-from dependencies import profile_optional_create_dependency, get_async_session
+from dependencies import profile_create_dependency, profile_optional_create_dependency, get_async_session
 from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -23,7 +23,7 @@ async def startup_profiles_list(
 
 @router.post("/", status_code=201)
 async def create_startup_profile(
-    profile: Annotated[Profile, Depends()],
+    profile: Annotated[Profile, Depends(dependency=profile_create_dependency)],
     session: AsyncSession = Depends(get_async_session)
     ):
     profile = await ProfileRepository.add_one(profile, session)
