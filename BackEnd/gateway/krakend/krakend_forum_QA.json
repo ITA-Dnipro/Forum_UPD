@@ -1,0 +1,392 @@
+{
+  "endpoints": [
+    {
+      "endpoint": "/api/questions",
+      "method": "POST",
+      "backend": [
+        {
+          "host": ["http://qa-forum-service:8080"],
+          "url_pattern": "/api/questions"
+        }
+      ],
+      "extra_config": {
+        "auth/validator": {
+          "endpoint": "/check?requiredRole=Public",    // Якщо потрібно, щоб авторизований користувач
+          "method": "GET",
+          "host": ["http://auth-service:8080"],
+          "header": "Authorization",
+          "response_codes": [200],
+          "cache": false
+        }
+      }
+    },
+    {
+      "endpoint": "/api/questions",
+      "method": "GET",
+      "backend": [
+        {
+          "host": ["http://qa-forum-service:8080"],
+          "url_pattern": "/api/questions"
+        }
+      ],
+      "extra_config": {
+        "auth/validator": {
+          "endpoint": "/check?requiredRole=Public",
+          "method": "GET",
+          "host": ["http://auth-service:8080"],
+          "header": "Authorization",
+          "response_codes": [200],
+          "cache": false
+        }
+      }
+    },
+    {
+      "endpoint": "/api/questions/{id}",
+      "method": "GET",
+      "backend": [
+        {
+          "host": ["http://qa-forum-service:8080"],
+          "url_pattern": "/api/questions/{id}"
+        }
+      ]
+    },
+
+    {
+      "endpoint": "/api/questions/{id}",
+      "method": "PUT",
+      "backend": [
+        {
+          "host": ["http://qa-forum-service:8080"],
+          "url_pattern": "/api/questions/{id}"
+        }
+      ],
+      "extra_config": {
+        "auth/validator": {
+          "endpoint": "/check?requiredRole=IsActive",
+          "method": "GET",
+          "host": ["http://auth-service:8080"],
+          "header": "Authorization",
+          "response_codes": [200],
+          "cache": false
+        }
+      }
+    },
+
+    {
+      "endpoint": "/api/questions/{id}",
+      "method": "DELETE",
+      "backend": [
+        {
+          "host": ["http://qa-forum-service:8080"],
+          "url_pattern": "/api/questions/{id}"
+        }
+      ],
+      "extra_config": {
+        "auth/validator": {
+          "endpoint": "/check?requiredRole=IsActive",
+          "method": "GET",
+          "host": ["http://auth-service:8080"],
+          "header": "Authorization",
+          "response_codes": [200],
+          "cache": false
+        }
+      }
+    },
+
+    {
+      "endpoint": "/api/questions/{id}/answers",
+      "method": "POST",
+      "backend": [
+        {
+          "host": ["http://qa-forum-service:8080"],
+          "url_pattern": "/api/questions/{id}/answers"
+        }
+      ],
+      "extra_config": {
+        "auth/validator": {
+          "endpoint": "/check?requiredRole=IsActive",
+          "method": "GET",
+          "host": ["http://auth-service:8080"],
+          "header": "Authorization",
+          "response_codes": [200],
+          "cache": false
+        }
+      }
+    },
+
+    {
+      "endpoint": "/api/questions/{id}/answers/{answerId}",
+      "method": "PUT",
+      "backend": [
+        {
+          "host": ["http://qa-forum-service:8080"],
+          "url_pattern": "/api/questions/{id}/answers/{answerId}"
+        }
+      ],
+      "extra_config": {
+        "auth/validator": {
+          "endpoint": "/check?requiredRole=IsActive",
+          "method": "GET",
+          "host": ["http://auth-service:8080"],
+          "header": "Authorization",
+          "response_codes": [200],
+          "cache": false
+        }
+      }
+    },
+
+    {
+      "endpoint": "/api/questions/{id}/answers/{answerId}",
+      "method": "DELETE",
+      "backend": [
+        {
+          "host": ["http://qa-forum-service:8080"],
+          "url_pattern": "/api/questions/{id}/answers/{answerId}"
+        }
+      ],
+      "extra_config": {
+        "auth/validator": {
+          "endpoint": "/check?requiredRole=IsActive",
+          "method": "GET",
+          "host": ["http://auth-service:8080"],
+          "header": "Authorization",
+          "response_codes": [200],
+          "cache": false
+        }
+      }
+    },
+
+    {
+      "endpoint": "/api/questions/{id}/save",
+      "method": "POST",
+      "backend": [
+        {
+          "host": ["http://qa-forum-service:8080"],
+          "url_pattern": "/api/questions/{id}/save"
+        }
+      ],
+      "extra_config": {
+        "auth/validator": {
+          "endpoint": "/check?requiredRole=IsActive",
+          "method": "GET",
+          "host": ["http://auth-service:8080"],
+          "header": "Authorization",
+          "response_codes": [200],
+          "cache": false
+        }
+      }
+    },
+
+    {
+      "endpoint": "/api/saved-questions",
+      "method": "GET",
+      "backend": [
+        {
+          "host": ["http://qa-forum-service:8080"],
+          "url_pattern": "/api/saved-questions"
+        }
+      ],
+      "extra_config": {
+        "auth/validator": {
+          "endpoint": "/check?requiredRole=IsActive",
+          "method": "GET",
+          "host": [
+            "http://auth-service:8080"
+          ],
+          "header": "Authorization",
+          "response_codes": [
+            200
+          ],
+          "cache": false
+        }
+      }
+    },
+
+    {
+      "endpoint": "/api/questions/{id}/unsave",
+      "method": "DELETE",
+      "backend": [
+        {
+          "host": ["http://qa-forum-service:8080"],
+          "url_pattern": "/api/questions/{id}/unsave"
+        }
+      ],
+      "extra_config": {
+        "auth/validator": {
+          "endpoint": "/check?requiredRole=IsActive",
+          "method": "GET",
+          "host": ["http://auth-service:8080"],
+          "header": "Authorization",
+          "response_codes": [200],
+          "cache": false
+        }
+      }
+    },
+
+    {
+      "endpoint": "/api/questions/{id}/reaction",
+      "method": "POST",
+      "backend": [
+        {
+          "host": ["http://qa-forum-service:8080"],
+          "url_pattern": "/api/questions/{id}/reaction"
+        }
+      ],
+      "extra_config": {
+        "auth/validator": {
+          "endpoint": "/check?requiredRole=IsActive",
+          "method": "GET",
+          "host": ["http://auth-service:8080"],
+          "header": "Authorization",
+          "response_codes": [200],
+          "cache": false
+        }
+      }
+    },
+
+    {
+      "endpoint": "/api/questions/{id}/reaction",
+      "method": "DELETE",
+      "backend": [
+        {
+          "host": ["http://qa-forum-service:8080"],
+          "url_pattern": "/api/questions/{id}/reaction"
+        }
+      ],
+      "extra_config": {
+        "auth/validator": {
+          "endpoint": "/check?requiredRole=IsActive",
+          "method": "GET",
+          "host": ["http://auth-service:8080"],
+          "header": "Authorization",
+          "response_codes": [200],
+          "cache": false
+        }
+      }
+    },
+
+    {
+      "endpoint": "/api/questions/{id}/reactions",
+      "method": "GET",
+      "backend": [
+        {
+          "host": ["http://qa-forum-service:8080"],
+          "url_pattern": "/api/questions/{id}/reactions"
+        }
+      ],
+      "extra_config": {
+        "auth/validator": {
+          "endpoint": "/check?requiredRole=IsActive",
+          "method": "GET",
+          "host": ["http://auth-service:8080"],
+          "header": "Authorization",
+          "response_codes": [200],
+          "cache": false
+        }
+      }
+    },
+
+    {
+      "endpoint": "/api/questions/{id}/answers/{answerId}/replies",
+      "method": "POST",
+      "backend": [
+        {
+          "host": ["http://qa-forum-service:8080"],
+          "url_pattern": "/api/questions/{id}/answers/{answerId}/replies"
+        }
+      ],
+      "extra_config": {
+        "auth/validator": {
+          "endpoint": "/check?requiredRole=IsActive",
+          "method": "GET",
+          "host": ["http://auth-service:8080"],
+          "header": "Authorization",
+          "response_codes": [200],
+          "cache": false
+        }
+      }
+    },
+
+    {
+      "endpoint": "/api/questions/{id}/answers/{answerId}/replies/{replyId}",
+      "method": "PUT",
+      "backend": [
+        {
+          "host": ["http://qa-forum-service:8080"],
+          "url_pattern": "/api/questions/{id}/answers/{answerId}/replies/{replyId}"
+        }
+      ],
+      "extra_config": {
+        "auth/validator": {
+          "endpoint": "/check?requiredRole=IsActive",
+          "method": "GET",
+          "host": ["http://auth-service:8080"],
+          "header": "Authorization",
+          "response_codes": [200],
+          "cache": false
+        }
+      }
+    },
+    {
+      "endpoint": "/api/questions/{id}/answers/{answerId}/replies/{replyId}",
+      "method": "DELETE",
+      "backend": [
+        {
+          "host": ["http://qa-forum-service:8080"],
+          "url_pattern": "/api/questions/{id}/answers/{answerId}/replies/{replyId}"
+        }
+      ],
+      "extra_config": {
+        "auth/validator": {
+          "endpoint": "/check?requiredRole=IsActive",
+          "method": "GET",
+          "host": ["http://auth-service:8080"],
+          "header": "Authorization",
+          "response_codes": [200],
+          "cache": false
+        }
+      }
+    },
+    {
+      "endpoint": "/api/questions/{id}/answers/{answerId}/reaction",
+      "method": "POST",
+      "backend": [
+        {
+          "host": ["http://qa-forum-service:8080"],
+          "url_pattern": "/api/questions/{id}/answers/{answerId}/reaction"
+        }
+      ],
+      "extra_config": {
+        "auth/validator": {
+          "endpoint": "/check?requiredRole=IsActive",
+          "method": "GET",
+          "host": ["http://auth-service:8080"],
+          "header": "Authorization",
+          "response_codes": [200],
+          "cache": false
+        }
+      }
+    },
+    {
+      "endpoint": "/api/questions/{id}/answers/{answerId}/reaction",
+      "method": "DELETE",
+      "backend": [
+        {
+          "host": ["http://qa-forum-service:8080"],
+          "url_pattern": "/api/questions/{id}/answers/{answerId}/reaction"
+        }
+      ],
+      "extra_config": {
+        "auth/validator": {
+          "endpoint": "/check?requiredRole=IsActive",
+          "method": "GET",
+          "host": ["http://auth-service:8080"],
+          "header": "Authorization",
+          "response_codes": [200],
+          "cache": false
+        }
+      }
+    }
+  ]
+}
+
