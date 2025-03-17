@@ -75,3 +75,26 @@ CREATE TABLE IF NOT EXISTS saved_questions (
     saved_at timestamp,
     PRIMARY KEY (user_id, question_id)
 );
+
+-- Таблиця для реакцій на відповіді (question_answer)
+CREATE TABLE IF NOT EXISTS answer_reactions (
+    question_id uuid,
+    answer_id uuid,
+    user_id int,
+    is_like boolean,
+    created_at timestamp,
+    PRIMARY KEY ((question_id, answer_id), user_id)
+);
+
+CREATE INDEX IF NOT EXISTS is_like_idx ON question_reactions (is_like);
+
+-- Таблиця для реакцій на відповіді до відповідей (answer_reply)
+CREATE TABLE IF NOT EXISTS reply_reactions (
+    question_id uuid,
+    answer_id uuid,
+    reply_id uuid,
+    user_id int,
+    is_like boolean,
+    created_at timestamp,
+    PRIMARY KEY ((question_id, answer_id, reply_id), user_id)
+);
