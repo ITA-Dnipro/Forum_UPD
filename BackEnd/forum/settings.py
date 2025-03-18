@@ -20,7 +20,6 @@ from decouple import config
 from dotenv import load_dotenv
 import logging
 
-
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -35,6 +34,8 @@ SECRET_KEY = config("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config("DEBUG", cast=bool)
+
+FRONTEND_URL = "http://localhost:8080"
 
 ALLOWED_HOSTS = [
     "localhost",
@@ -58,7 +59,6 @@ INSTALLED_APPS = [
     "rest_framework",
     "rest_framework.authtoken",
     "django_filters",
-    "djoser",
     "drf_spectacular",
     "debug_toolbar",
     "authentication",
@@ -68,7 +68,6 @@ INSTALLED_APPS = [
     "images",
     "chat",
 ]
-
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -140,9 +139,7 @@ DATABASES = {
     }
 }
 
-
 load_dotenv()
-
 
 mongo_db_name = os.getenv("MONGO_DB_NAME")
 mongo_username = os.getenv("MONGO_USERNAME")
@@ -150,7 +147,6 @@ mongo_password = os.getenv("MONGO_PASSWORD")
 mongo_host = os.getenv("MONGO_HOST", "localhost")
 mongo_port = int(os.getenv("MONGO_PORT", 27017))
 mongo_authentication_source = os.getenv("MONGO_AUTHENTICATION_SOURCE", "admin")
-
 
 try:
     # Attempt to connect to MongoDB with values from environment variables
@@ -208,7 +204,6 @@ STATIC_ROOT = os.path.join(BASE_DIR, "public", "static")
 MEDIA_URL = "/media/"
 MEDIA_ROOT = os.path.join(BASE_DIR, "public", "media")
 
-
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.1/ref/settings/#default-auto-field
 
@@ -219,7 +214,6 @@ AUTH_USER_MODEL = "authentication.CustomUser"
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
         "rest_framework_simplejwt.authentication.JWTAuthentication",
-        "authentication.authentication.DjoserTokenAuthentication",
     ),
     "DEFAULT_PERMISSION_CLASSES": [
         "rest_framework.permissions.IsAuthenticated",
@@ -261,31 +255,6 @@ EMAIL_USE_TLS = config("EMAIL_USE_TLS")
 EMAIL_HOST_USER = config("EMAIL_HOST_USER")
 EMAIL_HOST_PASSWORD = config("EMAIL_HOST_PASSWORD")
 
-DJOSER = {
-    "PASSWORD_RESET_CONFIRM_URL": "password/reset/confirm/{uid}/{token}",
-    "PASSWORD_RESET_CONFIRM_RETYPE": True,
-    "PASSWORD_RESET_SHOW_EMAIL_NOT_FOUND": True,
-    "ACTIVATION_URL": "activate/{uid}/{token}",
-    "SEND_ACTIVATION_EMAIL": True,
-    "HIDE_USERS": False,
-    "LOGIN_FIELD": "email",
-    "USER_CREATE_PASSWORD_RETYPE": True,
-    "PERMISSIONS": {
-        "user_delete": ["rest_framework.permissions.IsAdminUser"],
-        "user_list": ["rest_framework.permissions.IsAdminUser"],
-    },
-    "SERIALIZERS": {
-        "user_create_password_retype": "authentication.serializers.UserRegistrationSerializer",
-        "user": "authentication.serializers.UserListSerializer",
-        "current_user": "authentication.serializers.UserListSerializer",
-        "token_create": "authentication.serializers.CustomTokenCreateSerializer",
-    },
-    "EMAIL": {
-        "activation": "authentication.email.CustomActivationEmail",
-        "password_reset": "authentication.email.CustomPasswordResetEmail",
-    },
-}
-
 DELAY_FOR_LOGIN = 600  # delay time for login in seconds
 ATTEMPTS_FOR_LOGIN = 10  # attempts for login during delay for login
 
@@ -316,14 +285,14 @@ LOGGING = {
         "file": {
             "level": "INFO",
             "class": "logging.handlers.TimedRotatingFileHandler",
-            "filename": os.path.join(BASE_DIR, "django.log"),
+            "filename": os.path.join(BASE_DIR.parent, "logs", "django.log"),
             "when": "W0",
             "formatter": "verbose",
         },
         "error_file": {
             "level": "ERROR",
             "class": "logging.FileHandler",
-            "filename": os.path.join(BASE_DIR, "error.log"),
+            "filename": os.path.join(BASE_DIR.parent, "logs", "error.log"),
             "formatter": "verbose",
         },
     },
@@ -361,7 +330,7 @@ LOGGING = {
         "administration": {
             "handlers": ["file", "error_file"],
             "level": "INFO",
-            "propagade": False,
+            "propagate": False,
         },
         "utils": {
             "handlers": ["file"],
