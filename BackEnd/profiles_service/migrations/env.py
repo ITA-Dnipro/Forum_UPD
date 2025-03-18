@@ -4,7 +4,7 @@ from sqlalchemy import engine_from_config
 from sqlalchemy import pool
 
 from models.regions import RegionOrm, ProfileRegionORM
-from models.categories import CategoryOrm, ProfileCategoryORM
+from models.categories import StartupCategoryOrm, StartupProfileCategoryORM
 from models.profiles import StartupProfileOrm 
 from models import Model
 

@@ -16,9 +16,9 @@ class StartupProfileOrm(Model):
     is_startup: Mapped[bool]
     is_fop: Mapped[bool]
     is_deleted: Mapped[bool] = mapped_column(default=False, server_default="FALSE", nullable=False)
-    profile_categories: Mapped[list["CategoryOrm"]] = relationship( # type: ignore
-        back_populates="category_profiles", 
-        secondary="profile_category"
+    profile_categories: Mapped[list["StartupCategoryOrm"]] = relationship( # type: ignore
+        back_populates="starup_category_profiles", 
+        secondary="starup_profile_category"
         )
     profile_regions: Mapped[list["RegionOrm"]] = relationship( # type: ignore
         back_populates="region_profiles", 
