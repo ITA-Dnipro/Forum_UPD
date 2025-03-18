@@ -17,6 +17,10 @@ class CustomUser(AbstractBaseUser):
         "surname",
         "name",
     ]
+    is_startup = models.BooleanField(default=False)
+    is_investor = models.BooleanField(default=False)
+    is_startup_valid = models.BooleanField(default=False)
+    is_investor_valid = models.BooleanField(default=False)
 
     objects = CustomUserManager()
 
