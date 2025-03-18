@@ -60,7 +60,7 @@ class CategoryRepository:
         data: Category,
         session: AsyncSession
         ):
-        category = cls.get_by_id(category_id, session=session)
+        category = await cls.get_by_id(category_id, session=session)
         category.__dict__.update(data)
         await session.commit()
         return category

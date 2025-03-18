@@ -60,7 +60,7 @@ class RegionRepository:
         data: Region,
         session: AsyncSession
         ):
-        region = cls.get_by_id(region_id, session=session)
+        region = await cls.get_by_id(region_id, session=session)
         region.__dict__.update(data)
         await session.commit()
         return region
