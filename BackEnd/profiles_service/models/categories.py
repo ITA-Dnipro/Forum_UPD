@@ -5,28 +5,42 @@ from sqlalchemy import ForeignKey
 
 
 class StartupProfileCategoryORM(Model):
-    __tablename__ = "starup_profile_category"
+    __tablename__ = "startup_profile_category"
     startup_profile_id: Mapped[int] = mapped_column(
         ForeignKey("startup_profiles.id"),
         primary_key=True
     )
     startup_category_id: Mapped[int] = mapped_column(
-        ForeignKey("starup_category.id"),
+        ForeignKey("startup_category.id"),
         primary_key=True
     )
 
 
 class StartupCategoryOrm(Model):
-    __tablename__ = "starup_category"
+    __tablename__ = "startup_category"
 
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(unique=True)
-    starup_category_profiles: Mapped[list["StartupProfileOrm"]] = relationship(
+    startup_category_profiles: Mapped[list["StartupProfileOrm"]] = relationship(
         back_populates="profile_categories", 
-        secondary="starup_profile_category"
+        secondary="startup_profile_category"
+        )
+    investor_startup_categories: Mapped[list["StartupProfileOrm"]] = relationship(
+        back_populates="investment_categories", 
+        secondary="startup_profile_category"
         )
 
 
     def __repr__(self):
         return self.name
-    
+
+
+class InvestorStartupCategoryOrm(Model):
+    __tablename__ = "investor_startup_categories"
+    investor_profile_id = mapped_column(
+        ForeignKey("investor_profiles.id"),
+        primary_key=True)
+    startup_category_id = mapped_column(
+        ForeignKey("startup_category.id"),
+        primary_key=True
+    )
