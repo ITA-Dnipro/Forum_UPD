@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from models import Model
-from models.profiles import StartupProfileOrm
+from models.profiles import InvestorProfileOrm, StartupProfileOrm
 from sqlalchemy import ForeignKey
 
 
@@ -25,9 +25,9 @@ class StartupCategoryOrm(Model):
         back_populates="profile_categories", 
         secondary="startup_profile_category"
         )
-    investor_startup_categories: Mapped[list["StartupProfileOrm"]] = relationship(
+    investor_startup_categories: Mapped[list["InvestorProfileOrm"]] = relationship(
         back_populates="investment_categories", 
-        secondary="startup_profile_category"
+        secondary="investor_startup_categories"
         )
 
 
