@@ -1,0 +1,34 @@
+{
+    "version": 3,
+    "endpoints": [
+        {
+            "endpoint": "/api/conversations/",
+            "method": "POST",
+            "input_headers": [  
+              "Content-Type",
+              "Content-Length"
+            ],
+            "backend": [
+              {
+                "host": ["http://chat-service:8000"],
+                "url_pattern": "/api/conversations/",
+                "encoding": "no-op",
+                "input_headers": [  
+                  "Content-Type",
+                  "Content-Length",
+                  "User-Agent"
+                ],
+                "extra_config": {
+                  "github.com/devopsfaith/krakend/proxy": {
+                    "disable_body": false
+                  },
+                  "github.com/devopsfaith/krakend/http-client": {
+                    "disable_host_sanitize": true,
+                    "allow_encoding": false  
+                  }
+                }
+              }
+            ]
+          }
+    ]
+}

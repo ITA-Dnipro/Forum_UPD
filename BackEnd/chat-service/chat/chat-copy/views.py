@@ -9,15 +9,32 @@ from chat.pagination import ChatPagination
 
 class ConversationCreateView(APIView):
     def post(self, request, format=None):
-        serializer = RoomSerializer(data=request.data)
-        if serializer.is_valid():
-            room = serializer.save()
+        print("hello there")
+        print(request.data)
+        print(f"Request payload: {request}")
+        print(f"request headers: {request.headers}")
+        return Response(
+            {
+                "message": "Conversation was created",
+                "room_id": str(12321),
+            }
+        )
+        try:
+            serializer = RoomSerializer(data=request.data)
+            if serializer.is_valid():
+                room = serializer.save()
+                return Response(
+                    {
+                        "message": "Conversation was created",
+                        "room_id": str(room.id),
+                    },
+                    status=status.HTTP_201_CREATED,
+                )
+        except Exception as e:
+            print(f"Error123: {str(e)}")
             return Response(
-                {
-                    "message": "Conversation was created",
-                    "room_id": str(room.id),
-                },
-                status=status.HTTP_201_CREATED,
+                {"message": "An error occurred."},
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
