@@ -1,4 +1,3 @@
-import os
 from collections import defaultdict
 
 from dotenv import load_dotenv
@@ -14,8 +13,6 @@ search_router = APIRouter()
 limiter = Limiter(key_func=get_remote_address)
 
 load_dotenv()
-
-VALID_SERVICES = os.getenv("VALID_SERVICES", "").split(",") if os.getenv("VALID_SERVICES") else []
 
 
 async def get_es_client(request: Request):
@@ -78,19 +75,68 @@ async def global_search(
     return GlobalSearchResponse(results=result)
 
 
-@search_router.get("/service/{service_name}/")
+@search_router.get("/service/events/")
 @limiter.limit("20/minute")
 async def search_by_service(request: Request,
-                            service_name: str,
                             es_client=Depends(get_es_client)
                             ):
-    """Service-specific search endpoint."""
-    if service_name not in VALID_SERVICES:
-        logger.error(f"Invalid service name attempted: {service_name}")
-        raise HTTPException(status_code=400, detail=f"Invalid service name: {service_name}")
+    """Search endpoint for events."""
 
-    logger.info(f"Search for {service_name} requested")
-    return {"message": f"Search for service: {service_name} is working"}
+    logger.info(f"Search for event requested")
+    return {"message": "Search for service events is working"}
+
+
+@search_router.get("/service/blog-posts/")
+@limiter.limit("20/minute")
+async def search_by_service(request: Request,
+                            es_client=Depends(get_es_client)
+                            ):
+    """Search endpoint for blog posts."""
+    logger.info(f"Search for blog posts requested")
+    return {"message": "Search for service blog posts is working"}
+
+
+@search_router.get("/service/blog-comments/")
+@limiter.limit("20/minute")
+async def search_by_service(request: Request,
+                            es_client=Depends(get_es_client)
+                            ):
+    """Search endpoint for blog comments."""
+    logger.info(f"Search for blog comments requested")
+    return {"message": "Search for service blog comments is working"}
+
+
+@search_router.get("/service/questions/")
+@limiter.limit("20/minute")
+async def search_by_service(request: Request,
+                            es_client=Depends(get_es_client)
+                            ):
+    """Search endpoint for questions."""
+
+    logger.info(f"Search for questions requested")
+    return {"message": "Search for service questions is working"}
+
+
+@search_router.get("/service/question-answers/")
+@limiter.limit("20/minute")
+async def search_by_service(request: Request,
+                            es_client=Depends(get_es_client)
+                            ):
+    """Search endpoint for question answers."""
+
+    logger.info(f"Search for question answers requested")
+    return {"message": "Search for service question answers is working"}
+
+
+@search_router.get("/service/news/")
+@limiter.limit("20/minute")
+async def search_by_service(request: Request,
+                            es_client=Depends(get_es_client)
+                            ):
+    """Search endpoint for news."""
+
+    logger.info(f"Search for news requested")
+    return {"message": "Search for service news is working"}
 
 
 @search_router.get("/suggestions/")

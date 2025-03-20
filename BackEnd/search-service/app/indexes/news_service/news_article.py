@@ -18,7 +18,7 @@ class NewsArticleDocument(AsyncDocument):
     published_at = Date()
 
     class Index:
-        name = settings.news_articles_index
+        name = settings.NEWS_ARTICLES_INDEX
         settings = {
             "number_of_shards": 1,
             "number_of_replicas": 1

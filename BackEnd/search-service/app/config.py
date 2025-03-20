@@ -8,31 +8,31 @@ from pydantic_settings import BaseSettings
 class Settings(BaseSettings):
     """App config settings are loaded from .env file"""
 
-    service_name: str = Field("search-service", env="SERVICE_NAME")
-    debug: bool = Field(True, env="DEBUG")
+    SERVICE_NAME: str = Field("search-service", env="SERVICE_NAME")
+    DEBUG: bool = Field(True, env="DEBUG")
 
-    elasticsearch_host: str = Field("http://elasticsearch:9200", env="ELASTICSEARCH_HOST")
-    elasticsearch_max_retries: int = Field(5, env="ELASTICSEARCH_MAX_RETRIES")
-    elasticsearch_retry_delay: int = Field(2, env="ELASTICSEARCH_RETRY_DELAY")
+    ELASTICSEARCH_HOST: str = Field("http://elasticsearch:9200", env="ELASTICSEARCH_HOST")
+    ELASTICSEARCH_MAX_RETRIES: int = Field(5, env="ELASTICSEARCH_MAX_RETRIES")
+    ELASTICSEARCH_RETRY_DELAY: int = Field(2, env="ELASTICSEARCH_RETRY_DELAY")
 
-    events_index: str = Field("events")
-    forum_blog_posts_index: str = Field("blog_posts")
-    forum_blog_comments_index: str = Field("blog_comments")
-    forum_questions_index: str = Field("questions")
-    forum_question_answers_index: str = Field("question_answers")
-    news_articles_index: str = Field("news_articles")
+    EVENTS_INDEX: str = Field("events")
+    FORUM_BLOG_POSTS_INDEX: str = Field("blog_posts")
+    FORUM_BLOG_COMMENTS_INDEX: str = Field("blog_comments")
+    FORUM_QUESTIONS_INDEX: str = Field("questions")
+    FORUM_QUESTION_ANSWERS_INDEX: str = Field("question_answers")
+    NEWS_ARTICLES_INDEX: str = Field("news_articles")
 
     @property
     def global_search_indexes(self) -> list[str]:
         """Return Elasticsearch indexes as a list for the global search."""
         return [
-            self.events_index,
-            self.forum_blog_posts_index,
-            self.forum_questions_index,
-            self.news_articles_index,
+            self.EVENTS_INDEX,
+            self.FORUM_BLOG_POSTS_INDEX,
+            self.FORUM_QUESTIONS_INDEX,
+            self.NEWS_ARTICLES_INDEX,
         ]
 
-    log_level: str = Field("INFO", env="LOG_LEVEL")
+    LOG_LEVEL: str = Field("INFO", env="LOG_LEVEL")
 
     class Config:
         env_file = ".env"
@@ -47,7 +47,7 @@ def setup_logging():
     log_format = "%(asctime)s | %(levelname)s | %(name)s | %(message)s"
 
     logging.basicConfig(
-        level=getattr(logging, settings.log_level.upper(), logging.INFO),
+        level=getattr(logging, settings.LOG_LEVEL.upper(), logging.INFO),
         format=log_format,
         datefmt="%Y-%m-%d %H:%M:%S",
         handlers=[
@@ -60,4 +60,4 @@ def setup_logging():
 
 
 setup_logging()
-logger = logging.getLogger(settings.service_name)
+logger = logging.getLogger(settings.SERVICE_NAME)

@@ -38,7 +38,7 @@ class EventDocument(AsyncDocument):
     starting_time = Date()
 
     class Index:
-        name = settings.events_index
+        name = settings.EVENTS_INDEX
         settings = {
             "number_of_shards": 1,
             "number_of_replicas": 1

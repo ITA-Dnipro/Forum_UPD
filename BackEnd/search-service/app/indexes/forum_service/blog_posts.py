@@ -40,7 +40,7 @@ class BlogPostDocument(AsyncDocument):
     updated_at = Date()
 
     class Index:
-        name = settings.forum_blog_posts_index
+        name = settings.FORUM_BLOG_POSTS_INDEX
         settings = {
             "number_of_shards": 1,
             "number_of_replicas": 1

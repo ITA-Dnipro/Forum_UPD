@@ -22,7 +22,7 @@ class PostCommentDocument(AsyncDocument):
     created_at = Date()
 
     class Index:
-        name = settings.forum_blog_comments_index
+        name = settings.FORUM_BLOG_COMMENTS_INDEX
         settings = {
             "number_of_shards": 1,
             "number_of_replicas": 1

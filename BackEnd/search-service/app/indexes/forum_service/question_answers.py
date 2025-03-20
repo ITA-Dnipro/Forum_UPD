@@ -23,7 +23,7 @@ class QuestionAnswerDocument(AsyncDocument):
     created_at = Date()
 
     class Index:
-        name = settings.forum_question_answers_index
+        name = settings.FORUM_QUESTION_ANSWERS_INDEX
         settings = {
             "number_of_shards": 1,
             "number_of_replicas": 1

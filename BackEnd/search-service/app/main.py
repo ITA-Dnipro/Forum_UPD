@@ -53,11 +53,12 @@ async def lifespan(app: FastAPI):
         logger.exception(f"Error setting up Elasticsearch indices: {str(e)}")
         raise
 
-    try:
-        await seed_all()
-    except Exception as e:
-        logger.exception(f"Error seeding data: {str(e)}")
-        raise
+    if settings.DEBUG:
+        try:
+            await seed_all()
+        except Exception as e:
+            logger.exception(f"Error seeding data: {str(e)}")
+            raise
 
     try:
         yield
@@ -68,8 +69,8 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     lifespan=lifespan,
-    title=settings.service_name,
-    debug=settings.debug,
+    title=settings.SERVICE_NAME,
+    debug=settings.DEBUG,
 )
 
 

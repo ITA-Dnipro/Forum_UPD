@@ -11,9 +11,9 @@ load_dotenv()
 
 async def elasticsearch_init():
     """Establishes a connection to Elasticsearch with retries."""
-    elasticsearch_host = settings.elasticsearch_host
-    retry = settings.elasticsearch_max_retries
-    delay = settings.elasticsearch_retry_delay
+    elasticsearch_host = settings.ELASTICSEARCH_HOST
+    retry = settings.ELASTICSEARCH_MAX_RETRIES
+    delay = settings.ELASTICSEARCH_RETRY_DELAY
 
     for attempt in range(retry):
         try:
