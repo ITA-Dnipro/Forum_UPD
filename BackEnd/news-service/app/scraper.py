@@ -129,12 +129,11 @@ async def scrape_and_store_news():
         existing = await NewsModel.find_one({"link": news.link})
         if existing:
             skipped_news.append(news)
-            continue
-        inserted = await NewsModel.insert_one(news)
-        if inserted.id:
+        else:
             saved_news.append(news)
 
     if saved_news:
+        await NewsModel.insert_many(saved_news)
         await update_news_cache(saved_news)
 
 #   return {

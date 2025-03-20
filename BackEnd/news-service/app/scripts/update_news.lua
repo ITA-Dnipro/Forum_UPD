@@ -1,22 +1,24 @@
 local key = KEYS[1]
-local new_news = cjson.decode(ARGV[1])
-local max_size = tonumber(ARGV[2])
+local max_size = tonumber(ARGV[table.getn(ARGV)]) -- Last argument is max_size
 local ttl = 57600
 
-local existing_news = redis.call("GET", key)
-local news_list = {}
+redis.log(redis.LOG_NOTICE, "Entering Lua script for updating news cache")
 
-if existing_news then
-    news_list = cjson.decode(existing_news)
+-- Loop through all arguments except the last one (which is max_size)
+for i = 1, table.getn(ARGV) - 1 do
+    redis.call("LPUSH", key, ARGV[i])
 end
 
-table.insert(news_list, 1, new_news)
+redis.log(redis.LOG_NOTICE, "Pushed new articles")
 
-while #news_list > max_size do
-    table.remove(news_list)
+-- Trim the list to ensure it does not exceed max size
+redis.call("LTRIM", key, 0, max_size - 1) -- 0-based index
+
+-- Set TTL (only if the key is newly created)
+if redis.call("TTL", key) == -1 then
+    redis.call("EXPIRE", key, ttl)
 end
 
-
-redis.call("SETEX", key, ttl, cjson.encode(news_list))
+redis.log(redis.LOG_NOTICE, "Cache updated successfully")
 
 return "Updated"

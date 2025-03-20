@@ -5,6 +5,7 @@ from app.celery import celery
 from beanie import PydanticObjectId
 from app.redis import redis
 from app.utils import delete_news_from_cache
+from app.tasks import scrape_news_task
 import json
 
 router = APIRouter()
@@ -31,16 +32,20 @@ async def get_article(news_id: PydanticObjectId):
 
 @router.get("/news/recent/")
 async def get_recent_news():
-    cached_news = await redis.get("recent_news")
-    if cached_news:
-        return json.loads(cached_news)
-    return {"message": "No recent news found in cache."}
+    try:
+        cached_news = await redis.lrange("recent_news", 0, -1)  # Fetch all items from list
+        print(cached_news)
+        if cached_news:
+            return [json.loads(news) for news in cached_news]  # Decode each item from JSON
+        return {"message": "No recent news found in cache."}
+    except:
+        raise HTTPException(status_code=500, detail="We got problem on the server. It is not your fault." )
 
 
 @router.post("/scrape/")
 async def trigger_scraping():
     """Trigger the Celery task to scrape news"""
-    task = celery.send_task("app.tasks.scrape_news_task")  # Reference the task in tasks.py
+    task = scrape_news_task.apply_async()
     return {"message": "Scraping task started", "task_id": task.id}
 
 

@@ -6,7 +6,12 @@ from app.database import init_db
 
 logger = logging.getLogger(__name__)
 
-@celery.task(bind=True)
+@celery.task(
+    bind=True,
+    autoretry_for=(Exception,),
+    retry_backoff=True,          
+    retry_kwargs={"max_retries": 5},
+)
 def scrape_news_task(self):
     """Scrapes and stores news asynchronously"""
     try:
@@ -18,6 +23,6 @@ def scrape_news_task(self):
         loop.run_until_complete(scrape_and_store_news())
     except Exception as e:
         logger.error(f"Error in scrape_news_task: {e}", exc_info=True)
-        raise self.retry(exc=e)  
+        raise e
     finally:
         loop.close()  
