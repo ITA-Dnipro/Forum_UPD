@@ -21,5 +21,5 @@ from django.urls.conf import include
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-    path("api/", include("chat-copy.urls")),
+    path("api/", include("chat_copy.urls")),
 ]

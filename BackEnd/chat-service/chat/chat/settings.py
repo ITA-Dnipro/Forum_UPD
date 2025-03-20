@@ -41,7 +41,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    "chat-copy",
+    "chat_copy",
     "rest_framework",
 ]
 
@@ -93,6 +93,12 @@ mongo_password = os.getenv("MONGO_PASSWORD")
 mongo_host = os.getenv("MONGO_HOST", "localhost")
 mongo_port = int(os.getenv("MONGO_PORT", 27017))
 mongo_authentication_source = os.getenv("MONGO_AUTHENTICATION_SOURCE", "admin")
+print(f"Mongo DB Name: {mongo_db_name}")
+print(f"Mongo Username: {mongo_username}")
+print(f"Mongo Password: {mongo_password}")
+print(f"Mongo Host: {mongo_host}")
+print(f"Mongo Port: {mongo_port}")
+print(f"Mongo Authentication Source: {mongo_authentication_source}")
 
 
 mongoengine.connect(

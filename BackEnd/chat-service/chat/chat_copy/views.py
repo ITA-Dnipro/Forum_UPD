@@ -13,23 +13,25 @@ class ConversationCreateView(APIView):
         print(request.data)
         print(f"Request payload: {request}")
         print(f"request headers: {request.headers}")
-        return Response(
-            {
-                "message": "Conversation was created",
-                "room_id": str(12321),
-            }
-        )
         try:
             serializer = RoomSerializer(data=request.data)
             if serializer.is_valid():
                 room = serializer.save()
-                return Response(
+                print("Saved room")
+                print(f"Room ID: {room.id}")
+                response = Response(
                     {
                         "message": "Conversation was created",
                         "room_id": str(room.id),
                     },
                     status=status.HTTP_201_CREATED,
+                    content_type="application/json",
                 )
+                print(f"Response: {response}")
+                print(f"Response status: {response.status_code}")
+                print(f"Response data: {response.data}")
+                print(f"Response headers: {response.headers}")
+                return response
         except Exception as e:
             print(f"Error123: {str(e)}")
             return Response(

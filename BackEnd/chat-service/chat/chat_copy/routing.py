@@ -7,8 +7,7 @@ from django.urls import re_path
 
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "chat.settings")
-
-
+print("in routing.py")
 websocket_urlpatterns = [
     re_path(r"ws/chat/(?P<room_name>\w+)/$", consumers.ChatConsumer.as_asgi()),
 ]

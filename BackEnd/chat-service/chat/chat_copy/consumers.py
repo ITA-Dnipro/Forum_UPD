@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 class ChatConsumer(AsyncWebsocketConsumer):
     async def connect(self):
         self.room_id = str(self.scope["url_route"]["kwargs"]["room_id"])
-
+        print("asdsadasd")
         # Check if user is authenticated before proceeding
         if not self.scope["user"].is_authenticated:
             logger.warning(f"User {self.scope['user']} is not authenticated.")
