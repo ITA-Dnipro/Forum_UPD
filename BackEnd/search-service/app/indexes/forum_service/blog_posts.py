@@ -1,12 +1,14 @@
 from elasticsearch_dsl import (
-    Document,
     Date,
     Integer,
     Text,
     Keyword,
     Nested,
-    InnerDoc
+    InnerDoc,
+    AsyncDocument
 )
+
+from ...config import settings
 
 
 class Category(InnerDoc):
@@ -21,7 +23,7 @@ class Tag(InnerDoc):
     name = Keyword()
 
 
-class BlogPostDocument(Document):
+class BlogPostDocument(AsyncDocument):
     """Document representing a blog post."""
     id = Keyword()
     author_id = Integer()
@@ -38,7 +40,7 @@ class BlogPostDocument(Document):
     updated_at = Date()
 
     class Index:
-        name = "blog_posts"
+        name = settings.forum_blog_posts_index
         settings = {
             "number_of_shards": 1,
             "number_of_replicas": 1

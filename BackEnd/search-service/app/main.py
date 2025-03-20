@@ -15,6 +15,7 @@ from .indexes.forum_service.question_answers import QuestionAnswerDocument
 from .indexes.forum_service.questions import QuestionDocument
 from .indexes.news_service.news_article import NewsArticleDocument
 from .routes.search import search_router
+from .utils.seed_indexes import seed_all
 
 limiter = Limiter(key_func=get_remote_address)
 
@@ -43,8 +44,8 @@ async def lifespan(app: FastAPI):
     try:
         for cls in index_classes:
             index_name = cls.get_index_name()
-            if not es_client.indices.exists(index=index_name):
-                cls.init()
+            if not await es_client.indices.exists(index=index_name):
+                await cls.init()
                 logger.info(f"Created index: {index_name}")
             else:
                 logger.info(f"Index already exists: {index_name}")
@@ -53,8 +54,15 @@ async def lifespan(app: FastAPI):
         raise
 
     try:
+        await seed_all()
+    except Exception as e:
+        logger.exception(f"Error seeding data: {str(e)}")
+        raise
+
+    try:
         yield
     finally:
+        await es_client.close()
         logger.info("Shutdown: cleaning up...")
 
 

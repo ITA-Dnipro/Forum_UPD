@@ -1,12 +1,14 @@
 from elasticsearch_dsl import (
-    Document,
     Date,
     Integer,
     Text,
     Keyword,
     Nested,
-    InnerDoc
+    InnerDoc,
+    AsyncDocument
 )
+
+from ...config import settings
 
 
 class Category(InnerDoc):
@@ -15,7 +17,7 @@ class Category(InnerDoc):
     name = Keyword()
 
 
-class EventDocument(Document):
+class EventDocument(AsyncDocument):
     """Document representing an event."""
     id = Keyword()
     organizer_id = Integer()
@@ -36,7 +38,7 @@ class EventDocument(Document):
     starting_time = Date()
 
     class Index:
-        name = "events"
+        name = settings.events_index
         settings = {
             "number_of_shards": 1,
             "number_of_replicas": 1

@@ -15,6 +15,23 @@ class Settings(BaseSettings):
     elasticsearch_max_retries: int = Field(5, env="ELASTICSEARCH_MAX_RETRIES")
     elasticsearch_retry_delay: int = Field(2, env="ELASTICSEARCH_RETRY_DELAY")
 
+    events_index: str = Field("events")
+    forum_blog_posts_index: str = Field("blog_posts")
+    forum_blog_comments_index: str = Field("blog_comments")
+    forum_questions_index: str = Field("questions")
+    forum_question_answers_index: str = Field("question_answers")
+    news_articles_index: str = Field("news_articles")
+
+    @property
+    def global_search_indexes(self) -> list[str]:
+        """Return Elasticsearch indexes as a list for the global search."""
+        return [
+            self.events_index,
+            self.forum_blog_posts_index,
+            self.forum_questions_index,
+            self.news_articles_index,
+        ]
+
     log_level: str = Field("INFO", env="LOG_LEVEL")
 
     class Config:
