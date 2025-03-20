@@ -1,67 +1,42 @@
-from sqlalchemy import select
-from exceptions import NotFoundError
-from models.regions import RegionOrm
+from repositories import BaseRepository
 from schemas.regions import Region
 from sqlalchemy.ext.asyncio import AsyncSession 
 
+class RegionService:
 
-class RegionRepository:
-    @staticmethod
-    async def add_one(
-        data: Region, 
-        session: AsyncSession
-        ):
+    def __init__(self, model, session: AsyncSession):
+        self.session = session
+        self.repository = BaseRepository(model, session)
+
+
+    async def add_one(self, data: Region):
         region_dict = data.model_dump()
-        region = RegionOrm(**region_dict)
-        session.add(region)
-        await session.commit()
+        region = await self.repository.add_one(region_dict)
         return region
 
 
-    @staticmethod
-    async def get_all(session: AsyncSession):
-        query = select(RegionOrm)
-        result = await session.execute(query)
-        region_models = result.scalars().all()
-        return region_models
+    async def get_all(self):
+        regions = await self.repository.get_all()
+        return regions
 
 
-    @staticmethod
-    async def get_by_id(
-        region_id: int,
-        session: AsyncSession
-        ):
-        region = await session.get(RegionOrm, region_id)
-        if not region:
-            raise NotFoundError('Region not found')
+    async def get_list_by_ids(self, regions_id: list[int]):
+        """
+        Takes list of region ids and returns list of respective region objects
+        """
+        regions = await self.repository.get_list_by_ids(regions_id)
+        return regions
+
+
+    async def get_by_id(self, region_id: int):
+        region = await self.repository.get_by_id(region_id)
+        return region
+    
+            
+    async def update(self, region_id: int, data: Region, ):
+        region_dict = data.model_dump()
+        region = await self.repository.update(region_id, region_dict)
         return region
     
 
-    @staticmethod
-    async def get_list_by_ids(
-        regions_id: list[int], 
-        session: AsyncSession):
-        """
-        Takes list of region ids and returns list of respective RegionOrm objects
-        """
-        regions = await session.execute(
-        select(RegionOrm).where(RegionOrm.id.in_(regions_id))
-        )
-        regions = regions.scalars().all()
-        if not regions or len(regions_id) > len(regions):
-            raise NotFoundError('Region not found')
-        return regions
-        
-            
-    @classmethod
-    async def update(
-        cls,
-        region_id: int,
-        data: Region,
-        session: AsyncSession
-        ):
-        region = await cls.get_by_id(region_id, session=session)
-        region.__dict__.update(data)
-        await session.commit()
-        return region
             

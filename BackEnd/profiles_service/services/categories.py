@@ -17,7 +17,6 @@ class CategoryService:
 
     async def get_all(self):
         categories = await self.repository.get_all()
-        print(categories)
         return categories
 
 
