@@ -3,7 +3,8 @@ krakend run \
   -c krakend_authentication.json \
   -c krakend_chats.json \
   -c krakend_events.json \
-  -c krakend_forum.json \
+  -c krakend_forum_posts.json \
+  -c krakend_forum_QA.json \
   -c krakend_news.json \
   -c krakend_notifications.json \
   -c krakend_profiles.json \
