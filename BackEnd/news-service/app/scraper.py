@@ -2,7 +2,7 @@ import aiohttp
 import asyncio
 from fastapi import HTTPException
 from bs4 import BeautifulSoup
-from datetime import datetime
+from datetime import datetime, timedelta
 from app.models import NewsModel
 import logging
 from app.utils import update_news_cache
@@ -122,20 +122,21 @@ async def scrape_and_store_news():
     if not latest_news:
         raise HTTPException(status_code=404, detail="No news found")
 
-    saved_news = []
-    skipped_news = []
+    news_links = [news.link for news in latest_news]
 
-    for news in latest_news:
-        existing = await NewsModel.find_one({"link": news.link})
-        if existing:
-            skipped_news.append(news)
-        else:
-            saved_news.append(news)
+    cutoff_date = datetime.now() - timedelta(days=90)
 
-    if saved_news:
-        await NewsModel.insert_many(saved_news)
-        await update_news_cache(saved_news)
+    existing_news = await NewsModel.find(
+        {"link": {"$in": news_links}, "published_at": {"$gte": cutoff_date}}
+    ).to_list(None)
 
+    existing_links = {news.link for news in existing_news}
+
+    new_news = [news for news in latest_news if news.link not in existing_links]
+
+    if new_news:
+        await NewsModel.insert_many(new_news)
+        await update_news_cache(new_news)
 #   return {
 #       "message": "Scraping completed",
 #      "saved_news_count": len(saved_news),

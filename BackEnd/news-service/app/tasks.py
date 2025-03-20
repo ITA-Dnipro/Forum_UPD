@@ -15,8 +15,10 @@ logger = logging.getLogger(__name__)
 def scrape_news_task(self):
     """Scrapes and stores news asynchronously"""
     try:
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
+        loop = asyncio.get_event_loop()
+        if loop.is_closed():
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
 
         loop.run_until_complete(init_db())
 
