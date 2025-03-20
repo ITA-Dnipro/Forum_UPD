@@ -3,8 +3,10 @@ from fastapi import APIRouter, Depends, HTTPException
 from exceptions import NotFoundError
 from schemas.categories import Category
 from crud.categories import CategoryRepository
+from services.categories import CategoryService
 from sqlalchemy.ext.asyncio import AsyncSession
 from dependencies import get_async_session
+from models.categories import StartupCategoryOrm 
 
 
 router = APIRouter(
@@ -14,7 +16,7 @@ router = APIRouter(
 
 @router.get("/", status_code=200)
 async def categories_list(session: AsyncSession = Depends(get_async_session)):
-    categories = await CategoryRepository.get_all(session=session)
+    categories = await CategoryService(model=StartupCategoryOrm, session=session).get_all()
     return categories
 
 
@@ -23,7 +25,7 @@ async def create_category(
     category: Annotated[Category, Depends()],
     session: AsyncSession = Depends(get_async_session)
     ):
-    category = await CategoryRepository.add_one(category, session=session)
+    category = await CategoryService(model=StartupCategoryOrm, session=session).add_one(category)
     
     return category
 
@@ -34,7 +36,7 @@ async def categories_detail(
     session: AsyncSession = Depends(get_async_session)
     ):
     try:
-        category = await CategoryRepository.get_by_id(category_id, session=session)
+        category = await CategoryService(model=StartupCategoryOrm, session=session).get_by_id(category_id)
     except NotFoundError as e:
         raise HTTPException(
             status_code=404, detail=f"{e}"
@@ -49,10 +51,9 @@ async def category_update(
     session: AsyncSession = Depends(get_async_session)
     ):
     try:
-        category = await CategoryRepository.update(category_id, category_data, session=session)
+        category = await CategoryService(model=StartupCategoryOrm, session=session).update(category_id, category_data)
     except NotFoundError as e:
         raise HTTPException(
             status_code=404, detail=f"{e}"
             )
     return category
-
