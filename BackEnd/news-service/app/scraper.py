@@ -1,10 +1,11 @@
 import aiohttp
 import asyncio
+from fastapi import HTTPException
 from bs4 import BeautifulSoup
-from datetime import datetime
+from datetime import datetime, timedelta
 from app.models import NewsModel
 import logging
-import random
+from app.utils import update_news_cache
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -35,7 +36,7 @@ async def fetch(session, url, retries=5, backoff_factor=1):
         except aiohttp.ClientError as e:
             logger.error(f"Attempt {attempt + 1}: Error fetching {url} - {e}")
 
-        await asyncio.sleep(delay + random.uniform(0, 0.5))  # Random jitter
+        await asyncio.sleep(delay)
         delay *= 2  # Exponential backoff
 
     logger.error(f"Failed to fetch {url} after {retries} attempts.")
@@ -113,3 +114,36 @@ async def scrape_article(session, article_url):
     except Exception as e:
         logger.error(f"Error scraping article {article_url}: {e}", exc_info=True)
         return None  # Ensure it returns None on failure
+    
+
+async def scrape_and_store_news():
+    """Scrapes the latest 5 news articles and stores them in MongoDB if not duplicates."""
+    latest_news = await scrape_news()
+    if not latest_news:
+        raise HTTPException(status_code=404, detail="No news found")
+
+    news_links = [news.link for news in latest_news]
+
+    cutoff_date = datetime.now() - timedelta(days=90)
+
+    existing_news = await NewsModel.find(
+        {"link": {"$in": news_links}, "published_at": {"$gte": cutoff_date}}
+    ).to_list(None)
+
+    existing_links = {news.link for news in existing_news}
+
+    new_news = [news for news in latest_news if news.link not in existing_links]
+
+    if new_news:
+        await NewsModel.insert_many(new_news)
+        await update_news_cache(new_news)
+#   return {
+#       "message": "Scraping completed",
+#      "saved_news_count": len(saved_news),
+#      "skipped_news_count": len(skipped_news),
+#     "saved_news": saved_news,
+#      "skipped_news": skipped_news
+#   }
+
+
+

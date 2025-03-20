@@ -1,15 +1,19 @@
 # routes.py
 from fastapi import APIRouter, Query, HTTPException
 from app.models import NewsModel
-from app.scraper import scrape_news
+from app.celery import celery
 from beanie import PydanticObjectId
+from app.redis import redis
+from app.utils import delete_news_from_cache
+from app.tasks import scrape_news_task
+import json
 
 router = APIRouter()
 
 
 @router.get("/news")
 async def get_news(skip: int = 0, limit: int = 3):
-    news = await NewsModel.find_all().skip(skip).limit(limit).to_list()
+    news = await NewsModel.find(NewsModel.deleted == False).skip(skip).limit(limit).to_list()
     if not news:
         raise HTTPException(status_code=404, detail="News not found")
 
@@ -20,42 +24,29 @@ async def get_news(skip: int = 0, limit: int = 3):
 async def get_article(news_id: PydanticObjectId):
     news = await NewsModel.get(news_id)
     
-    if not news:
+    if not news or news.deleted:
         raise HTTPException(status_code=404, detail="News not found")
 
     return news
 
-@router.post("/scrape")
-async def scrape_and_store_news():
-    """Scrapes the latest 5 news articles and stores them in MongoDB if not duplicates."""
-    
-    latest_news = await scrape_news()
-    
-    if not latest_news:
-        raise HTTPException(status_code=404, detail="No news found")
 
-    saved_news = []
-    skipped_news = []
+@router.get("/news/recent/")
+async def get_recent_news():
+    try:
+        cached_news = await redis.lrange("recent_news", 0, -1)  # Fetch all items from list
+        print(cached_news)
+        if cached_news:
+            return [json.loads(news) for news in cached_news]  # Decode each item from JSON
+        return {"message": "No recent news found in cache."}
+    except:
+        raise HTTPException(status_code=500, detail="We got problem on the server. It is not your fault." )
 
-    for news in latest_news:
-        # Check if the article already exists in MongoDB
-        existing = await NewsModel.find_one({"link": news.link})
-        if existing:
-            skipped_news.append(news)
-            continue  
 
-        # Insert new news into MongoDB
-        inserted = await NewsModel.insert_one(news)
-        if inserted.id:
-            saved_news.append(news)
-
-    return {
-        "message": "Scraping completed",
-        "saved_news_count": len(saved_news),
-        "skipped_news_count": len(skipped_news),
-        "saved_news": saved_news,
-        "skipped_news": skipped_news
-    }
+@router.post("/scrape/")
+async def trigger_scraping():
+    """Trigger the Celery task to scrape news"""
+    task = scrape_news_task.apply_async()
+    return {"message": "Scraping task started", "task_id": task.id}
 
 
 @router.delete("/news/{news_id}")
@@ -63,7 +54,11 @@ async def delete_news(news_id: PydanticObjectId):
     news = await NewsModel.get(news_id)
 
     if news:
-        await news.delete()
+        news.deleted = True
+        await news.save()
+
+        await delete_news_from_cache(news_id)
+
         return {"message": "News deleted"}
     
     raise HTTPException(status_code=204, detail="News not found")
