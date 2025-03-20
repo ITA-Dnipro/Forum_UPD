@@ -47,7 +47,7 @@ async def startup_profiles_detail(
 @router.put("/{profile_id}")
 async def startup_profile_update(
     profile_id: int, 
-    profile_data: Annotated[Profile, Depends()],
+    profile_data: Annotated[Profile, Depends(dependency=profile_create_dependency)],
     session: AsyncSession = Depends(get_async_session)
     ):
     profile_dict = profile_data.model_dump(exclude_unset=True, exclude_none=True)

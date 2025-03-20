@@ -53,9 +53,8 @@ class ProfileRepository:
         return profile
         
         
-    async def update(self, profile_id: int, data: Profile):
+    async def update(self, profile_id: int, profile_dict: dict):
         profile = await self.get_by_id(profile_id)
-        profile_dict = data.model_dump()
         profile.__dict__.update(profile_dict)
         profile.updated_at = datetime.now()
         await self.session.commit()
