@@ -3,9 +3,11 @@ from fastapi import APIRouter, Depends, Response
 from exceptions import NotFoundError
 from schemas.profiles import ProfileOptional, Profile
 from crud.profiles import ProfileStartupRepository
+from services.profiles import ProfileStartupService
 from dependencies import profile_create_dependency, profile_optional_create_dependency, get_async_session
 from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
+from models.profiles import StartupProfileOrm
 
 
 router = APIRouter(
@@ -17,7 +19,7 @@ router = APIRouter(
 async def startup_profiles_list(
     session: AsyncSession = Depends(get_async_session)
     ):
-    profiles = await ProfileStartupRepository(session=session).get_all()
+    profiles = await ProfileStartupService(model=StartupProfileOrm, session=session).startups_list()
     return profiles
 
 
@@ -26,8 +28,7 @@ async def create_startup_profile(
     profile: Annotated[Profile, Depends(dependency=profile_create_dependency)],
     session: AsyncSession = Depends(get_async_session)
     ):
-    profile_dict = profile.model_dump(exclude_unset=True, exclude_none=True)
-    profile = await ProfileStartupRepository(session=session).add_one(profile_dict)
+    profile = await ProfileStartupService(model=StartupProfileOrm, session=session).add_startup(profile)
     return profile
 
 
@@ -36,7 +37,7 @@ async def startup_profiles_detail(
     profile_id: int, 
     session: AsyncSession = Depends(get_async_session)):
     try:
-        profile = await ProfileStartupRepository(session=session).get_by_id(profile_id)
+        profile = await ProfileStartupService(model=StartupProfileOrm, session=session).get_startup_by_id(profile_id)
     except NotFoundError as e:
         raise HTTPException(
             status_code=404, detail=f"{e}"
@@ -50,9 +51,8 @@ async def startup_profile_update(
     profile_data: Annotated[Profile, Depends(dependency=profile_create_dependency)],
     session: AsyncSession = Depends(get_async_session)
     ):
-    profile_dict = profile_data.model_dump(exclude_unset=True, exclude_none=True)
     try:
-        profile = await ProfileStartupRepository(session=session).partial_update(profile_id, profile_dict)
+        profile = await ProfileStartupService(model=StartupProfileOrm, session=session).partial_startup_update(profile_id, profile_data)
     except NotFoundError as e:
         raise HTTPException(
             status_code=404, detail=f"{e}"
@@ -66,9 +66,8 @@ async def startup_profile_partial_update(
     profile_data: Annotated[ProfileOptional, Depends(dependency=profile_optional_create_dependency)],
     session: AsyncSession = Depends(get_async_session)
     ):
-    update_fields = profile_data.model_dump(exclude_unset=True, exclude_none=True)
     try:
-        profile = await ProfileStartupRepository(session=session).partial_update(profile_id, update_fields=update_fields)
+        profile = await ProfileStartupService(model=StartupProfileOrm, session=session).partial_startup_update(profile_id, data=profile_data)
     except NotFoundError as e:
         raise HTTPException(
             status_code=404, detail=f"{e}"
