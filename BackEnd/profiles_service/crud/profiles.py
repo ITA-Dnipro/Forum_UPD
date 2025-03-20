@@ -1,85 +1,112 @@
-from sqlalchemy import select
+from sqlalchemy import select, inspect
 from sqlalchemy.ext.asyncio import AsyncSession 
 from sqlalchemy.orm import selectinload
 from models.profiles import StartupProfileOrm
 from crud.categories import CategoryRepository
 from crud.regions import RegionRepository
-from schemas.profiles import Profile, ProfileOptional
+from schemas.profiles import Profile
 from exceptions import NotFoundError
 from datetime import datetime 
 
 class ProfileRepository:
-    @staticmethod
-    async def add_one(data: Profile, session: AsyncSession):
-        profile_dict = data.model_dump(exclude_unset=True, exclude_none=True)
-        if profile_dict.get("profile_categories") is not None: 
-            profile_dict["profile_categories"] = await CategoryRepository.get_list_by_ids(profile_dict["profile_categories"], session=session)
-        if profile_dict.get("profile_regions") is not None: 
-            profile_dict["profile_regions"] = await RegionRepository.get_list_by_ids(profile_dict["profile_regions"], session=session)
+
+    def __init__(self, model, session: AsyncSession):
+        self.model = model
+        self.session = session
+        self.many_to_many = self._get_many_to_many_fields()
+
+    def _get_many_to_many_fields(self):
+        many_to_many_fields = []
+        for name, relationship in inspect(self.model).relationships.items():
+            if relationship.direction.name == "MANYTOMANY":
+                many_to_many_fields.append(name)
+
+        return many_to_many_fields
+    
+
+    async def add_one(self, profile_dict: dict):
         profile_dict["is_deleted"] = False
-        profile = StartupProfileOrm(**profile_dict)
-        session.add(profile)
-        await session.commit()
+        profile = self.model(**profile_dict)
+        self.session.add(profile)
+        await self.session.commit()
         return profile
 
 
-    @staticmethod
-    async def get_all(session: AsyncSession):
-        query = select(StartupProfileOrm).where(StartupProfileOrm.is_deleted == False)\
-        .options(selectinload(StartupProfileOrm.profile_categories))\
-        .options(selectinload(StartupProfileOrm.profile_regions))
-        result = await session.execute(query)
+    async def get_all(self):
+        query = select(self.model).where(self.model.is_deleted == False)
+        for field in self.many_to_many:
+            query = query.options(selectinload(getattr(self.model, field)))
+
+        result = await self.session.execute(query)
         profile_models = result.scalars().all()
         return profile_models
 
 
-    @staticmethod
-    async def get_by_id(profile_id: int, session: AsyncSession):
-        query = select(StartupProfileOrm).where(StartupProfileOrm.id == profile_id, StartupProfileOrm.is_deleted == False)\
-        .options(selectinload(StartupProfileOrm.profile_categories))\
-        .options(selectinload(StartupProfileOrm.profile_regions))
-        result = await session.execute(query)
+    async def get_by_id(self, profile_id: int):
+        query = select(StartupProfileOrm).where(StartupProfileOrm.id == profile_id, StartupProfileOrm.is_deleted == False)
+        for field in self.many_to_many:
+            query = query.options(selectinload(getattr(self.model, field)))
+        result = await self.session.execute(query)
         profile = result.scalars().first()
         if not profile:
             raise NotFoundError("Profile not foud")
         return profile
         
-            
-    @classmethod
-    async def update(cls, profile_id: int, data: Profile, session: AsyncSession):
-        profile = await cls.get_by_id(profile_id, session=session)
+        
+    async def update(self, profile_id: int, data: Profile):
+        profile = await self.get_by_id(profile_id)
         profile_dict = data.model_dump()
-        categories = await CategoryRepository.get_list_by_ids(profile_dict["profile_categories"], session=session)
-        profile_dict["profile_categories"] = categories
-        regions = await RegionRepository.get_list_by_ids(profile_dict["profile_regions"], session=session)
-        profile_dict["profile_regions"] = regions
         profile.__dict__.update(profile_dict)
         profile.updated_at = datetime.now()
-        await session.commit()
+        await self.session.commit()
         return profile
        
 
-    @classmethod
-    async def partial_update(cls, profile_id: int, data: ProfileOptional, session: AsyncSession): 
-        profile = await cls.get_by_id(profile_id, session=session)
-        update_fields : dict = data.model_dump(exclude_unset=True, exclude_defaults=True)
+    async def partial_update(self, profile_id: int, update_fields: dict): 
+        profile = await self.get_by_id(profile_id)
         
-        if update_fields.get("profile_categories") is not None: 
-            update_fields["profile_categories"] = await CategoryRepository.get_list_by_ids(update_fields["profile_categories"], session=session)
-            
-        if update_fields.get("profile_regions") is not None: 
-            update_fields["profile_regions"] = await RegionRepository.get_list_by_ids(update_fields["profile_regions"], session=session)
-
         for key, value in update_fields.items():
             setattr(profile, key, value)
         profile.updated_at = datetime.now()
-        await session.commit()
+        await self.session.commit()
         return profile
 
 
-    @classmethod
-    async def soft_delete(cls, profile_id: int, session: AsyncSession):
-        profile: StartupProfileOrm = await cls.get_by_id(profile_id, session=session)
+    async def soft_delete(self, profile_id: int):
+        profile = await self.get_by_id(profile_id)
         profile.is_deleted = True
-        await session.commit()
+        await self.session.commit()
             
+
+class ProfileStartupRepository(ProfileRepository):
+
+    def __init__(self, session):
+        super().__init__(model=StartupProfileOrm, session=session)
+
+    
+    async def add_one(self, profile_dict: dict):
+        if profile_dict.get("profile_categories") is not None: 
+            profile_dict["profile_categories"] = await CategoryRepository.get_list_by_ids(profile_dict["profile_categories"], session=self.session)
+        if profile_dict.get("profile_regions") is not None: 
+            profile_dict["profile_regions"] = await RegionRepository.get_list_by_ids(profile_dict["profile_regions"], session=self.session)
+        return await super().add_one(profile_dict=profile_dict)
+    
+
+    async def partial_update(self, profile_id: int, update_fields: dict): 
+        if update_fields.get("profile_categories") is not None: 
+            update_fields["profile_categories"] = await CategoryRepository.get_list_by_ids(update_fields["profile_categories"], session=self.session)
+            
+        if update_fields.get("profile_regions") is not None: 
+            update_fields["profile_regions"] = await RegionRepository.get_list_by_ids(update_fields["profile_regions"], session=self.session)
+
+        return await super().partial_update(profile_id=profile_id, update_fields=update_fields)
+
+
+    async def update(self, profile_id: int, profile_dict: dict):
+        categories = await CategoryRepository.get_list_by_ids(profile_dict["profile_categories"], session=self.session)
+        profile_dict["profile_categories"] = categories
+        regions = await RegionRepository.get_list_by_ids(profile_dict["profile_regions"], session=self.session)
+        profile_dict["profile_regions"] = regions
+        
+        return await super().update(profile_id=profile_id, profile_dict=profile_dict)
+
