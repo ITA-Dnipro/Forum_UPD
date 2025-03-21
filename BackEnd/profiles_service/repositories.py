@@ -3,11 +3,12 @@ from sqlalchemy import select, inspect
 from sqlalchemy.ext.asyncio import AsyncSession 
 from sqlalchemy.orm import selectinload
 from exceptions import NotFoundError
+from models import Model
 
 
 class BaseRepository:
 
-    def __init__(self, model, session: AsyncSession):
+    def __init__(self, model: Model, session: AsyncSession):
         self.model = model
         self.session = session
         self.many_to_many = self._get_many_to_many_fields()
