@@ -11,10 +11,15 @@ class CategoryRepository:
         session: AsyncSession
         ):
         category_dict = data.model_dump()
-        category = StartupCategoryOrm(**category_dict)
-        session.add(category)
-        await session.commit()
-        return category
+        try:
+            category = StartupCategoryOrm(**category_dict)
+            session.add(category)
+            await session.commit()
+            return category
+        except Exception as e:
+                await session.rollback()
+        raise e
+        
 
 
     @staticmethod
@@ -60,12 +65,16 @@ class CategoryRepository:
         data: Category,
         session: AsyncSession
         ):
-        category = await cls.get_by_id(category_id, session=session)
         category_dict = data.model_dump()
-        for key, value in category_dict.items():
-            setattr(category, key, value)
-        await session.commit()
-        return category
+        try:
+            category = await cls.get_by_id(category_id, session=session)
+            for key, value in category_dict.items():
+                setattr(category, key, value)
+            await session.commit()
+            return category
+        except Exception as e:
+                await session.rollback()
+        raise e
     
 
             

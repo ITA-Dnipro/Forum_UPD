@@ -23,11 +23,16 @@ class ProfileRepository:
     
 
     async def add_one(self, profile_dict: dict):
-        profile_dict["is_deleted"] = False
-        profile = self.model(**profile_dict)
-        self.session.add(profile)
-        await self.session.commit()
-        return profile
+        try:
+            profile_dict["is_deleted"] = False
+            profile = self.model(**profile_dict)
+            self.session.add(profile)
+            await self.session.commit()
+            return profile
+        except Exception as e:
+                await self.session.rollback()
+        raise e
+        
 
 
     async def get_all(self):
@@ -52,11 +57,15 @@ class ProfileRepository:
         
         
     async def update(self, profile_id: int, profile_dict: dict):
-        profile = await self.get_by_id(profile_id)
-        for key, value in profile_dict.items():
-            setattr(profile, key, value)
-        await self.session.commit()
-        return profile
+        try:
+            profile = await self.get_by_id(profile_id)
+            for key, value in profile_dict.items():
+                setattr(profile, key, value)
+            await self.session.commit()
+            return profile
+        except Exception as e:
+                await self.session.rollback()
+        raise e
        
 
     async def partial_update(self, profile_id: int, update_fields: dict): 
@@ -69,9 +78,14 @@ class ProfileRepository:
 
 
     async def soft_delete(self, profile_id: int):
-        profile = await self.get_by_id(profile_id)
-        profile.is_deleted = True
-        await self.session.commit()
+        try:
+            profile = await self.get_by_id(profile_id)
+            profile.is_deleted = True
+            await self.session.commit()
+        except Exception as e:
+                await self.session.rollback()
+        raise e
+
             
 
 class ProfileStartupRepository(ProfileRepository):
