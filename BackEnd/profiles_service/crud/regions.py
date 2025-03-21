@@ -61,7 +61,9 @@ class RegionRepository:
         session: AsyncSession
         ):
         region = await cls.get_by_id(region_id, session=session)
-        region.__dict__.update(data)
+        region_dict = data.model_dump()
+        for key, value in region_dict.items():
+            setattr(region, key, value)
         await session.commit()
         return region
             

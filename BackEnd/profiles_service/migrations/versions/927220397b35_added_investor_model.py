@@ -52,7 +52,7 @@ def upgrade() -> None:
     sa.Column('rnokpp', sa.String(length=10), nullable=True),
     sa.Column('available_funds', sa.Numeric(precision=15, scale=2), nullable=True),
     sa.Column('created_at', sa.DateTime(), nullable=False),
-    sa.Column('updated_at', sa.DateTime(), nullable=True),
+    sa.Column('updated_at', sa.DateTime(), nullable=True, onupdate=sa.func.now()),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('edrpou'),
     sa.UniqueConstraint('rnokpp')

@@ -61,7 +61,9 @@ class CategoryRepository:
         session: AsyncSession
         ):
         category = await cls.get_by_id(category_id, session=session)
-        category.__dict__.update(data)
+        category_dict = data.model_dump()
+        for key, value in category_dict.items():
+            setattr(category, key, value)
         await session.commit()
         return category
     

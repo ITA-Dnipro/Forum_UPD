@@ -30,7 +30,7 @@ class StartupProfileOrm(Model):
     founded: Mapped[int] = mapped_column(nullable=True)
     startup_idea: Mapped[str] = mapped_column(Text, default=None, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=func.now())
-    updated_at: Mapped[datetime] = mapped_column(DateTime, nullable=True) 
+    updated_at: Mapped[datetime] = mapped_column(DateTime, nullable=True, onupdate=func.now()) 
 
 
 
@@ -47,7 +47,7 @@ class InvestorProfileOrm(Model):
     rnokpp: Mapped[str] = mapped_column(String(10), default=None, unique=True, nullable=True)
     available_funds: Mapped[float] = mapped_column(Numeric(15, 2), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=func.now())
-    updated_at: Mapped[datetime] = mapped_column(DateTime, nullable=True)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, nullable=True, onupdate=func.now())
     investment_categories: Mapped[list["StartupCategoryOrm"]] = relationship( # type: ignore
         back_populates="investor_startup_categories", 
         secondary="investor_startup_categories"

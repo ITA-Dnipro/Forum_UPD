@@ -4,9 +4,7 @@ from sqlalchemy.orm import selectinload
 from models.profiles import StartupProfileOrm
 from crud.categories import CategoryRepository
 from crud.regions import RegionRepository
-from schemas.profiles import Profile
 from exceptions import NotFoundError
-from datetime import datetime 
 
 class ProfileRepository:
 
@@ -55,8 +53,8 @@ class ProfileRepository:
         
     async def update(self, profile_id: int, profile_dict: dict):
         profile = await self.get_by_id(profile_id)
-        profile.__dict__.update(profile_dict)
-        profile.updated_at = datetime.now()
+        for key, value in profile_dict.items():
+            setattr(profile, key, value)
         await self.session.commit()
         return profile
        
@@ -66,7 +64,6 @@ class ProfileRepository:
         
         for key, value in update_fields.items():
             setattr(profile, key, value)
-        profile.updated_at = datetime.now()
         await self.session.commit()
         return profile
 
@@ -82,30 +79,29 @@ class ProfileStartupRepository(ProfileRepository):
     def __init__(self, session):
         super().__init__(model=StartupProfileOrm, session=session)
 
-    
+
+    async def _fetch_related(self, data: dict):
+        if data.get("profile_categories") is not None:
+            data["profile_categories"] = await CategoryRepository.get_list_by_ids(
+                data["profile_categories"], session=self.session
+            )
+        if data.get("profile_regions") is not None:
+            data["profile_regions"] = await RegionRepository.get_list_by_ids(
+                data["profile_regions"], session=self.session
+            )
+
+
     async def add_one(self, profile_dict: dict):
-        if profile_dict.get("profile_categories") is not None: 
-            profile_dict["profile_categories"] = await CategoryRepository.get_list_by_ids(profile_dict["profile_categories"], session=self.session)
-        if profile_dict.get("profile_regions") is not None: 
-            profile_dict["profile_regions"] = await RegionRepository.get_list_by_ids(profile_dict["profile_regions"], session=self.session)
+        self._fetch_related(profile_dict)        
         return await super().add_one(profile_dict=profile_dict)
     
 
     async def partial_update(self, profile_id: int, update_fields: dict): 
-        if update_fields.get("profile_categories") is not None: 
-            update_fields["profile_categories"] = await CategoryRepository.get_list_by_ids(update_fields["profile_categories"], session=self.session)
-            
-        if update_fields.get("profile_regions") is not None: 
-            update_fields["profile_regions"] = await RegionRepository.get_list_by_ids(update_fields["profile_regions"], session=self.session)
-
+        self._fetch_related(update_fields)
         return await super().partial_update(profile_id=profile_id, update_fields=update_fields)
 
 
     async def update(self, profile_id: int, profile_dict: dict):
-        categories = await CategoryRepository.get_list_by_ids(profile_dict["profile_categories"], session=self.session)
-        profile_dict["profile_categories"] = categories
-        regions = await RegionRepository.get_list_by_ids(profile_dict["profile_regions"], session=self.session)
-        profile_dict["profile_regions"] = regions
-        
+        self._fetch_related(profile_dict)
         return await super().update(profile_id=profile_id, profile_dict=profile_dict)
 
