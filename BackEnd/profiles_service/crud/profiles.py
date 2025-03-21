@@ -104,18 +104,20 @@ class ProfileStartupRepository(ProfileRepository):
                 data["profile_regions"], session=self.session
             )
 
+        return data
+
 
     async def add_one(self, profile_dict: dict):
-        self._fetch_related(profile_dict)        
+        profile_dict = await self._fetch_related(profile_dict)        
         return await super().add_one(profile_dict=profile_dict)
     
 
     async def partial_update(self, profile_id: int, update_fields: dict): 
-        self._fetch_related(update_fields)
+        profile_dict = await self._fetch_related(profile_dict) 
         return await super().partial_update(profile_id=profile_id, update_fields=update_fields)
 
 
     async def update(self, profile_id: int, profile_dict: dict):
-        self._fetch_related(profile_dict)
+        profile_dict = await self._fetch_related(profile_dict) 
         return await super().update(profile_id=profile_id, profile_dict=profile_dict)
 
