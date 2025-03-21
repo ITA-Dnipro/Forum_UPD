@@ -1,9 +1,12 @@
-from fastapi import Body, HTTPException
+from fastapi import Body, Depends, HTTPException
 from pydantic import ValidationError
 from sqlalchemy.ext.asyncio import AsyncSession
+from models.profiles import StartupProfileOrm
+from repositories import ProfileRepository
 from schemas.profiles import Profile, StatusEnum, ProfileOptional
 from typing import List
 from database import new_session
+from services.profiles import ProfileStartupService
 
 def profile_create_dependency(
     name: str = Body(...),
@@ -78,3 +81,11 @@ def profile_optional_create_dependency(
 async def get_async_session() -> AsyncSession:
     async with new_session() as session:
         yield session
+
+
+def get_startup_profile_repo(session: AsyncSession = Depends(get_async_session)):
+    return ProfileRepository(model=StartupProfileOrm, session=session)
+
+
+def get_startup_service(repo: ProfileStartupService = Depends(dependency=get_startup_profile_repo)):
+    return ProfileStartupService(repo)
