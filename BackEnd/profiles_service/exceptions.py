@@ -14,3 +14,12 @@ class InvalidRelatedEntityError(Exception):
 
     def __str__(self):
         return self.message
+
+
+class UniqueConstraintViolationError(Exception):
+    def __init__(self, message="A record with this unique field value already exists."):
+        super().__init__(message)
+        self.message = message
+
+    def __str__(self):
+        return self.message

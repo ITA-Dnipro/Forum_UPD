@@ -10,6 +10,7 @@ from typing import List
 from database import new_session
 from services.categories import CategoryService
 from services.profiles import ProfileStartupService
+from services.regions import RegionService
 
 def profile_create_dependency(
     name: str = Body(...),
@@ -99,4 +100,4 @@ def get_caterory_service(session: AsyncSession = Depends(get_async_session)):
 
 def get_region_service(session: AsyncSession = Depends(get_async_session)):
     repo = BaseRepository(model=RegionOrm, session=session)
-    return CategoryService(repo)
+    return RegionService(repo)

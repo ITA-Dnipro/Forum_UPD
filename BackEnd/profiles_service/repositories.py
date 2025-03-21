@@ -34,8 +34,11 @@ class BaseRepository:
         return instance
 
 
-    async def get_all(self):
+    async def get_all(self, **filters):
         query = self._get_query()
+        for key, value in filters.items():
+            query = query.where(getattr(self.model, key) == value)
+            
         for field in self.many_to_many:
             query = query.options(selectinload(getattr(self.model, field)))
 

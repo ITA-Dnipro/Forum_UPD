@@ -1,6 +1,6 @@
 from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException
-from exceptions import NotFoundError
+from exceptions import NotFoundError, UniqueConstraintViolationError
 from schemas.categories import Category
 from services.categories import CategoryService
 from dependencies import get_caterory_service
@@ -24,7 +24,12 @@ async def create_category(
     category: Annotated[Category, Depends()],
     service: CategoryService = Depends(get_caterory_service)
     ):
-    category = await service.add_one(category)
+    try:
+        category = await service.add_one(category)
+    except UniqueConstraintViolationError:
+        raise HTTPException(
+            status_code=400, detail="Category already exists"
+            )
     
     return category
 

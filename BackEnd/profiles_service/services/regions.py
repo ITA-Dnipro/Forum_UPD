@@ -1,16 +1,18 @@
 from repositories import BaseRepository
 from schemas.regions import Region
-from sqlalchemy.ext.asyncio import AsyncSession 
+from exceptions import UniqueConstraintViolationError
 
 class RegionService:
 
-    def __init__(self, model, session: AsyncSession):
-        self.session = session
-        self.repository = BaseRepository(model, session)
+    def __init__(self, repo: BaseRepository):
+        self.repository = repo
 
 
     async def add_one(self, data: Region):
         region_dict = data.model_dump()
+        region_name = region_dict["name"]
+        if self.repository.get_all(name=region_name):
+            raise UniqueConstraintViolationError
         region = await self.repository.add_one(region_dict)
         return region
 
@@ -33,8 +35,11 @@ class RegionService:
         return region
     
             
-    async def update(self, region_id: int, data: Region, ):
+    async def update(self, region_id: int, data: Region):
         region_dict = data.model_dump()
+        region_name = region_dict["name"]
+        if self.repository.get_all(name=region_name):
+            raise UniqueConstraintViolationError
         region = await self.repository.update(region_id, region_dict)
         return region
     

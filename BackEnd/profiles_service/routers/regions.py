@@ -1,6 +1,6 @@
 from typing import Annotated
 from fastapi import APIRouter, HTTPException, Depends
-from exceptions import NotFoundError
+from exceptions import NotFoundError, UniqueConstraintViolationError
 from schemas.regions import Region
 from services.regions import RegionService
 from dependencies import get_region_service
@@ -22,7 +22,12 @@ async def create_region(
     region: Annotated[Region, Depends()],
     service: RegionService = Depends(get_region_service)
     ):
-    region = await service.add_one(region)
+    try:
+        region = await service.add_one(region)
+    except UniqueConstraintViolationError:
+        raise HTTPException(
+            status_code=400, detail="Region already exists"
+            )
     
     return region
 

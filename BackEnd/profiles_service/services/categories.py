@@ -1,16 +1,18 @@
+from exceptions import UniqueConstraintViolationError
 from repositories import BaseRepository
 from schemas.categories import Category
-from sqlalchemy.ext.asyncio import AsyncSession 
 
 class CategoryService:
 
-    def __init__(self, model, session: AsyncSession):
-        self.session = session
-        self.repository = BaseRepository(model, session)
+    def __init__(self, repo: BaseRepository):
+        self.repository = repo
 
 
     async def add_one(self, data: Category):
         category_dict = data.model_dump()
+        category_name = category_dict["name"]
+        if self.repository.get_all(name=category_name):
+            raise UniqueConstraintViolationError
         category = await self.repository.add_one(category_dict)
         return category
 
@@ -31,10 +33,13 @@ class CategoryService:
     async def get_by_id(self, category_id: int):
         category = await self.repository.get_by_id(category_id)
         return category
-    
-            
-    async def update(self, category_id: int, data: Category, ):
+
+
+    async def update(self, category_id: int, data: Category):
         category_dict = data.model_dump()
+        category_name = category_dict["name"]
+        if self.repository.get_all(name=category_name):
+            raise UniqueConstraintViolationError
         category = await self.repository.update(category_id, category_dict)
         return category
     
