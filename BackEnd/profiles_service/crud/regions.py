@@ -18,8 +18,8 @@ class RegionRepository:
             await session.commit()
             return region
         except Exception as e:
-                await session.rollback()
-        raise e
+            await session.rollback()
+            raise e
 
 
     @staticmethod
@@ -73,6 +73,6 @@ class RegionRepository:
             await session.commit()
             return region
         except Exception as e:
-                await session.rollback()
-        raise e
+            await session.rollback()
+            raise e
             

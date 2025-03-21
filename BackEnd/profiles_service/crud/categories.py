@@ -17,8 +17,8 @@ class CategoryRepository:
             await session.commit()
             return category
         except Exception as e:
-                await session.rollback()
-        raise e
+            await session.rollback()
+            raise e
         
 
 
@@ -73,8 +73,8 @@ class CategoryRepository:
             await session.commit()
             return category
         except Exception as e:
-                await session.rollback()
-        raise e
+            await session.rollback()
+            raise e
     
 
             

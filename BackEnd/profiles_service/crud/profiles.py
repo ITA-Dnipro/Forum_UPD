@@ -30,8 +30,8 @@ class ProfileRepository:
             await self.session.commit()
             return profile
         except Exception as e:
-                await self.session.rollback()
-        raise e
+            await self.session.rollback()
+            raise e
         
 
 
@@ -64,8 +64,8 @@ class ProfileRepository:
             await self.session.commit()
             return profile
         except Exception as e:
-                await self.session.rollback()
-        raise e
+            await self.session.rollback()
+            raise e
        
 
     async def partial_update(self, profile_id: int, update_fields: dict): 
@@ -83,8 +83,8 @@ class ProfileRepository:
             profile.is_deleted = True
             await self.session.commit()
         except Exception as e:
-                await self.session.rollback()
-        raise e
+            await self.session.rollback()
+            raise e
 
             
 
