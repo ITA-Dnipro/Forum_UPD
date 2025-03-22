@@ -19,6 +19,7 @@ import (
     _ "github.com/user/forumupd/gateway/auth/docs"
 )
 
+// main initializes the database, sets up HTTP routes, and starts the authorization service.
 func main() {
     db.InitDB()
 
@@ -29,7 +30,7 @@ func main() {
     log.Println("Automatic migration completed successfully!")
     db.SeedOrUpdateDB()
 
-    // The route is used for checking token /check
+	// Setup HTTP route for checking token authorization.
     http.HandleFunc("/check", checkHandler)
 
     // Swagger documentation which is available on: http://localhost:8080/swagger/index.html
@@ -39,6 +40,7 @@ func main() {
     log.Fatal(http.ListenAndServe(":8080", nil))
 }
 
+// checkHandler validates the JWT token from the request and checks user role permissions.
 // checkHandler godoc
 // @Summary JWT validation
 // @Description Retrieves a JWT token from the Authorization header and optionally checks the user's role.
@@ -54,24 +56,28 @@ func main() {
 func checkHandler(w http.ResponseWriter, r *http.Request) {
     authHeader := r.Header.Get("Authorization")
     if authHeader == "" {
+    	log.Println("Missing Authorization header in /check request")
         http.Error(w, "Missing Authorization header", http.StatusUnauthorized)
         return
     }
 
     tokenStr, err := localjwt.ExtractBearerToken(authHeader)
     if err != nil {
+    	log.Printf("Error extracting token: %v", err)
         http.Error(w, err.Error(), http.StatusUnauthorized)
         return
     }
 
     token, claims, err := localjwt.ParseToken(tokenStr)
     if err != nil || !token.Valid {
+    	log.Printf("Invalid or expired token: %v", err)
         http.Error(w, "Invalid or expired token", http.StatusUnauthorized)
         return
     }
 
     roleClaim, ok := claims["role"].(string)
     if !ok {
+		log.Println("Missing or invalid 'role' claim")
         http.Error(w, "No or invalid 'role' claim found", http.StatusForbidden)
         return
     }
