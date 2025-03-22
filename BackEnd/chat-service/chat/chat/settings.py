@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 from pathlib import Path
 import os
 import mongoengine
+from dotenv import load_dotenv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -74,18 +75,17 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = "chat.wsgi.application"
+ASGI_APPLICATION = "chat.asgi.application"
 
-
-# Database
-# https://docs.djangoproject.com/en/5.1/ref/settings/#databases
-
-# DATABASES = {
-#     "default": {
-#         "ENGINE": "django.db.backends.sqlite3",
-#         "NAME": BASE_DIR / "db.sqlite3",
-#     }
-# }
-
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [("redis", 6379)],
+        },
+    },
+}
+load_dotenv()
 
 mongo_db_name = os.getenv("MONGO_DB_NAME")
 mongo_username = os.getenv("MONGO_USERNAME")
@@ -108,6 +108,7 @@ mongoengine.connect(
     host=mongo_host,
     port=mongo_port,
     authentication_source=mongo_authentication_source,
+    alias="default",
 )
 
 

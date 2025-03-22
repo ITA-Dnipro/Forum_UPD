@@ -9,3 +9,4 @@ redis==5.0.7
 djangorestframework==3.14.0
 channels==4.2.0
 channels_redis==4.2.1
+python-dotenv
