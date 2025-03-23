@@ -190,17 +190,16 @@ class LoginView(APIView):
 
         user = authenticate(request, email=email, password=password)
 
-        if user is None:
-            return Response(
-                {"error": "Invalid password or email"},
-                status=status.HTTP_401_UNAUTHORIZED
-            )
-
-        refresh = RefreshToken.for_user(user)
-        return Response({
-            'refresh': str(refresh),
-            'access': str(refresh.access_token),
-        }, status=status.HTTP_200_OK)
+        serializer = CustomTokenObtainPairSerializer(data=request.data)
+        if serializer.is_valid():
+            return Response({
+                'refresh': str(serializer.validated_data['refresh']),
+                'access': str(serializer.validated_data['access']),
+            })
+        return Response(
+            {"error": "Something went wrong with token generation"},
+            status=status.HTTP_400_BAD_REQUEST
+        )
 
 
 class LogoutView(APIView):

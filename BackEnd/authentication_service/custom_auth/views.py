@@ -44,6 +44,7 @@ from .validate_password import (
     validate_password_include_symbols,
     validate_password_strength
 )
+from .models import Role, UserRole
 
 logger = logging.getLogger(__name__)
 
@@ -64,7 +65,7 @@ class UserRegistrationView(APIView):
         request=UserRegistrationSerializer,
         responses={
             201: OpenApiResponse(
-                response=UserRegistrationSerializer,
+                response=UserRegistrationResponseSerializer,
                 description="User registration successful",
             ),
             400: OpenApiResponse(description="Bad request (validation error or missing fields)"),
@@ -83,6 +84,13 @@ class UserRegistrationView(APIView):
             serializer = UserRegistrationSerializer(data=request.data)
             if serializer.is_valid():
                 user = serializer.save()
+
+                # Check if user is registering as a startup or investor
+                registration_type = request.data.get("registration_type")  # "Startup" or "Investor"
+                if registration_type not in ["Startup", "Investor"]:
+                    return Response({"error": "Invalid registration type."}, status=status.HTTP_400_BAD_REQUEST)
+
+
                 user_data = UserRegistrationResponseSerializer(user).data
                 logger.info("User created successfully")
 
@@ -92,10 +100,7 @@ class UserRegistrationView(APIView):
 
                 email_subject = "Account Activation"
                 activation_link = f"{settings.FRONTEND_URL}/auth/activate/?token={signed_token}"
-                email_message = render_to_string("email/custom_activation.html", {
-                    'user': user,
-                    'activation_link': activation_link,
-                })
+                email_message = f"Please, click on the following link to activate your account {activation_link}"
 
                 send_mail(
                     email_subject,
@@ -110,7 +115,6 @@ class UserRegistrationView(APIView):
         except Exception:
             logger.error(f"Unexpected error occurred.")
             return Response({"detail": "Internal server error. Please try again later."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
 
 class AccountActivationView(APIView):
     permission_classes = [AllowAny]
@@ -167,6 +171,8 @@ class AccountActivationView(APIView):
 
 
 class LoginView(APIView):
+    permission_classes = [AllowAny]
+
     @extend_schema(
         description="User login with email and password.",
         request=CustomTokenObtainPairSerializer,
@@ -179,11 +185,19 @@ class LoginView(APIView):
                     }
                 }
             ),
-            400: OpenApiResponse(
+            401: OpenApiResponse(
                 description="Invalid credentials",
                 examples={
                     "application/json": {
                         "error": "Invalid credentials."
+                    }
+                }
+            ),
+            400: OpenApiResponse(
+                description="Unauthorized, wrong login option or unregistered role",
+                examples={
+                    "application/json": {
+                        "error": "Wrong login option or user role not found."
                     }
                 }
             ),
@@ -192,6 +206,7 @@ class LoginView(APIView):
     def post(self, request):
         email = request.data.get('email')
         password = request.data.get('password')
+        login_option = request.data.get('login_option')  # Expecting "Startup" or "Investor"
 
         user = authenticate(request, email=email, password=password)
 
@@ -201,10 +216,19 @@ class LoginView(APIView):
                 status=status.HTTP_401_UNAUTHORIZED
             )
 
-        refresh = RefreshToken.for_user(user)
+        serializer = CustomTokenObtainPairSerializer(data=request.data)
+
+        try:
+            token = serializer.get_token(user, login_option)
+        except ValidationError as e:
+            return Response(
+                {"error": str(e)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
         return Response({
-            'refresh': str(refresh),
-            'access': str(refresh.access_token),
+            'refresh': str(token),
+            'access': str(token.access_token),
         }, status=status.HTTP_200_OK)
 
 

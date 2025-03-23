@@ -20,6 +20,7 @@ from .validate_password import (
     validate_password_strength,
 )
 from .validate_recaptcha import verify_recaptcha
+from .models import Role, UserRole
 
 import logging
 
@@ -28,15 +29,50 @@ logger = logging.getLogger(__name__)
 User = get_user_model()
 signer = TimestampSigner()
 
+class CustomProfileSerializer(serializers.Serializer):
+    is_registered = serializers.BooleanField()
+    is_startup = serializers.BooleanField()
+    is_fop = serializers.BooleanField()
+    name = serializers.CharField(max_length=255, required=False)
+
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
+    login_option = serializers.CharField(required=True)  # Expecting "Startup" or "Investor"
+
     @classmethod
-    def get_token(cls, user):
+    def get_token(cls, user, login_option):
+        if login_option not in ["Startup", "Investor"]:
+            raise serializers.ValidationError("Invalid login option")
+
         token = super().get_token(user)
 
         token['email'] = user.email
         token['is_staff'] = user.is_staff
         token['is_superuser'] = user.is_superuser
+
+        if login_option == "Startup":
+            startup_role = Role.objects.get(name="Startup")
+            user_role = UserRole.objects.filter(user=user, role=startup_role).first()
+
+            if user_role:
+                if user_role.status == UserRole.VALIDATED:
+                    token['role'] = "Startup"
+                elif user_role.status == UserRole.NOT_VALIDATED:
+                    token['role'] = "NotValidated"
+            else:
+                raise serializers.ValidationError("Not registered as a startup")
+
+        elif login_option == "Investor":
+            investor_role = Role.objects.get(name="Investor")
+            user_role = UserRole.objects.filter(user=user, role=investor_role).first()
+
+            if user_role:
+                if user_role.status == UserRole.VALIDATED:
+                    token['role'] = "Investor"
+                elif user_role.status == UserRole.NOT_VALIDATED:
+                    token['role'] = "NotValidated"
+            else:
+                raise serializers.ValidationError("Not registered as an investor")
 
         return token
 
@@ -48,6 +84,7 @@ class UserRegistrationResponseSerializer(serializers.ModelSerializer):
 
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
+    company = CustomProfileSerializer(write_only=True)
     email = serializers.EmailField(
         required=True,
         write_only=True,
@@ -59,10 +96,13 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
     captcha = serializers.CharField(
         write_only=True, allow_blank=True, allow_null=True
     )
+    registration_type = serializers.ChoiceField(
+        choices=["Startup", "Investor"], write_only=True, required=True
+    )
 
     class Meta:
         model = User
-        fields = ("email", "password", "re_password", "name", "surname", "company", "captcha")
+        fields = ("email", "password", "re_password", "name", "surname", "company", "captcha", "registration_type")
 
     def validate(self, value):
         custom_errors = defaultdict(list)
@@ -74,6 +114,7 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         company_data = value.get("company")
         is_registered = company_data.get("is_registered")
         is_startup = company_data.get("is_startup")
+
         if User.objects.filter(email=email).exists():
             logger.error(f"Email is already registered {email}")
             custom_errors["email"].append("Email is already registered")
@@ -113,6 +154,8 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         validated_data.pop("re_password", None)
         validated_data.pop("captcha", None)
         company_data = validated_data.pop("company")
+        registration_type = validated_data.pop("registration_type")
+
         user = User.objects.create(
             email=validated_data["email"],
             name=validated_data["name"],
@@ -121,6 +164,10 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         user.set_password(validated_data["password"])
         logger.info(f"Saving user {user.email}")
         user.save(update_fields=["password"])
+
+        role = Role.objects.get(name=registration_type)
+        UserRole.objects.create(user=user, role=role, status=UserRole.NOT_VALIDATED)
+
         return user
 
 
