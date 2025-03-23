@@ -8,7 +8,6 @@ from slowapi.util import get_remote_address
 from typing_extensions import Annotated
 
 from ..config import logger, settings
-from ..schema.global_search import GlobalSearchResponse
 from ..search_processing.local_search_params import (
     EventSearchParams,
     BlogPostSearchParams,
@@ -31,12 +30,12 @@ limiter = Limiter(key_func=get_remote_address)
 
 load_dotenv()
 
-event_search_service = EventSearchProcessor()
-blog_post_search_service = BlogPostSearchProcessor()
-blog_comment_search_service = BlogCommentSearchProcessor()
-question_search_service = QuestionSearchProcessor()
-question_answer_search_service = QuestionAnswerSearchProcessor()
-news_search_service = NewsSearchProcessor()
+event_search_processor = EventSearchProcessor()
+blog_post_search_processor = BlogPostSearchProcessor()
+blog_comment_search_processor = BlogCommentSearchProcessor()
+question_search_processor = QuestionSearchProcessor()
+question_answer_search_processor = QuestionAnswerSearchProcessor()
+news_search_processor = NewsSearchProcessor()
 
 
 async def get_es_client(request: Request):
@@ -52,30 +51,34 @@ async def get_es_client(request: Request):
 
 @search_router.get(
     "/",
-    response_model=GlobalSearchResponse,
     summary="Global search"
 )
 @limiter.limit("20/minute")
 async def global_search(
         request: Request,
         q: str = Query(..., description="Query string for the search"),
+        page: int = Query(1, ge=1, description="Page number"),
+        page_size: int = Query(10, ge=1, le=100, description="Number of results per page"),
         es_client=Depends(get_es_client)
 ):
     """
-    Global search endpoint, that performs a multi-index search using a multi_match query.
-    Matches in the title have a higher score.\n
-    Fuzzy matching is enabled to return similar results as well.
-    The results are grouped by index.
+    Global search endpoint that performs a multi-index search using a multi_match query,
+    with pagination. Matches in the title have a higher score. Fuzzy matching is enabled
+    to return similar results as well. The results are grouped by index.
 
     - q: The search query string.
-    - Response body: A JSON object with grouped search results, each key represents the source index.
+    - page: The page number for pagination.
+    - page_size: Number of results per page.
+    - Response body: A JSON object with grouped search results; each key represents the source index.
     """
+    offset = (page - 1) * page_size
+
     s = AsyncSearch(using=es_client, index=settings.global_search_indexes).query(
         "multi_match",
         query=q,
         fields=["title^2", "content"],
         fuzziness="AUTO"
-    )
+    ).extra(from_=offset, size=page_size)
 
     try:
         response = await s.execute()
@@ -96,7 +99,7 @@ async def global_search(
         )
 
     logger.info(f"Global search succeeded, returning results from {len(result)} indexes")
-    return GlobalSearchResponse(results=result)
+    return {"results": result}
 
 
 @search_router.get("/service/events/")
@@ -118,10 +121,13 @@ async def search_events(
     - location: filter by the location of the event.
     - date_from: filter events from this date onward.
     - sort_by: field name to sort results (default: "date").
+    - sort_order: sort order, either "asc" or "desc".
+    - page: Page number for pagination.
+    - page_size: Number of results per page.
     - Response body: A JSON object with 'total_records' and 'records_list'.
     """
     logger.info("Search for events requested")
-    response = await event_search_service.search(es_client, params, sort_by=params.sort_by)
+    response = await event_search_processor.search(es_client, params)
     logger.info("Search for events was successful")
     return response
 
@@ -144,10 +150,13 @@ async def search_blog_posts(
     - tag: filter by the tag name.
     - created_from: filter posts created from this date onward.
     - sort_by: field name to sort results (default: "likes_count").
+    - sort_order: sort order, either "asc" or "desc".
+    - page: Page number for pagination.
+    - page_size: Number of results per page.
     - Response body JSON object with 'total_records' and 'records_list'.
     """
     logger.info("Search for blog posts requested")
-    response = await blog_post_search_service.search(es_client, params, sort_by=params.sort_by)
+    response = await blog_post_search_processor.search(es_client, params)
     logger.info("Search for blog posts was successful")
     return response
 
@@ -167,10 +176,13 @@ async def search_blog_comments(
     - author_id: filter by the author's ID.
     - created_from: filter comments created from this date onward.
     - sort_by: field name to sort results (default: "likes_count").
+    - sort_order: sort order, either "asc" or "desc".
+    - page: Page number for pagination.
+    - page_size: Number of results per page.
     - Response body: JSON object with 'total_records' and 'records_list'.
     """
     logger.info("Search for blog comments requested")
-    response = await blog_comment_search_service.search(es_client, params, sort_by=params.sort_by)
+    response = await blog_comment_search_processor.search(es_client, params)
     logger.info("Search for blog comments was successful")
     return response
 
@@ -192,10 +204,13 @@ async def search_questions(
     - question_status: filter by the question status.
     - created_from: filter questions created from this date onward.
     - sort_by: field name to sort results (default: "views_count").
+    - sort_order: sort order, either "asc" or "desc".
+    - page: Page number for pagination.
+    - page_size: Number of results per page.
     - Response body: JSON object with 'total_records' and 'records_list'.
     """
     logger.info("Search for questions requested")
-    response = await question_search_service.search(es_client, params, sort_by=params.sort_by)
+    response = await question_search_processor.search(es_client, params)
     logger.info("Search for questions was successful")
     return response
 
@@ -215,10 +230,13 @@ async def search_question_answers(
     - author_id: filter by the author's ID.
     - created_from: filter answers created from this date onward.
     - sort_by: field name to sort results (default: "likes_count").
+    - sort_order: sort order, either "asc" or "desc".
+    - page: Page number for pagination.
+    - page_size: Number of results per page.
     - Response body: JSON object with 'total_records' and 'records_list'.
     """
     logger.info("Search for question answers requested")
-    response = await question_answer_search_service.search(es_client, params, sort_by=params.sort_by)
+    response = await question_answer_search_processor.search(es_client, params)
     logger.info("Search for question answers was successful")
     return response
 
@@ -238,10 +256,13 @@ async def search_news(
     - query: text to search within titles and content.
     - published_from: filter articles published from this date onward.
     - sort_by: field name to sort results (default: "published_at").
+    - sort_order: sort order, either "asc" or "desc".
+    - page: Page number for pagination.
+    - page_size: Number of results per page.
     - Response body: JSON object with 'total_records' and 'records_list'.
     """
     logger.info("Search for news requested")
-    response = await news_search_service.search(es_client, params, sort_by=params.sort_by)
+    response = await news_search_processor.search(es_client, params)
     logger.info("Search for news was successful")
     return response
 

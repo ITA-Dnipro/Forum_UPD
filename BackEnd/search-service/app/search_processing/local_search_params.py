@@ -1,9 +1,15 @@
 from typing import Optional, List
-
 from pydantic import BaseModel, Field
 
 
-class EventSearchParams(BaseModel):
+class PaginationAndSortingMixin(BaseModel):
+    """Common pagination and sort order parameters."""
+    page: int = Field(1, ge=1, description="Page number")
+    page_size: int = Field(10, ge=1, le=100, description="Number of results per page")
+    sort_order: str = Field("desc", pattern="^(asc|desc)$", description="Sort order: 'asc' or 'desc'")
+
+
+class EventSearchParams(PaginationAndSortingMixin):
     """Parameters for searching events."""
     query: Optional[str] = Field(default=None, description="Search query for event title or description")
     category: Optional[List[str]] = Field([], description="List of categories to filter events by")
@@ -14,7 +20,7 @@ class EventSearchParams(BaseModel):
     sort_by: Optional[str] = Field(default="date", description="Field to sort results by (default: date)")
 
 
-class BlogPostSearchParams(BaseModel):
+class BlogPostSearchParams(PaginationAndSortingMixin):
     """Parameters for searching blog posts."""
     query: Optional[str] = Field(None, description="Search query for blog post titles and content")
     author_id: Optional[int] = Field(None, description="Filter by author ID")
@@ -24,7 +30,7 @@ class BlogPostSearchParams(BaseModel):
     sort_by: Optional[str] = Field("likes_count", description="Field to sort results by (default: likes_count)")
 
 
-class BlogCommentSearchParams(BaseModel):
+class BlogCommentSearchParams(PaginationAndSortingMixin):
     """Parameters for searching blog comments."""
     query: Optional[str] = Field(None, description="Search query for blog comment content")
     author_id: Optional[str] = Field(None, description="Filter by comment author's ID")
@@ -32,7 +38,7 @@ class BlogCommentSearchParams(BaseModel):
     sort_by: Optional[str] = Field("likes_count", description="Field to sort results by (default: likes_count)")
 
 
-class QuestionSearchParams(BaseModel):
+class QuestionSearchParams(PaginationAndSortingMixin):
     """Parameters for searching questions."""
     query: Optional[str] = Field(None, description="Search query for question titles and content")
     author_id: Optional[str] = Field(None, description="Filter by question author's ID")
@@ -41,7 +47,7 @@ class QuestionSearchParams(BaseModel):
     sort_by: Optional[str] = Field("views_count", description="Field to sort results by (default: views_count)")
 
 
-class QuestionAnswerSearchParams(BaseModel):
+class QuestionAnswerSearchParams(PaginationAndSortingMixin):
     """Parameters for searching question answers."""
     query: Optional[str] = Field(None, description="Search query for answer content")
     author_id: Optional[str] = Field(None, description="Filter by answer author's ID")
@@ -49,7 +55,7 @@ class QuestionAnswerSearchParams(BaseModel):
     sort_by: Optional[str] = Field("likes_count", description="Field to sort results by (default: likes_count)")
 
 
-class NewsSearchParams(BaseModel):
+class NewsSearchParams(PaginationAndSortingMixin):
     """Parameters for searching news articles."""
     query: Optional[str] = Field(None, description="Search query for news article titles and content")
     published_from: Optional[str] = Field(None,

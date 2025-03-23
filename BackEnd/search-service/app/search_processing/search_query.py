@@ -13,23 +13,26 @@ async def build_search_query(
         filters: List[Q],
         sort_by: Optional[str],
         search_fields: List[str],
-        sort_order: str
+        sort_order: str,
+        page: int,
+        page_size: int,
 ) -> (int, List[Dict[str, Any]]):
     """
-    Build and execute an Elasticsearch DSL search query.
+    Build and execute an Elasticsearch DSL search query with pagination.
     """
     s = AsyncSearch(using=es_client, index=index_name)
     if query:
-        query_type = "match"
-        if len(search_fields) > 1:
-            query_type = "multi_match"
-
+        query_type = "match" if len(search_fields) == 1 else "multi_match"
         s = s.query(query_type, query=query, fields=search_fields, fuzziness="AUTO")
     else:
         s = s.query("match_all")
     if filters:
         s = s.filter("bool", filter=filters)
     s = s.sort({sort_by: {"order": sort_order}})
+
+    offset = (page - 1) * page_size
+    s = s.extra(from_=offset, size=page_size)
+
     try:
         response = await s.execute()
         total_records = response.hits.total.value
@@ -47,7 +50,9 @@ async def generic_search(
         filters: List[Q],
         sort_by: str,
         search_fields: List[str],
-        sort_order: str = "desc"
+        sort_order: str,
+        page: int,
+        page_size: int,
 ):
     """
     Generic search helper that wraps build_search_query.
@@ -59,5 +64,7 @@ async def generic_search(
         filters=filters,
         sort_by=sort_by,
         search_fields=search_fields,
-        sort_order=sort_order
+        sort_order=sort_order,
+        page=page,
+        page_size=page_size
     )

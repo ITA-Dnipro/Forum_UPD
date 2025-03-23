@@ -9,16 +9,15 @@ from ..config import logger, settings
 class BaseSearchService:
     """
     Encapsulates common search logic and structure:
-    - index_name: Name of the Elasticsearch index
-    - search_fields: Fields to search on
-    - build_filters: Subclasses override this to build query filters
-    - search: performs search and returns response
+    - index_name: Name of the Elasticsearch index.
+    - search_fields: Fields to search on.
+    - build_filters: Subclasses override this to build query filters.
+    - search: Performs search and returns response including pagination details.
     """
-
     index_name: str
     search_fields: List[str]
 
-    async def search(self, es_client, params, sort_by: Optional[str] = None):
+    async def search(self, es_client, params):
         logger.info(f"Performing search on index: {self.index_name}")
         filters = self.build_filters(params)
         total_records, records_list = await generic_search(
@@ -26,10 +25,18 @@ class BaseSearchService:
             index_name=self.index_name,
             query=params.query,
             filters=filters,
-            sort_by=sort_by,
-            search_fields=self.search_fields
+            sort_by=params.sort_by,
+            search_fields=self.search_fields,
+            sort_order=params.sort_order,
+            page=params.page,
+            page_size=params.page_size
         )
-        return {"total_records": total_records, "records_list": records_list}
+        return {
+            "total_records": total_records,
+            "page": params.page,
+            "page_size": params.page_size,
+            "records_list": records_list
+        }
 
     def build_filters(self, params) -> List[Q]:
         """
