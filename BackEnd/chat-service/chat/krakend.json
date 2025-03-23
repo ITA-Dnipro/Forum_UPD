@@ -12,7 +12,7 @@
         "output_encoding": "no-op",
         "backend": [
           {
-            "host": ["http://chat-service:8000"],
+            "host": ["http://chat-gunicorn:8000"],
             "url_pattern": "/api/conversations/",
             "method": "POST",
             "extra_config": {
