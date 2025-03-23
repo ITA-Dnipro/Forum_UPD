@@ -1,0 +1,148 @@
+from typing import List, Optional
+
+from elasticsearch_dsl import Q
+
+from .search_query import generic_search
+from ..config import logger, settings
+
+
+class BaseSearchService:
+    """
+    Encapsulates common search logic and structure:
+    - index_name: Name of the Elasticsearch index
+    - search_fields: Fields to search on
+    - build_filters: Subclasses override this to build query filters
+    - search: performs search and returns response
+    """
+
+    index_name: str
+    search_fields: List[str]
+
+    async def search(self, es_client, params, sort_by: Optional[str] = None):
+        logger.info(f"Performing search on index: {self.index_name}")
+        filters = self.build_filters(params)
+        total_records, records_list = await generic_search(
+            es_client=es_client,
+            index_name=self.index_name,
+            query=params.query,
+            filters=filters,
+            sort_by=sort_by,
+            search_fields=self.search_fields
+        )
+        return {"total_records": total_records, "records_list": records_list}
+
+    def build_filters(self, params) -> List[Q]:
+        """
+        Default implementation. Subclasses override to add custom filters.
+        """
+        return []
+
+
+class EventSearchProcessor(BaseSearchService):
+    """Search processor for filtering and retrieving events from Elasticsearch."""
+    index_name = settings.EVENTS_INDEX
+    search_fields = ["title^2", "content"]
+
+    def build_filters(self, params) -> List[Q]:
+        filters: List[Q] = []
+        if params.category:
+            filters.append(
+                Q(
+                    "nested",
+                    path="categories",
+                    query=Q("terms", **{
+                        "categories.name": params.category})
+                )
+            )
+        if params.event_type:
+            filters.append(Q("term", type=params.event_type))
+        if params.event_status:
+            filters.append(Q("term", status=params.event_status))
+        if params.location:
+            filters.append(Q("term", location=params.location))
+        if params.date_from:
+            filters.append(Q("range", date={"gte": params.date_from}))
+        return filters
+
+
+class BlogPostSearchProcessor(BaseSearchService):
+    """Search processor for filtering and retrieving blog posts from Elasticsearch."""
+    index_name = settings.FORUM_BLOG_POSTS_INDEX
+    search_fields = ["title^2", "content"]
+
+    def build_filters(self, params) -> List[Q]:
+        filters: List[Q] = []
+        if params.author_id is not None:
+            filters.append(Q("term", author_id=params.author_id))
+        if params.category:
+            filters.append(
+                Q(
+                    "nested",
+                    path="categories",
+                    query=Q("terms", **{
+                        "categories.name": params.category})
+                )
+            )
+        if params.tag:
+            filters.append(
+                Q("nested", path="tags", query=Q("terms", **{"tags.name": params.tag}))
+            )
+        if params.created_from:
+            filters.append(Q("range", created_at={"gte": params.created_from}))
+        return filters
+
+
+class BlogCommentSearchProcessor(BaseSearchService):
+    """Search processor for filtering and retrieving blog comments from Elasticsearch."""
+    index_name = settings.FORUM_BLOG_COMMENTS_INDEX
+    search_fields = ["content"]
+
+    def build_filters(self, params) -> List[Q]:
+        filters: List[Q] = []
+        if params.author_id:
+            filters.append(Q("term", author_id=params.author_id))
+        if params.created_from:
+            filters.append(Q("range", created_at={"gte": params.created_from}))
+        return filters
+
+
+class QuestionSearchProcessor(BaseSearchService):
+    """Search processor for filtering and retrieving questions from Elasticsearch."""
+    index_name = settings.FORUM_QUESTIONS_INDEX
+    search_fields = ["title^2", "content"]
+
+    def build_filters(self, params) -> List[Q]:
+        filters: List[Q] = []
+        if params.author_id:
+            filters.append(Q("term", author_id=params.author_id))
+        if params.status:
+            filters.append(Q("term", status=params.status))
+        if params.created_from:
+            filters.append(Q("range", created_at={"gte": params.created_from}))
+        return filters
+
+
+class QuestionAnswerSearchProcessor(BaseSearchService):
+    """Search processor for filtering and retrieving question answers from Elasticsearch."""
+    index_name = settings.FORUM_QUESTION_ANSWERS_INDEX
+    search_fields = ["content"]
+
+    def build_filters(self, params) -> List[Q]:
+        filters: List[Q] = []
+        if params.author_id:
+            filters.append(Q("term", author_id=params.author_id))
+        if params.created_from:
+            filters.append(Q("range", created_at={"gte": params.created_from}))
+        return filters
+
+
+class NewsSearchProcessor(BaseSearchService):
+    """Search processor for filtering and retrieving news articles from Elasticsearch."""
+    index_name = settings.NEWS_ARTICLES_INDEX
+    search_fields = ["title^2", "content"]
+
+    def build_filters(self, params) -> List[Q]:
+        filters: List[Q] = []
+        if params.published_from:
+            filters.append(Q("range", published_at={"gte": params.published_from}))
+        return filters

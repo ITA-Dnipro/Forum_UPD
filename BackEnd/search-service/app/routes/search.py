@@ -5,14 +5,38 @@ from elasticsearch_dsl import AsyncSearch
 from fastapi import APIRouter, Depends, Request, HTTPException, Query, status
 from slowapi import Limiter
 from slowapi.util import get_remote_address
+from typing_extensions import Annotated
 
 from ..config import logger, settings
 from ..schema.global_search import GlobalSearchResponse
+from ..search_processing.local_search_params import (
+    EventSearchParams,
+    BlogPostSearchParams,
+    BlogCommentSearchParams,
+    QuestionSearchParams,
+    QuestionAnswerSearchParams,
+    NewsSearchParams
+)
+from ..search_processing.search_processor import (
+    EventSearchProcessor,
+    BlogPostSearchProcessor,
+    BlogCommentSearchProcessor,
+    QuestionSearchProcessor,
+    QuestionAnswerSearchProcessor,
+    NewsSearchProcessor
+)
 
 search_router = APIRouter()
 limiter = Limiter(key_func=get_remote_address)
 
 load_dotenv()
+
+event_search_service = EventSearchProcessor()
+blog_post_search_service = BlogPostSearchProcessor()
+blog_comment_search_service = BlogCommentSearchProcessor()
+question_search_service = QuestionSearchProcessor()
+question_answer_search_service = QuestionAnswerSearchProcessor()
+news_search_service = NewsSearchProcessor()
 
 
 async def get_es_client(request: Request):
@@ -39,7 +63,7 @@ async def global_search(
 ):
     """
     Global search endpoint, that performs a multi-index search using a multi_match query.
-    Matches in the title have a higher score.
+    Matches in the title have a higher score.\n
     Fuzzy matching is enabled to return similar results as well.
     The results are grouped by index.
 
@@ -76,67 +100,150 @@ async def global_search(
 
 
 @search_router.get("/service/events/")
-@limiter.limit("20/minute")
-async def search_by_service(request: Request,
-                            es_client=Depends(get_es_client)
-                            ):
-    """Search endpoint for events."""
+async def search_events(
+        request: Request,
+        params: Annotated[EventSearchParams, Query()],
+        es_client=Depends(get_es_client),
+):
+    """
+    Event search endpoint, that uses multi_match query.
+    Matches in the title have a higher score.\n
+    Fuzzy matching is enabled to return similar results as well.
+    Filters and sorts events based on various parameters.
 
-    logger.info(f"Search for event requested")
-    return {"message": "Search for service events is working"}
+    - query: text to search within titles and content.
+    - category: filter by the category name.
+    - event_type: filter by the type of event.
+    - event_status: filter by the status of the event.
+    - location: filter by the location of the event.
+    - date_from: filter events from this date onward.
+    - sort_by: field name to sort results (default: "date").
+    - Response body: A JSON object with 'total_records' and 'records_list'.
+    """
+    logger.info("Search for events requested")
+    response = await event_search_service.search(es_client, params, sort_by=params.sort_by)
+    logger.info("Search for events was successful")
+    return response
 
 
 @search_router.get("/service/blog-posts/")
-@limiter.limit("20/minute")
-async def search_by_service(request: Request,
-                            es_client=Depends(get_es_client)
-                            ):
-    """Search endpoint for blog posts."""
-    logger.info(f"Search for blog posts requested")
-    return {"message": "Search for service blog posts is working"}
+async def search_blog_posts(
+        request: Request,
+        params: Annotated[BlogPostSearchParams, Query()],
+        es_client=Depends(get_es_client)
+):
+    """
+    Blog posts search endpoint, that uses multi_match query.
+    Matches in the title have a higher score.\n
+    Fuzzy matching is enabled to return similar results as well.
+    Filters and sorts blog posts based on various parameters.
+
+    - query: text to search within titles and content.
+    - author_id: filter by the author's ID.
+    - category: filter by the category name.
+    - tag: filter by the tag name.
+    - created_from: filter posts created from this date onward.
+    - sort_by: field name to sort results (default: "likes_count").
+    - Response body JSON object with 'total_records' and 'records_list'.
+    """
+    logger.info("Search for blog posts requested")
+    response = await blog_post_search_service.search(es_client, params, sort_by=params.sort_by)
+    logger.info("Search for blog posts was successful")
+    return response
 
 
 @search_router.get("/service/blog-comments/")
-@limiter.limit("20/minute")
-async def search_by_service(request: Request,
-                            es_client=Depends(get_es_client)
-                            ):
-    """Search endpoint for blog comments."""
-    logger.info(f"Search for blog comments requested")
-    return {"message": "Search for service blog comments is working"}
+async def search_blog_comments(
+        request: Request,
+        params: Annotated[BlogCommentSearchParams, Query()],
+        es_client=Depends(get_es_client)
+):
+    """
+    Blog comments search endpoint, that uses match query.\n
+    Fuzzy matching is enabled to return similar results as well.
+    Filters and sorts blog comments based on various parameters.
+
+    - query: text to search within content.
+    - author_id: filter by the author's ID.
+    - created_from: filter comments created from this date onward.
+    - sort_by: field name to sort results (default: "likes_count").
+    - Response body: JSON object with 'total_records' and 'records_list'.
+    """
+    logger.info("Search for blog comments requested")
+    response = await blog_comment_search_service.search(es_client, params, sort_by=params.sort_by)
+    logger.info("Search for blog comments was successful")
+    return response
 
 
 @search_router.get("/service/questions/")
-@limiter.limit("20/minute")
-async def search_by_service(request: Request,
-                            es_client=Depends(get_es_client)
-                            ):
-    """Search endpoint for questions."""
+async def search_questions(
+        request: Request,
+        params: Annotated[QuestionSearchParams, Query()],
+        es_client=Depends(get_es_client)
+):
+    """
+    Questions search endpoint, that uses multi_match query.
+    Matches in the title have a higher score.\n
+    Fuzzy matching is enabled to return similar results as well.
+    Filters and sorts questions based on various parameters.
 
-    logger.info(f"Search for questions requested")
-    return {"message": "Search for service questions is working"}
+    - query: text to search within titles and content.
+    - author_id: filter by the author's ID.
+    - question_status: filter by the question status.
+    - created_from: filter questions created from this date onward.
+    - sort_by: field name to sort results (default: "views_count").
+    - Response body: JSON object with 'total_records' and 'records_list'.
+    """
+    logger.info("Search for questions requested")
+    response = await question_search_service.search(es_client, params, sort_by=params.sort_by)
+    logger.info("Search for questions was successful")
+    return response
 
 
 @search_router.get("/service/question-answers/")
-@limiter.limit("20/minute")
-async def search_by_service(request: Request,
-                            es_client=Depends(get_es_client)
-                            ):
-    """Search endpoint for question answers."""
+async def search_question_answers(
+        request: Request,
+        params: Annotated[QuestionAnswerSearchParams, Query()],
+        es_client=Depends(get_es_client)
+):
+    """
+    Question answers search endpoint, that uses match query.\n
+    Fuzzy matching is enabled to return similar results as well.
+    Filters and sorts question answers based on various parameters.
 
-    logger.info(f"Search for question answers requested")
-    return {"message": "Search for service question answers is working"}
+    - query: text to search within the content.
+    - author_id: filter by the author's ID.
+    - created_from: filter answers created from this date onward.
+    - sort_by: field name to sort results (default: "likes_count").
+    - Response body: JSON object with 'total_records' and 'records_list'.
+    """
+    logger.info("Search for question answers requested")
+    response = await question_answer_search_service.search(es_client, params, sort_by=params.sort_by)
+    logger.info("Search for question answers was successful")
+    return response
 
 
 @search_router.get("/service/news/")
-@limiter.limit("20/minute")
-async def search_by_service(request: Request,
-                            es_client=Depends(get_es_client)
-                            ):
-    """Search endpoint for news."""
+async def search_news(
+        request: Request,
+        params: Annotated[NewsSearchParams, Query()],
+        es_client=Depends(get_es_client)
+):
+    """
+    News search endpoint, that uses multi_match query.
+    Matches in the title have a higher score.\n
+    Fuzzy matching is enabled to return similar results as well.
+    Filters and sorts questions based on various parameters.
 
-    logger.info(f"Search for news requested")
-    return {"message": "Search for service news is working"}
+    - query: text to search within titles and content.
+    - published_from: filter articles published from this date onward.
+    - sort_by: field name to sort results (default: "published_at").
+    - Response body: JSON object with 'total_records' and 'records_list'.
+    """
+    logger.info("Search for news requested")
+    response = await news_search_service.search(es_client, params, sort_by=params.sort_by)
+    logger.info("Search for news was successful")
+    return response
 
 
 @search_router.get("/suggestions/")
