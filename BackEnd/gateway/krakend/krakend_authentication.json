@@ -1,0 +1,55 @@
+{
+  "version": 3,
+  "name": "Authentication Gateway",
+  "endpoints": [
+    {
+      "endpoint": "/login",
+      "method": "POST",
+      "backend": [
+        {
+          "host": [
+            "http://auth-service:8080"
+          ],
+          "url_pattern": "/login"
+        }
+      ]
+    },
+    {
+      "endpoint": "/register",
+      "method": "POST",
+      "backend": [
+        {
+          "host": [
+            "http://auth-service:8080"
+          ],
+          "url_pattern": "/register"
+        }
+      ]
+    },
+    {
+      "endpoint": "/check",
+      "method": "GET",
+      "extra_config": {
+        "auth/validator": {
+          "endpoint": "/check?requiredRole=Public",
+          "method": "GET",
+          "host": [
+            "http://auth-service:8080"
+          ],
+          "header": "Authorization",
+          "response_codes": [200],
+          "cache": false
+        }
+      },
+      "backend": [
+        {
+          "host": [
+            "http://auth-service:8080"
+          ],
+          "url_pattern": "/check"
+        }
+      ]
+    }
+  ]
+}
+
