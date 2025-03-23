@@ -22,11 +22,11 @@ services:
 
   chat-gunicorn:
     build: .
-    command: gunicorn --pythonpath /app chat.wsgi:application --bind 0.0.0.0:8000
+    command: gunicorn --pythonpath /app chat.wsgi:application --bind 0.0.0.0:8001
     volumes:
       - .:/app
     ports:
-      - "8000:8000" # HTTP API
+      - "8001:8001" # HTTP API
     environment:
       - DEBUG=${DEBUG}
       - SECRET_KEY=${SECRET_KEY}
@@ -43,11 +43,11 @@ services:
 
   chat-daphne:
     build: .
-    command: daphne -b 0.0.0.0 -p 8001 chat.asgi:application
+    command: daphne -b 0.0.0.0 -p 8002 chat.asgi:application
     volumes:
       - .:/app
     ports:
-      - "8001:8001" # WebSocket
+      - "8002:8002" # WebSocket
     environment:
       - DEBUG=${DEBUG}
       - SECRET_KEY=${SECRET_KEY}
@@ -75,6 +75,27 @@ services:
       - chat-daphne
     networks:
       - chat-network
+
+  kong:
+    image: kong:3.6.1
+    container_name: kong
+    environment:
+      KONG_DATABASE: "off"
+      KONG_DECLARATIVE_CONFIG: /etc/kong/kong.yml
+      KONG_PROXY_ACCESS_LOG: /dev/stdout
+      KONG_PROXY_ERROR_LOG: /dev/stderr
+      KONG_ADMIN_ACCESS_LOG: /dev/stdout
+      KONG_ADMIN_ERROR_LOG: /dev/stderr
+    volumes:
+      - ./kong.yml:/etc/kong/kong.yml
+    ports:
+      - "8000:8000"   # HTTP traffic (host:container)
+      - "8443:8443"   # HTTPS traffi
+    networks:
+      - chat-network
+    depends_on:
+      - chat-gunicorn
+      - chat-daphne
 
 networks:
   chat-network:

@@ -1,0 +1,15 @@
+_format_version: "3.0"
+services:
+  - name: chat-http
+    url: http://chat-gunicorn:8001
+    routes:
+      - name: http-route
+        paths: ["/"]
+        strip_path: false
+
+  - name: chat-websocket
+    url: http://chat-daphne:8002
+    routes:
+      - name: websocket-route
+        paths: ["/ws"]
+        strip_path: false
