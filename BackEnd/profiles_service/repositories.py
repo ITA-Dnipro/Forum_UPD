@@ -1,4 +1,3 @@
-from datetime import datetime
 from sqlalchemy import select, inspect
 from sqlalchemy.ext.asyncio import AsyncSession 
 from sqlalchemy.orm import selectinload
@@ -28,10 +27,14 @@ class BaseRepository:
     
 
     async def add_one(self, data: dict):
-        instance = self.model(**data)
-        self.session.add(instance)
-        await self.session.commit()
-        return instance
+        try:
+            instance = self.model(**data)
+            self.session.add(instance)
+            await self.session.commit()
+            return instance
+        except Exception as e:
+            await self.session.rollback()
+            raise e
 
 
     async def get_all(self, **filters):
@@ -72,19 +75,27 @@ class BaseRepository:
 
 
     async def update(self, instance_id: int, data: dict):
-        instance = await self.get_by_id(instance_id)
-        instance.__dict__.update(data)
-        await self.session.commit()
-        return instance
+        try:
+            instance = await self.get_by_id(instance_id)
+            for key, value in data.items():
+                setattr(instance, key, value)
+            await self.session.commit()
+            return instance
+        except Exception as e:
+            await self.session.rollback()
+            raise e
     
 
-    async def partial_update(self, instance_id: int, update_fields: dict): 
-        instance = await self.get_by_id(instance_id)
-        for key, value in update_fields.items():
-            setattr(instance, key, value)
-        await self.session.commit()
-        return instance
-
+    async def partial_update(self, instance_id: int, update_fields: dict):
+        try: 
+            instance = await self.get_by_id(instance_id)
+            for key, value in update_fields.items():
+                setattr(instance, key, value)
+            await self.session.commit()
+            return instance
+        except Exception as e:
+            await self.session.rollback()
+            raise e
 
 
 class ProfileRepository(BaseRepository):
@@ -104,17 +115,11 @@ class ProfileRepository(BaseRepository):
         return await super().add_one(profile_dict)
 
 
-    async def update(self, profile_id: int, profile_dict: dict):
-        profile_dict["updated_at"] = datetime.now()
-        return await super().update(profile_id, profile_dict)
-
-
-    async def partial_update(self, profile_id: int, update_fields: dict): 
-        update_fields["updated_at"] = datetime.now()
-        return await super().partial_update(profile_id, update_fields)
-
-
     async def soft_delete(self, profile_id: int):
-        profile = await self.get_by_id(profile_id)
-        profile.is_deleted = True
-        await self.session.commit()
+        try: 
+            profile = await self.get_by_id(profile_id)
+            profile.is_deleted = True
+            await self.session.commit()
+        except Exception as e:
+                await self.session.rollback()
+                raise e
