@@ -12,7 +12,7 @@ class ProfileStartupService:
         self.repository = repo
 
 
-    async def _fetch_related(self, data: dict):
+    async def _fetch_related_by_id(self, data: dict):
         if data.get("profile_categories") is not None:
             category_repo = BaseRepository(model=StartupCategoryOrm, session=self.repository.session)
             try:
@@ -38,20 +38,20 @@ class ProfileStartupService:
 
     async def add_startup(self, data: Profile):
         profile_dict = data.model_dump(exclude_unset=True, exclude_none=True)
-        profile_dict = await self._fetch_related(profile_dict)
+        profile_dict = await self._fetch_related_by_id(profile_dict)
         return await self.repository.add_one(profile_dict=profile_dict)
     
 
     async def partial_startup_update(self, profile_id: int, data: ProfileOptional):
         profile_dict = data.model_dump(exclude_unset=True, exclude_none=True)
-        profile_dict = await self._fetch_related(data=profile_dict)
+        profile_dict = await self._fetch_related_by_id(data=profile_dict)
         return await self.repository.partial_update(profile_id=profile_id, update_fields=profile_dict)
     
 
 
     async def startup_update(self, profile_id: int, data: Profile):
         profile_dict = data.model_dump(exclude_unset=True, exclude_none=True)
-        self._fetch_related(profile_dict)
+        self._fetch_related_by_id(profile_dict)
         
         return await self.repository.update(profile_id=profile_id, profile_dict=profile_dict)
 

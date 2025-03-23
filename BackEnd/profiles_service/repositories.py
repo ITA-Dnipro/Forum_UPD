@@ -89,7 +89,7 @@ class BaseRepository:
 
 class ProfileRepository(BaseRepository):
 
-    def __init__(self, model, session: AsyncSession):
+    def __init__(self, model: Model, session: AsyncSession):
         self.model = model
         self.session = session
         self.many_to_many = self._get_many_to_many_fields()
