@@ -1,10 +1,11 @@
 from typing import Annotated
 from fastapi import APIRouter, Depends, Response
-from exceptions import NotFoundError, InvalidRelatedEntityError
+from exceptions import NotFoundError
 from schemas.profiles import ProfileOptional, Profile
-from services.profiles import ProfileStartupService
-from dependencies import get_startup_service, profile_create_dependency, profile_optional_create_dependency
+from crud.profiles import ProfileStartupRepository
+from dependencies import profile_create_dependency, profile_optional_create_dependency, get_async_session
 from fastapi import HTTPException
+from sqlalchemy.ext.asyncio import AsyncSession
 
 
 router = APIRouter(
@@ -14,33 +15,28 @@ router = APIRouter(
 
 @router.get("/", status_code=200)
 async def startup_profiles_list(
-    service: Annotated[ProfileStartupService, Depends(dependency=get_startup_service)],
+    session: AsyncSession = Depends(get_async_session)
     ):
-    profiles = await service.startups_list()
+    profiles = await ProfileStartupRepository(session=session).get_all()
     return profiles
 
 
 @router.post("/", status_code=201)
 async def create_startup_profile(
     profile: Annotated[Profile, Depends(dependency=profile_create_dependency)],
-    service: Annotated[ProfileStartupService, Depends(dependency=get_startup_service)]
+    session: AsyncSession = Depends(get_async_session)
     ):
-    try:
-        profile = await service.add_startup(profile)
-        return profile
-    except InvalidRelatedEntityError as e:
-        raise HTTPException(
-            status_code=400, detail=f"{e}"
-            )
+    profile_dict = profile.model_dump(exclude_unset=True, exclude_none=True)
+    profile = await ProfileStartupRepository(session=session).add_one(profile_dict)
+    return profile
 
 
 @router.get("/{profile_id}", status_code=200)
 async def startup_profiles_detail(
     profile_id: int, 
-    service: Annotated[ProfileStartupService, Depends(dependency=get_startup_service)]
-    ):
+    session: AsyncSession = Depends(get_async_session)):
     try:
-        profile = await service.get_startup_by_id(profile_id)
+        profile = await ProfileStartupRepository(session=session).get_by_id(profile_id)
     except NotFoundError as e:
         raise HTTPException(
             status_code=404, detail=f"{e}"
@@ -52,17 +48,14 @@ async def startup_profiles_detail(
 async def startup_profile_update(
     profile_id: int, 
     profile_data: Annotated[Profile, Depends(dependency=profile_create_dependency)],
-    service: Annotated[ProfileStartupService, Depends(dependency=get_startup_service)]
+    session: AsyncSession = Depends(get_async_session)
     ):
+    profile_dict = profile_data.model_dump(exclude_unset=True, exclude_none=True)
     try:
-        profile = await service.partial_startup_update(profile_id, profile_data)
+        profile = await ProfileStartupRepository(session=session).partial_update(profile_id, profile_dict)
     except NotFoundError as e:
         raise HTTPException(
             status_code=404, detail=f"{e}"
-            )
-    except InvalidRelatedEntityError as e:
-        raise HTTPException(
-            status_code=422, detail=f"{e}"
             )
     return profile
 
@@ -71,17 +64,14 @@ async def startup_profile_update(
 async def startup_profile_partial_update(
     profile_id: int, 
     profile_data: Annotated[ProfileOptional, Depends(dependency=profile_optional_create_dependency)],
-    service: Annotated[ProfileStartupService, Depends(dependency=get_startup_service)]
+    session: AsyncSession = Depends(get_async_session)
     ):
+    update_fields = profile_data.model_dump(exclude_unset=True, exclude_none=True)
     try:
-        profile = await service.partial_startup_update(profile_id, data=profile_data)
+        profile = await ProfileStartupRepository(session=session).partial_update(profile_id, update_fields=update_fields)
     except NotFoundError as e:
         raise HTTPException(
             status_code=404, detail=f"{e}"
-            )
-    except InvalidRelatedEntityError as e:
-        raise HTTPException(
-            status_code=400, detail=f"{e}"
             )
     return profile
 
@@ -89,10 +79,10 @@ async def startup_profile_partial_update(
 @router.delete("/{profile_id}")
 async def startup_profile_delete(
     profile_id: int,
-    service: Annotated[ProfileStartupService, Depends(dependency=get_startup_service)]
+    session: AsyncSession = Depends(get_async_session)
     ):
     try:
-        await service.startup_delete(profile_id)
+        await ProfileStartupRepository(session=session).soft_delete(profile_id)
     except NotFoundError as e:
         raise HTTPException(
             status_code=404, detail=f"{e}"

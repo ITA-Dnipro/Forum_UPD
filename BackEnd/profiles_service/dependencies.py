@@ -1,9 +1,16 @@
-from fastapi import Body, HTTPException
+from fastapi import Body, Depends, HTTPException
 from pydantic import ValidationError
 from sqlalchemy.ext.asyncio import AsyncSession
+from models.profiles import StartupProfileOrm
+from models.categories import StartupCategoryOrm
+from models.regions import RegionOrm
+from repositories import BaseRepository, ProfileRepository
 from schemas.profiles import Profile, StatusEnum, ProfileOptional
 from typing import List
 from database import new_session
+from services.categories import CategoryService
+from services.profiles import ProfileStartupService
+from services.regions import RegionService
 
 def profile_create_dependency(
     name: str = Body(...),
@@ -78,3 +85,19 @@ def profile_optional_create_dependency(
 async def get_async_session() -> AsyncSession:
     async with new_session() as session:
         yield session
+
+
+
+def get_startup_service(session: AsyncSession = Depends(get_async_session)):
+    repo = ProfileRepository(model=StartupProfileOrm, session=session)
+    return ProfileStartupService(repo)
+
+
+def get_caterory_service(session: AsyncSession = Depends(get_async_session)):
+    repo = BaseRepository(model=StartupCategoryOrm, session=session)
+    return CategoryService(repo)
+
+
+def get_region_service(session: AsyncSession = Depends(get_async_session)):
+    repo = BaseRepository(model=RegionOrm, session=session)
+    return RegionService(repo)
