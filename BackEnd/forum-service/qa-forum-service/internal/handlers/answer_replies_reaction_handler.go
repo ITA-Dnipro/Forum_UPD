@@ -3,27 +3,22 @@ package handlers
 import (
 	"net/http"
 
-	"github.com/gocql/gocql"
-
 	"github.com/gin-gonic/gin"
 )
 
 func (h *Handler) AddReplyReaction(c *gin.Context) {
-	questionId, err := gocql.ParseUUID(c.Param("id"))
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid question ID"})
+	questionId, ok := parseUUIDParam(c, "id")
+	if !ok {
 		return
 	}
 
-	answerId, err := gocql.ParseUUID(c.Param("answerId"))
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid answer ID"})
+	answerId, ok := parseUUIDParam(c, "answerId")
+	if !ok {
 		return
 	}
 
-	replyId, err := gocql.ParseUUID(c.Param("replyId"))
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid reply ID"})
+	replyId, ok := parseUUIDParam(c, "replyId")
+	if !ok {
 		return
 	}
 
@@ -45,21 +40,18 @@ func (h *Handler) AddReplyReaction(c *gin.Context) {
 }
 
 func (h *Handler) DeleteReplyReaction(c *gin.Context) {
-	questionId, err := gocql.ParseUUID(c.Param("id"))
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid question ID"})
+	questionId, ok := parseUUIDParam(c, "id")
+	if !ok {
 		return
 	}
 
-	answerId, err := gocql.ParseUUID(c.Param("answerId"))
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid answer ID"})
+	answerId, ok := parseUUIDParam(c, "answerId")
+	if !ok {
 		return
 	}
 
-	replyId, err := gocql.ParseUUID(c.Param("replyId"))
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid reply ID"})
+	replyId, ok := parseUUIDParam(c, "replyId")
+	if !ok {
 		return
 	}
 

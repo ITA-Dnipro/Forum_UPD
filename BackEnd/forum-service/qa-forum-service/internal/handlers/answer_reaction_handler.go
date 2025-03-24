@@ -3,21 +3,17 @@ package handlers
 import (
 	"net/http"
 
-	"github.com/gocql/gocql"
-
 	"github.com/gin-gonic/gin"
 )
 
 func (h *Handler) AddAnswerReaction(c *gin.Context) {
-	questionId, err := gocql.ParseUUID(c.Param("id"))
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid question ID"})
+	questionId, ok := parseUUIDParam(c, "id")
+	if !ok {
 		return
 	}
 
-	answerId, err := gocql.ParseUUID(c.Param("answerId"))
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid answer ID"})
+	answerId, ok := parseUUIDParam(c, "answerId")
+	if !ok {
 		return
 	}
 
@@ -39,15 +35,13 @@ func (h *Handler) AddAnswerReaction(c *gin.Context) {
 }
 
 func (h *Handler) DeleteAnswerReaction(c *gin.Context) {
-	questionId, err := gocql.ParseUUID(c.Param("id"))
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid question ID"})
+	questionId, ok := parseUUIDParam(c, "id")
+	if !ok {
 		return
 	}
 
-	answerId, err := gocql.ParseUUID(c.Param("answerId"))
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid answer ID"})
+	answerId, ok := parseUUIDParam(c, "answerId")
+	if !ok {
 		return
 	}
 
