@@ -5,14 +5,15 @@ from models.profiles import StartupProfileOrm
 from models.categories import StartupCategoryOrm
 from models.regions import RegionOrm
 from repositories import BaseRepository, ProfileRepository
-from schemas.profiles import Profile, StatusEnum, ProfileOptional
+from schemas.profiles import StatusEnum, Startup, StartupOptional, Investor, InvestorOptional
 from typing import List
 from database import new_session
 from services.categories import CategoryService
 from services.profiles import ProfileStartupService
 from services.regions import RegionService
 
-def profile_create_dependency(
+
+def startup_create_dependency(
     name: str = Body(...),
     status: StatusEnum = Body(...),
     is_registered: bool = Body(False),
@@ -25,9 +26,9 @@ def profile_create_dependency(
     founded: int = Body(None),
     profile_categories: List[int] = Body(None),
     profile_regions: List[int] = Body(None), 
-) -> Profile:
+) -> Startup:
     try:
-        profile = Profile(
+        profile = Startup(
             name=name,
             status=status,
             is_registered=is_registered,
@@ -47,7 +48,7 @@ def profile_create_dependency(
     return profile
 
 
-def profile_optional_create_dependency(
+def startup_optional_create_dependency(
     name: str = Body(None),
     status: StatusEnum = Body(None),
     is_registered: bool = Body(False),
@@ -60,9 +61,9 @@ def profile_optional_create_dependency(
     founded: int = Body(None),
     profile_categories: List[int] = Body(None),
     profile_regions: List[int] = Body(None), 
-) -> ProfileOptional:
+) -> StartupOptional:
     try:
-        profile = ProfileOptional(
+        profile = StartupOptional(
             name=name,
             status=status,
             is_registered=is_registered,
