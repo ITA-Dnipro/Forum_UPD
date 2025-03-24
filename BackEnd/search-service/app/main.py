@@ -15,6 +15,7 @@ from .indexes.forum_service.question_answers import QuestionAnswerDocument
 from .indexes.forum_service.questions import QuestionDocument
 from .indexes.news_service.news_article import NewsArticleDocument
 from .routes.search import search_router
+from .services.redis import get_redis_client
 from .utils.seed_indexes import seed_all
 
 limiter = Limiter(key_func=get_remote_address)
@@ -32,7 +33,10 @@ async def lifespan(app: FastAPI):
     try:
         es_client = await elasticsearch_init()
         app.state.es_client = es_client
-    except Exception as e:
+
+        redis_client = await get_redis_client()
+        app.state.redis = redis_client
+    except Exception:
         logger.exception("Startup failed. Shutting down search service...")
         raise
 
@@ -64,6 +68,7 @@ async def lifespan(app: FastAPI):
         yield
     finally:
         await es_client.close()
+        await redis_client.close()
         logger.info("Shutdown: cleaning up...")
 
 

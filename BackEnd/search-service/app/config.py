@@ -10,6 +10,7 @@ class Settings(BaseSettings):
 
     SERVICE_NAME: str = Field("search-service", env="SERVICE_NAME")
     DEBUG: bool = Field(True, env="DEBUG")
+    REDIS_URL: str = Field("redis://redis:6379", env="REDIS_URL")
 
     ELASTICSEARCH_HOST: str = Field("http://elasticsearch:9200", env="ELASTICSEARCH_HOST")
     ELASTICSEARCH_MAX_RETRIES: int = Field(5, env="ELASTICSEARCH_MAX_RETRIES")

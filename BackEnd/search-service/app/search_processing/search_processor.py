@@ -1,9 +1,12 @@
-from typing import List, Optional
+import json
+from typing import List
 
 from elasticsearch_dsl import Q
+from pydantic import BaseModel
 
 from .search_query import generic_search
 from ..config import logger, settings
+from ..utils.generate_cache_key import generate_cache_key
 
 
 class BaseSearchService:
@@ -17,8 +20,14 @@ class BaseSearchService:
     index_name: str
     search_fields: List[str]
 
-    async def search(self, es_client, params):
+    async def search(self, es_client, redis_client, params: BaseModel):
         logger.info(f"Performing search on index: {self.index_name}")
+        cache_key = generate_cache_key(f"{self.index_name}", params.model_dump())
+        cached = await redis_client.get(cache_key)
+        if cached:
+            logger.info(f"Returning cached {self.index_name} search results")
+            return json.loads(cached)
+
         filters = self.build_filters(params)
         total_records, records_list = await generic_search(
             es_client=es_client,
@@ -31,12 +40,14 @@ class BaseSearchService:
             page=params.page,
             page_size=params.page_size
         )
-        return {
+        result = {
             "total_records": total_records,
             "page": params.page,
             "page_size": params.page_size,
             "records_list": records_list
         }
+        await redis_client.set(cache_key, json.dumps(result), ex=120)
+        return result
 
     def build_filters(self, params) -> List[Q]:
         """
