@@ -96,3 +96,5 @@ CREATE TABLE IF NOT EXISTS reply_reactions (
     created_at timestamp,
     PRIMARY KEY ((question_id, answer_id, reply_id), user_id)
 );
+
+CREATE INDEX IF NOT EXISTS question_reactions_user_id ON question_reactions (user_id);
