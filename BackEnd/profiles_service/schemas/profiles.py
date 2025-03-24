@@ -43,14 +43,6 @@ class Profile(BaseModel):
       return value
     if not value.isdigit() or len(value) != 10:
       raise ValueError("RNOKPP must be exactly 10 digits.")
-      
-
-  @model_validator(mode='after')
-  def validate_fop_and_identifiers(self):
-    if self.is_fop and self.edrpou is not None:
-      raise ValueError("For the EDRPOU field filled out, FOP must be set to False")
-    if self.rnokpp and not self.is_fop:
-      raise ValueError("For the RNOKPP field filled out, FOP must be set to True")
 
 
 class Startup(Profile):
@@ -59,8 +51,8 @@ class Startup(Profile):
   is_fop: bool = False
   startup_idea: Optional[str] = None
   founded: Optional[int] = None
-  profile_categories: Optional[conlist(int, min_length=1)]
-  profile_regions: Optional[conlist(int, min_length=1)]
+  profile_categories: Optional[conlist(int, min_length=1)] = None
+  profile_regions: Optional[conlist(int, min_length=1)] = None
 
 
   @field_validator("founded", mode="after")
@@ -71,6 +63,14 @@ class Startup(Profile):
     current_year = datetime.now().year
     if value < 1800 or value > current_year:
         raise ValueError(f"Foundation year must be between 1800 and {current_year}.")
+    
+
+  @model_validator(mode='after')
+  def validate_fop_and_identifiers(self):
+    if self.is_fop and self.edrpou is not None:
+      raise ValueError("For the EDRPOU field filled out, FOP must be set to False")
+    if self.rnokpp and not self.is_fop:
+      raise ValueError("For the RNOKPP field filled out, FOP must be set to True")
 
 
 class StartupOptional(Startup):
@@ -82,6 +82,13 @@ class Investor(Profile):
   is_legal_entity: bool = False
   available_funds: Optional[float] = None
   investment_categories: Optional[conlist(int, min_length=1)]
+
+  @model_validator(mode='after')
+  def validate_fop_and_identifiers(self):
+    if self.is_legal_entity and self.edrpou is not None:
+      raise ValueError("For the EDRPOU field filled out, is_legal_entity  must be set to False")
+    if self.rnokpp and not self.is_legal_entity:
+      raise ValueError("For the RNOKPP field filled out, is_legal_entity must be set to True")
 
 
 class InvestorOptional(Investor):

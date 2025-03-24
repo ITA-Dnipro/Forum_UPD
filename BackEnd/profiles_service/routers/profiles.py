@@ -1,9 +1,9 @@
 from typing import Annotated
 from fastapi import APIRouter, Depends, Response
 from exceptions import NotFoundError, InvalidRelatedEntityError
-from schemas.profiles import ProfileOptional, Profile
+from schemas.profiles import StartupOptional, Startup
 from services.profiles import ProfileStartupService
-from dependencies import get_startup_service, profile_create_dependency, profile_optional_create_dependency
+from dependencies import get_startup_service, startup_create_dependency, startup_optional_create_dependency
 from fastapi import HTTPException
 
 
@@ -22,7 +22,7 @@ async def startup_profiles_list(
 
 @router.post("/", status_code=201)
 async def create_startup_profile(
-    profile: Annotated[Profile, Depends(dependency=profile_create_dependency)],
+    profile: Annotated[Startup, Depends(dependency=startup_create_dependency)],
     service: Annotated[ProfileStartupService, Depends(dependency=get_startup_service)]
     ):
     try:
@@ -51,7 +51,7 @@ async def startup_profiles_detail(
 @router.put("/{profile_id}")
 async def startup_profile_update(
     profile_id: int, 
-    profile_data: Annotated[Profile, Depends(dependency=profile_create_dependency)],
+    profile_data: Annotated[Startup, Depends(dependency=startup_create_dependency)],
     service: Annotated[ProfileStartupService, Depends(dependency=get_startup_service)]
     ):
     try:
@@ -70,7 +70,7 @@ async def startup_profile_update(
 @router.patch("/{profile_id}")
 async def startup_profile_partial_update(
     profile_id: int, 
-    profile_data: Annotated[ProfileOptional, Depends(dependency=profile_optional_create_dependency)],
+    profile_data: Annotated[StartupOptional, Depends(dependency=startup_optional_create_dependency)],
     service: Annotated[ProfileStartupService, Depends(dependency=get_startup_service)]
     ):
     try:
