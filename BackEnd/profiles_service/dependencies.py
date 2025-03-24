@@ -119,7 +119,7 @@ def investor_optional_create_dependency(
     investment_categories: List[int] = Body(None),
 ) -> InvestorOptional:
     try:
-        profile = Investor.get_optional(
+        profile = InvestorOptional(
             name=name,
             status=status,
             is_legal_entity=is_legal_entity, 
