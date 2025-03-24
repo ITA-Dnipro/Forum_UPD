@@ -86,8 +86,6 @@ CREATE TABLE IF NOT EXISTS answer_reactions (
     PRIMARY KEY ((question_id, answer_id), user_id)
 );
 
-CREATE INDEX IF NOT EXISTS is_like_idx ON question_reactions (is_like);
-
 -- Таблиця для реакцій на відповіді до відповідей (answer_reply)
 CREATE TABLE IF NOT EXISTS reply_reactions (
     question_id uuid,

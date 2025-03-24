@@ -8,26 +8,21 @@ import (
 )
 
 func (db *ScyllaDB) AddAnswerReaction(questionId, answerId gocql.UUID, userID int, isLike bool) error {
-
-	var existingIsLike bool
-	checkQuery := `SELECT is_like FROM answer_reactions WHERE question_id = ? AND answer_id = ? AND user_id = ?`
-	err := db.session.Query(checkQuery, questionId, answerId, userID).Scan(&existingIsLike)
-	if err != gocql.ErrNotFound {
-		if err == nil {
-			return fmt.Errorf("reaction already exists for user %d on answer %v in question %v", userID, answerId, questionId)
-		}
-		return err
-	}
-
 	createdAt := time.Now()
-	reactionQuery := `INSERT INTO answer_reactions (question_id, answer_id, user_id, is_like, created_at) VALUES (?, ?, ?, ?, ?)`
-	if err := db.session.Query(reactionQuery, questionId, answerId, userID, isLike, createdAt).Exec(); err != nil {
-		return err
+	reactionQuery := `INSERT INTO answer_reactions (question_id, answer_id, user_id, is_like, created_at) VALUES (?, ?, ?, ?, ?) IF NOT EXISTS`
+
+	result := make(map[string]interface{})
+	applied, err := db.session.Query(reactionQuery, questionId, answerId, userID, isLike, createdAt).MapScanCAS(result)
+	if err != nil {
+		return fmt.Errorf("failed to insert reaction: %v", err)
+	}
+	if !applied {
+		return fmt.Errorf("reaction already exists for user %d on answer %v in question %v", userID, answerId, questionId)
 	}
 
 	question, err := db.GetQuestionByID(questionId)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get question: %v", err)
 	}
 	if question == nil {
 		return fmt.Errorf("question with ID %v not found", questionId)
@@ -50,27 +45,32 @@ func (db *ScyllaDB) AddAnswerReaction(questionId, answerId gocql.UUID, userID in
 	}
 
 	updateQuery := `UPDATE questions SET answers = ? WHERE question_id = ?`
-	return db.session.Query(updateQuery, question.Answers, questionId).Exec()
+	if err := db.session.Query(updateQuery, question.Answers, questionId).Exec(); err != nil {
+		return fmt.Errorf("failed to update question answers: %v", err)
+	}
+
+	return nil
 }
 
 func (db *ScyllaDB) DeleteAnswerReaction(questionId, answerId gocql.UUID, userID int) error {
 	var isLike bool
 	findQuery := `SELECT is_like FROM answer_reactions WHERE question_id = ? AND answer_id = ? AND user_id = ?`
-	if err := db.session.Query(findQuery, questionId, answerId, userID).Scan(&isLike); err != nil {
+	err := db.session.Query(findQuery, questionId, answerId, userID).Scan(&isLike)
+	if err != nil {
 		if err == gocql.ErrNotFound {
 			return fmt.Errorf("reaction not found for user %d on answer %v in question %v", userID, answerId, questionId)
 		}
-		return err
+		return fmt.Errorf("failed to check reaction: %v", err)
 	}
 
 	deleteQuery := `DELETE FROM answer_reactions WHERE question_id = ? AND answer_id = ? AND user_id = ?`
 	if err := db.session.Query(deleteQuery, questionId, answerId, userID).Exec(); err != nil {
-		return err
+		return fmt.Errorf("failed to delete reaction: %v", err)
 	}
 
 	question, err := db.GetQuestionByID(questionId)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get question: %v", err)
 	}
 	if question == nil {
 		return fmt.Errorf("question with ID %v not found", questionId)
@@ -97,5 +97,9 @@ func (db *ScyllaDB) DeleteAnswerReaction(questionId, answerId gocql.UUID, userID
 	}
 
 	updateQuery := `UPDATE questions SET answers = ? WHERE question_id = ?`
-	return db.session.Query(updateQuery, question.Answers, questionId).Exec()
+	if err := db.session.Query(updateQuery, question.Answers, questionId).Exec(); err != nil {
+		return fmt.Errorf("failed to update question answers: %v", err)
+	}
+
+	return nil
 }
