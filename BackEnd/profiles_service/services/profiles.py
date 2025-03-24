@@ -2,7 +2,7 @@ from models.categories import StartupCategoryOrm
 from models.regions import RegionOrm
 from schemas.profiles import Startup, StartupOptional
 from exceptions import InvalidRelatedEntityError, NotFoundError
-from repositories import ProfileRepository, BaseRepository
+from utils.repositories import ProfileRepository, BaseRepository
 
 
 

@@ -3,6 +3,8 @@ from typing import Annotated, Optional, Union
 from pydantic import BaseModel, conlist, constr, field_validator, model_validator
 from enum import Enum
 from pydantic_extra_types.phone_numbers import PhoneNumberValidator, PhoneNumber
+from utils.create_optional_model import create_optional_model
+
 
 MyNumberType = Annotated[
   Union[str, PhoneNumber],
@@ -73,15 +75,10 @@ class Startup(Profile):
       raise ValueError("For the RNOKPP field filled out, FOP must be set to True")
 
 
-class StartupOptional(Startup):
-  name: Optional[str] = None
-  status: Optional[StatusEnum] = None
-
-
 class Investor(Profile):
   is_legal_entity: bool = False
   available_funds: Optional[float] = None
-  investment_categories: Optional[conlist(int, min_length=1)]
+  investment_categories: Optional[conlist(int, min_length=1)] = None
 
   @model_validator(mode='after')
   def validate_fop_and_identifiers(self):
@@ -91,6 +88,5 @@ class Investor(Profile):
       raise ValueError("For the RNOKPP field filled out, is_legal_entity must be set to True")
 
 
-class InvestorOptional(Investor):
-  name: Optional[str] = None
-  status: Optional[StatusEnum] = None
+InvestorOptional = create_optional_model(Investor)
+StartupOptional = create_optional_model(Startup)

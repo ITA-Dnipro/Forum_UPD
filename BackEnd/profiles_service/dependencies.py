@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from models.profiles import StartupProfileOrm, InvestorProfileOrm
 from models.categories import StartupCategoryOrm
 from models.regions import RegionOrm
-from repositories import BaseRepository, ProfileRepository
+from utils.repositories import BaseRepository, ProfileRepository
 from schemas.profiles import StatusEnum, Startup, StartupOptional, Investor, InvestorOptional
 from typing import List
 from database import new_session
@@ -119,7 +119,7 @@ def investor_optional_create_dependency(
     investment_categories: List[int] = Body(None),
 ) -> InvestorOptional:
     try:
-        profile = InvestorOptional(
+        profile = Investor.get_optional(
             name=name,
             status=status,
             is_legal_entity=is_legal_entity, 

@@ -1,4 +1,4 @@
-from repositories import BaseRepository
+from utils.repositories import BaseRepository
 from schemas.regions import Region
 from exceptions import UniqueConstraintViolationError
 

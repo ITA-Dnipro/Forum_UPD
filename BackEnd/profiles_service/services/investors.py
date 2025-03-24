@@ -1,7 +1,7 @@
 from models.categories import StartupCategoryOrm
 from schemas.profiles import Investor, InvestorOptional
 from exceptions import InvalidRelatedEntityError, NotFoundError
-from repositories import ProfileRepository, BaseRepository
+from utils.repositories import ProfileRepository, BaseRepository
 
 
 
