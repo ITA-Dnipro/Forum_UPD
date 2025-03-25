@@ -15,6 +15,7 @@ from .views import (
     UserRegistrationView,
     LogoutView,
     AccountActivationView,
+    LoginView
 )
 
 router = SimpleRouter(trailing_slash=False)
@@ -25,7 +26,7 @@ urlpatterns = [
     path('auth/register/', UserRegistrationView.as_view(), name='register'),
     path('auth/activate/', AccountActivationView.as_view(), name='activate'),
     path('auth/logout/', LogoutView.as_view(), name='logout'),
-    path('auth/login/', CustomTokenObtainPairView.as_view(), name='login'),
+    path('auth/login/', LoginView.as_view(), name='login'),
     path(
         "auth/password-reset/",
         PasswordResetRequestView.as_view(),

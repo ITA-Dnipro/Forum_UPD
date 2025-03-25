@@ -17,9 +17,9 @@ RUN apk add --no-cache --virtual .build-deps gcc python3-dev musl-dev \
     && apk del .build-deps \
     && rm -rf /var/cache/apk/*
 
-COPY . $APP_HOME
+COPY . $APP_HOME/
 
-RUN chown -R authentication:authentication $APP_HOME $HOME/.local
+RUN chown -R authentication:authentication $APP_HOME
 
 USER authentication
 

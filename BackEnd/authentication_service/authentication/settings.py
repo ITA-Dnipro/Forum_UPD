@@ -208,7 +208,7 @@ SPECTACULAR_SETTINGS = {
 TOKEN_EXPIRATION_TIME = timedelta(days=14)
 
 # SMTP
-EMAIL_BACKEND = config("EMAIL_BACKEND", default="django.core.mail.backends.smtp.EmailBackend")
+EMAIL_BACKEND = config("EMAIL_BACKEND", default="django.core.mail.backends.console.EmailBackend")
 EMAIL_HOST = config("EMAIL_HOST", default="localhost")
 EMAIL_PORT = config("EMAIL_PORT", default=1025)
 EMAIL_USE_TLS = config("EMAIL_USE_TLS", default=True)

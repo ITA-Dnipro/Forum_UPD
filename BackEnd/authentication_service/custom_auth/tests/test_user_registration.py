@@ -11,7 +11,7 @@ url = reverse('authentication:register')
 class UserRegistrationAPITests(APITestCase):
     def setUp(self):
         patcher = patch(
-            "authentication.serializers.verify_recaptcha", return_value=True
+            "custom_auth.serializers.verify_recaptcha", return_value=True
         )
         self.mock_verify_recaptcha = patcher.start()
         self.addCleanup(patcher.stop)
@@ -31,6 +31,7 @@ class UserRegistrationAPITests(APITestCase):
                 "is_startup": False,
                 "is_fop": False,
             },
+            "registration_type": "Investor"
         }
 
     def test_register_user_email_incorrect(self):
