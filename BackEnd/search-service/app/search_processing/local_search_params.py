@@ -1,4 +1,5 @@
 from typing import Optional, List
+
 from pydantic import BaseModel, Field
 
 
@@ -7,6 +8,7 @@ class PaginationAndSortingMixin(BaseModel):
     page: int = Field(1, ge=1, description="Page number")
     page_size: int = Field(10, ge=1, le=100, description="Number of results per page")
     sort_order: str = Field("desc", pattern="^(asc|desc)$", description="Sort order: 'asc' or 'desc'")
+    include_suggestions: Optional[bool] = Field(False, description="Include search suggestions")
 
 
 class EventSearchParams(PaginationAndSortingMixin):

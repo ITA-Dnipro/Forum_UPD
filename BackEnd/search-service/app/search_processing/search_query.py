@@ -16,14 +16,22 @@ async def build_search_query(
         sort_order: str,
         page: int,
         page_size: int,
+        include_suggestions: bool,
+        suggest_filed: str
 ) -> (int, List[Dict[str, Any]]):
     """
     Build and execute an Elasticsearch DSL search query with pagination.
     """
     s = AsyncSearch(using=es_client, index=index_name)
     if query:
-        query_type = "match" if len(search_fields) == 1 else "multi_match"
-        s = s.query(query_type, query=query, fields=search_fields, fuzziness="AUTO")
+        if len(search_fields) == 1:
+            field = search_fields[0]
+            s = s.query("match", **{field: {"query": query, "fuzziness": "AUTO"}})
+        else:
+            s = s.query("multi_match", query=query, fields=search_fields, fuzziness="AUTO")
+
+        if include_suggestions:
+            s = s.suggest("suggestions", query, term={"field": suggest_filed})
     else:
         s = s.query("match_all")
     if filters:
@@ -40,7 +48,7 @@ async def build_search_query(
     except Exception as e:
         logger.error(f"Elasticsearch query error for {index_name}: {e}")
         raise HTTPException(status_code=500, detail="Search failed")
-    return total_records, records
+    return total_records, records, response
 
 
 async def generic_search(
@@ -53,6 +61,8 @@ async def generic_search(
         sort_order: str,
         page: int,
         page_size: int,
+        include_suggestions: bool,
+        suggest_filed: str
 ):
     """
     Generic search helper that wraps build_search_query.
@@ -66,5 +76,7 @@ async def generic_search(
         search_fields=search_fields,
         sort_order=sort_order,
         page=page,
-        page_size=page_size
+        page_size=page_size,
+        include_suggestions=include_suggestions,
+        suggest_filed=suggest_filed
     )

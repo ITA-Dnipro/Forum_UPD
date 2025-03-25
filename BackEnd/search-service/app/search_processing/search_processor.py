@@ -6,6 +6,7 @@ from pydantic import BaseModel
 
 from .search_query import generic_search
 from ..config import logger, settings
+from ..utils.extract_suggestions import extract_suggestions
 from ..utils.generate_cache_key import generate_cache_key
 
 
@@ -19,6 +20,7 @@ class BaseSearchService:
     """
     index_name: str
     search_fields: List[str]
+    suggest_filed: str
 
     async def search(self, es_client, redis_client, params: BaseModel):
         logger.info(f"Performing search on index: {self.index_name}")
@@ -29,7 +31,7 @@ class BaseSearchService:
             return json.loads(cached)
 
         filters = self.build_filters(params)
-        total_records, records_list = await generic_search(
+        total_records, records_list, response = await generic_search(
             es_client=es_client,
             index_name=self.index_name,
             query=params.query,
@@ -38,7 +40,9 @@ class BaseSearchService:
             search_fields=self.search_fields,
             sort_order=params.sort_order,
             page=params.page,
-            page_size=params.page_size
+            page_size=params.page_size,
+            include_suggestions=params.include_suggestions,
+            suggest_filed=self.suggest_filed
         )
         result = {
             "total_records": total_records,
@@ -46,6 +50,8 @@ class BaseSearchService:
             "page_size": params.page_size,
             "records_list": records_list
         }
+        if params.include_suggestions:
+            result["suggestions"] = extract_suggestions(response)
         await redis_client.set(cache_key, json.dumps(result), ex=120)
         return result
 
@@ -60,6 +66,7 @@ class EventSearchProcessor(BaseSearchService):
     """Search processor for filtering and retrieving events from Elasticsearch."""
     index_name = settings.EVENTS_INDEX
     search_fields = ["title^2", "content"]
+    suggest_filed = "title"
 
     def build_filters(self, params) -> List[Q]:
         filters: List[Q] = []
@@ -87,6 +94,7 @@ class BlogPostSearchProcessor(BaseSearchService):
     """Search processor for filtering and retrieving blog posts from Elasticsearch."""
     index_name = settings.FORUM_BLOG_POSTS_INDEX
     search_fields = ["title^2", "content"]
+    suggest_filed = "title"
 
     def build_filters(self, params) -> List[Q]:
         filters: List[Q] = []
@@ -114,6 +122,7 @@ class BlogCommentSearchProcessor(BaseSearchService):
     """Search processor for filtering and retrieving blog comments from Elasticsearch."""
     index_name = settings.FORUM_BLOG_COMMENTS_INDEX
     search_fields = ["content"]
+    suggest_filed = "content"
 
     def build_filters(self, params) -> List[Q]:
         filters: List[Q] = []
@@ -128,6 +137,7 @@ class QuestionSearchProcessor(BaseSearchService):
     """Search processor for filtering and retrieving questions from Elasticsearch."""
     index_name = settings.FORUM_QUESTIONS_INDEX
     search_fields = ["title^2", "content"]
+    suggest_filed = "title"
 
     def build_filters(self, params) -> List[Q]:
         filters: List[Q] = []
@@ -144,6 +154,7 @@ class QuestionAnswerSearchProcessor(BaseSearchService):
     """Search processor for filtering and retrieving question answers from Elasticsearch."""
     index_name = settings.FORUM_QUESTION_ANSWERS_INDEX
     search_fields = ["content"]
+    suggest_filed = "content"
 
     def build_filters(self, params) -> List[Q]:
         filters: List[Q] = []
@@ -158,6 +169,7 @@ class NewsSearchProcessor(BaseSearchService):
     """Search processor for filtering and retrieving news articles from Elasticsearch."""
     index_name = settings.NEWS_ARTICLES_INDEX
     search_fields = ["title^2", "content"]
+    suggest_filed = "title"
 
     def build_filters(self, params) -> List[Q]:
         filters: List[Q] = []

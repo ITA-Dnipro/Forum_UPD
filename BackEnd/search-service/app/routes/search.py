@@ -25,6 +25,7 @@ from ..search_processing.search_processor import (
     QuestionAnswerSearchProcessor,
     NewsSearchProcessor
 )
+from ..utils.extract_suggestions import extract_suggestions
 
 search_router = APIRouter()
 limiter = Limiter(key_func=get_remote_address)
@@ -71,6 +72,7 @@ async def global_search(
         q: str = Query(..., description="Query string for the search"),
         page: int = Query(1, ge=1, description="Page number"),
         page_size: int = Query(10, ge=1, le=100, description="Number of results per page"),
+        include_suggestions: bool = Query(False, description="Include suggestions in the response"),
         es_client=Depends(get_es_client)
 ):
     """
@@ -82,11 +84,12 @@ async def global_search(
     - q: The search query string.
     - page: The page number for pagination.
     - page_size: Number of results per page.
+    - include_suggestions: Whether to include search suggestions in the response.
 
     Response:
     - A JSON object with grouped search results; each key represents the source index.
     """
-    cache_key = f"global_search:{q}:{page}:{page_size}"
+    cache_key = f"global_search:{q}:{page}:{page_size}:{include_suggestions}"
     redis_client = request.app.state.redis
 
     cached = await redis_client.get(cache_key)
@@ -102,6 +105,9 @@ async def global_search(
         fields=["title^2", "content"],
         fuzziness="AUTO"
     ).extra(from_=offset, size=page_size)
+
+    if include_suggestions:
+        s = s.suggest("suggestions", q, term={"field": "title"})
 
     try:
         response = await s.execute()
@@ -121,10 +127,14 @@ async def global_search(
             detail="Search service is currently unavailable. Please try again later."
         )
 
+    final_result = {"results": result}
+
+    if include_suggestions:
+        final_result["suggestions"] = extract_suggestions(response)
+
     logger.info(f"Global search succeeded, returning results from {len(result)} index(es)")
-    cache_data = json.dumps({"results": dict(result)})
-    await redis_client.set(cache_key, cache_data, ex=120)
-    return {"results": result}
+    await redis_client.set(cache_key, json.dumps(final_result), ex=120)
+    return final_result
 
 
 @search_router.get("/service/events/")
@@ -314,11 +324,3 @@ async def search_news(
     response = await news_search_processor.search(es_client, redis_client, params)
     logger.info("Search for news was successful")
     return response
-
-
-@search_router.get("/suggestions/")
-@limiter.limit("20/minute")
-async def get_suggestions(request: Request, es_client=Depends(get_es_client)):
-    """Endpoint for search suggestions."""
-    logger.info("Suggestions requested")
-    return {"message": "Suggestions are working"}
