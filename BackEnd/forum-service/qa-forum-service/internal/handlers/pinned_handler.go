@@ -4,9 +4,18 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/boghtml/qa-forum-service/internal/repository"
 	"github.com/gin-gonic/gin"
 	"github.com/gocql/gocql"
 )
+
+type PinnedHandler struct {
+	repo repository.Repository
+}
+
+func NewPinnedHandler(repo repository.Repository) *PinnedHandler {
+	return &PinnedHandler{repo: repo}
+}
 
 // @Summary Accept an answer
 // @Description Marks an answer as accepted by the question author

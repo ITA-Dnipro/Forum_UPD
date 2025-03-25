@@ -5,12 +5,12 @@ import (
 	"github.com/gocql/gocql"
 )
 
-type QuestionRepository interface {
+type Repository interface {
 	CreateQuestion(q *models.Question) error
 	GetQuestionByID(id gocql.UUID) (*models.Question, error)
-	GetAllQuestions() ([]models.Question, error)
-	GetQuestionsByAuthor(authorID int) ([]models.Question, error)
-	GetQuestionsByStatus(status string) ([]models.Question, error)
+	GetAllQuestions(limit int, pagingState []byte) ([]models.Question, []byte, error)
+	GetQuestionsByAuthor(authorID int, limit int, pagingState []byte) ([]models.Question, []byte, error)
+	GetQuestionsByStatus(status string, limit int, pagingState []byte) ([]models.Question, []byte, error)
 	UpdateQuestion(q *models.Question) error
 	DeleteQuestion(id gocql.UUID) error
 
@@ -20,10 +20,10 @@ type QuestionRepository interface {
 
 	SaveQuestion(userID int, questionID gocql.UUID) error
 	UnsaveQuestion(userID int, questionID gocql.UUID) error
-	GetSavedQuestions(userID int) ([]models.Question, error)
+	GetSavedQuestions(userID int, limit int, pagingState []byte) ([]models.Question, []byte, error)
 
-	AddReaction(userID, questionID gocql.UUID, isLike bool) error
-	RemoveReaction(userID, questionID gocql.UUID) error
+	AddReaction(userID int, questionID gocql.UUID, isLike bool) error
+	RemoveReaction(userID int, questionID gocql.UUID) error
 
 	GetReactions(questionID gocql.UUID) ([]models.ReactionDetail, error)
 	GetLikedQuestions(userID int, limit int, pagingState []byte) ([]models.Question, []byte, error)
