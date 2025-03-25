@@ -1,9 +1,11 @@
-from fastapi import Body, Depends, HTTPException
+from fastapi import Body, Depends, HTTPException, UploadFile
 from pydantic import ValidationError
 from sqlalchemy.ext.asyncio import AsyncSession
 from models.profiles import StartupProfileOrm, InvestorProfileOrm
 from models.categories import StartupCategoryOrm
 from models.regions import RegionOrm
+from models.images import ProfileImage 
+from services.images import ImageService
 from utils.repositories import BaseRepository, ProfileRepository
 from schemas.profiles import StatusEnum, Startup, StartupOptional, Investor, InvestorOptional
 from typing import List
@@ -27,6 +29,7 @@ def startup_create_dependency(
     founded: int = Body(None),
     profile_categories: List[int] = Body(None),
     profile_regions: List[int] = Body(None), 
+    profile_banner: int = Body(None)
 ) -> Startup:
     try:
         profile = Startup(
@@ -42,6 +45,7 @@ def startup_create_dependency(
             rnokpp=rnokpp,
             founded=founded,
             startup_idea=startup_idea,
+            profile_banner=profile_banner
         )
     except ValidationError as e:
         error_messages = [error['msg'] for error in e.errors()]
@@ -61,7 +65,9 @@ def startup_optional_create_dependency(
     startup_idea: str = Body(None),
     founded: int = Body(None),
     profile_categories: List[int] = Body(None),
-    profile_regions: List[int] = Body(None), 
+    profile_regions: List[int] = Body(None),
+    profile_banner: int = Body(None) 
+    
 ) -> StartupOptional:
     try:
         profile = StartupOptional(
@@ -77,6 +83,7 @@ def startup_optional_create_dependency(
             rnokpp=rnokpp,
             founded=founded,
             startup_idea=startup_idea,
+            profile_banner=profile_banner
         )
     except ValidationError as e:
         error_messages = [error['msg'] for error in e.errors()]
@@ -134,6 +141,22 @@ def investor_optional_create_dependency(
     return profile
 
 
+# def image_upload_dependency(
+#     created_by: int,
+#     image_type: ImageTypeEnum,
+#     file: UploadFile
+# ):
+#     try:
+#         image = ProfileImage(
+#             created_by=created_by,
+#             image_type = image_type
+#         )
+#     except ValidationError as e:
+#         error_messages = [error['msg'] for error in e.errors()]
+#         raise HTTPException(status_code=422, detail=error_messages)
+#     return image, file
+
+
 async def get_async_session() -> AsyncSession:
     async with new_session() as session:
         yield session
@@ -158,3 +181,7 @@ def get_caterory_service(session: AsyncSession = Depends(get_async_session)):
 def get_region_service(session: AsyncSession = Depends(get_async_session)):
     repo = BaseRepository(model=RegionOrm, session=session)
     return RegionService(repo)
+
+def get_image_service(session: AsyncSession = Depends(get_async_session)):
+    repo = BaseRepository(model=ProfileImage, session=session)
+    return ImageService(repo)

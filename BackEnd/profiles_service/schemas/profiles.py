@@ -55,6 +55,7 @@ class Startup(Profile):
   founded: Optional[int] = None
   profile_categories: Optional[conlist(int, min_length=1)] = None
   profile_regions: Optional[conlist(int, min_length=1)] = None
+  profile_banner: Optional[int] = None
 
 
   @field_validator("founded", mode="after")

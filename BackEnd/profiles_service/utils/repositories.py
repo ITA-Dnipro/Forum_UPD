@@ -98,6 +98,16 @@ class BaseRepository:
             raise e
 
 
+    async def soft_delete(self, instance_id: int):
+        try: 
+            instance = await self.get_by_id(instance_id)
+            instance.is_deleted = True
+            await self.session.commit()
+        except Exception as e:
+                await self.session.rollback()
+                raise e
+
+
 class ProfileRepository(BaseRepository):
 
     def __init__(self, model: Model, session: AsyncSession):
