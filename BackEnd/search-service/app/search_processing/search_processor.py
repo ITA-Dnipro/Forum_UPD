@@ -20,7 +20,7 @@ class BaseSearchService:
     """
     index_name: str
     search_fields: List[str]
-    suggest_filed: str
+    suggest_field: str
 
     async def search(self, es_client, redis_client, params: BaseModel):
         logger.info(f"Performing search on index: {self.index_name}")
@@ -31,7 +31,7 @@ class BaseSearchService:
             return json.loads(cached)
 
         filters = self.build_filters(params)
-        total_records, records_list, response = await generic_search(
+        total_hits, records_list, response = await generic_search(
             es_client=es_client,
             index_name=self.index_name,
             query=params.query,
@@ -42,17 +42,19 @@ class BaseSearchService:
             page=params.page,
             page_size=params.page_size,
             include_suggestions=params.include_suggestions,
-            suggest_filed=self.suggest_filed
+            suggest_field=self.suggest_field
         )
         result = {
-            "total_records": total_records,
+            "total_hits": total_hits,
             "page": params.page,
             "page_size": params.page_size,
             "records_list": records_list
         }
         if params.include_suggestions:
             result["suggestions"] = extract_suggestions(response)
-        await redis_client.set(cache_key, json.dumps(result), ex=120)
+
+        ttl = settings.REDIS_CACHE_TTL_CONFIG.get(self.index_name, 180)
+        await redis_client.set(cache_key, json.dumps(result), ex=ttl)
         return result
 
     def build_filters(self, params) -> List[Q]:
@@ -65,8 +67,8 @@ class BaseSearchService:
 class EventSearchProcessor(BaseSearchService):
     """Search processor for filtering and retrieving events from Elasticsearch."""
     index_name = settings.EVENTS_INDEX
-    search_fields = ["title^2", "content"]
-    suggest_filed = "title"
+    search_fields = settings.SEARCH_BY_TITLE_AND_CONTENT
+    suggest_field = "title"
 
     def build_filters(self, params) -> List[Q]:
         filters: List[Q] = []
@@ -85,16 +87,21 @@ class EventSearchProcessor(BaseSearchService):
             filters.append(Q("term", status=params.event_status))
         if params.location:
             filters.append(Q("term", location=params.location))
-        if params.date_from:
-            filters.append(Q("range", date={"gte": params.date_from}))
+        if params.date_from or params.date_to:
+            range_filter = {}
+            if params.date_from:
+                range_filter["gte"] = params.date_from
+            if params.date_to:
+                range_filter["lte"] = params.date_to
+            filters.append(Q("range", date=range_filter))
         return filters
 
 
 class BlogPostSearchProcessor(BaseSearchService):
     """Search processor for filtering and retrieving blog posts from Elasticsearch."""
     index_name = settings.FORUM_BLOG_POSTS_INDEX
-    search_fields = ["title^2", "content"]
-    suggest_filed = "title"
+    search_fields = settings.SEARCH_BY_TITLE_AND_CONTENT
+    suggest_field = "title"
 
     def build_filters(self, params) -> List[Q]:
         filters: List[Q] = []
@@ -121,8 +128,8 @@ class BlogPostSearchProcessor(BaseSearchService):
 class BlogCommentSearchProcessor(BaseSearchService):
     """Search processor for filtering and retrieving blog comments from Elasticsearch."""
     index_name = settings.FORUM_BLOG_COMMENTS_INDEX
-    search_fields = ["content"]
-    suggest_filed = "content"
+    search_fields = settings.SEARCH_BY_CONTENT
+    suggest_field = "content"
 
     def build_filters(self, params) -> List[Q]:
         filters: List[Q] = []
@@ -136,8 +143,8 @@ class BlogCommentSearchProcessor(BaseSearchService):
 class QuestionSearchProcessor(BaseSearchService):
     """Search processor for filtering and retrieving questions from Elasticsearch."""
     index_name = settings.FORUM_QUESTIONS_INDEX
-    search_fields = ["title^2", "content"]
-    suggest_filed = "title"
+    search_fields = settings.SEARCH_BY_TITLE_AND_CONTENT
+    suggest_field = "title"
 
     def build_filters(self, params) -> List[Q]:
         filters: List[Q] = []
@@ -153,8 +160,8 @@ class QuestionSearchProcessor(BaseSearchService):
 class QuestionAnswerSearchProcessor(BaseSearchService):
     """Search processor for filtering and retrieving question answers from Elasticsearch."""
     index_name = settings.FORUM_QUESTION_ANSWERS_INDEX
-    search_fields = ["content"]
-    suggest_filed = "content"
+    search_fields = settings.SEARCH_BY_CONTENT
+    suggest_field = "content"
 
     def build_filters(self, params) -> List[Q]:
         filters: List[Q] = []
@@ -168,8 +175,8 @@ class QuestionAnswerSearchProcessor(BaseSearchService):
 class NewsSearchProcessor(BaseSearchService):
     """Search processor for filtering and retrieving news articles from Elasticsearch."""
     index_name = settings.NEWS_ARTICLES_INDEX
-    search_fields = ["title^2", "content"]
-    suggest_filed = "title"
+    search_fields = settings.SEARCH_BY_TITLE_AND_CONTENT
+    suggest_field = "title"
 
     def build_filters(self, params) -> List[Q]:
         filters: List[Q] = []

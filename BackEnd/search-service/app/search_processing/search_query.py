@@ -1,6 +1,7 @@
 from typing import Optional, List, Dict, Any
 
 from elasticsearch_dsl import AsyncSearch, Q
+from elasticsearch_dsl.response import Response
 from fastapi import HTTPException
 
 from ..config import logger
@@ -17,8 +18,8 @@ async def build_search_query(
         page: int,
         page_size: int,
         include_suggestions: bool,
-        suggest_filed: str
-) -> (int, List[Dict[str, Any]]):
+        suggest_field: str
+) -> (int, List[Dict[str, Any]], Response):
     """
     Build and execute an Elasticsearch DSL search query with pagination.
     """
@@ -31,7 +32,7 @@ async def build_search_query(
             s = s.query("multi_match", query=query, fields=search_fields, fuzziness="AUTO")
 
         if include_suggestions:
-            s = s.suggest("suggestions", query, term={"field": suggest_filed})
+            s = s.suggest("suggestions", query, term={"field": suggest_field})
     else:
         s = s.query("match_all")
     if filters:
@@ -43,12 +44,12 @@ async def build_search_query(
 
     try:
         response = await s.execute()
-        total_records = response.hits.total.value
+        total_hits = response.hits.total.value
         records = [hit.to_dict() for hit in response]
     except Exception as e:
         logger.error(f"Elasticsearch query error for {index_name}: {e}")
         raise HTTPException(status_code=500, detail="Search failed")
-    return total_records, records, response
+    return total_hits, records, response
 
 
 async def generic_search(
@@ -62,7 +63,7 @@ async def generic_search(
         page: int,
         page_size: int,
         include_suggestions: bool,
-        suggest_filed: str
+        suggest_field: str
 ):
     """
     Generic search helper that wraps build_search_query.
@@ -78,5 +79,5 @@ async def generic_search(
         page=page,
         page_size=page_size,
         include_suggestions=include_suggestions,
-        suggest_filed=suggest_filed
+        suggest_field=suggest_field
     )

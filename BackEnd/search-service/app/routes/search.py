@@ -69,7 +69,7 @@ async def get_redis_client(request: Request):
 @limiter.limit("20/minute")
 async def global_search(
         request: Request,
-        q: str = Query(..., description="Query string for the search"),
+        q: str = Query(..., description="Query string for the search", min_length=2, max_length=100),
         page: int = Query(1, ge=1, description="Page number"),
         page_size: int = Query(10, ge=1, le=100, description="Number of results per page"),
         include_suggestions: bool = Query(False, description="Include suggestions in the response"),
@@ -102,7 +102,7 @@ async def global_search(
     s = AsyncSearch(using=es_client, index=settings.global_search_indexes).query(
         "multi_match",
         query=q,
-        fields=["title^2", "content"],
+        fields=settings.SEARCH_BY_TITLE_AND_CONTENT,
         fuzziness="AUTO"
     ).extra(from_=offset, size=page_size)
 
@@ -127,13 +127,16 @@ async def global_search(
             detail="Search service is currently unavailable. Please try again later."
         )
 
-    final_result = {"results": result}
+    final_result = {"results": result,
+                    "total_hits": response.hits.total.value
+                    }
 
     if include_suggestions:
         final_result["suggestions"] = extract_suggestions(response)
 
     logger.info(f"Global search succeeded, returning results from {len(result)} index(es)")
     await redis_client.set(cache_key, json.dumps(final_result), ex=120)
+
     return final_result
 
 
