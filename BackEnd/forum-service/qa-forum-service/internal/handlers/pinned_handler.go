@@ -8,6 +8,20 @@ import (
 	"github.com/gocql/gocql"
 )
 
+// @Summary Accept an answer
+// @Description Marks an answer as accepted by the question author
+// @Tags Answers
+// @Accept json
+// @Produce json
+// @Param id path string true "Question ID (UUID)"
+// @Param answerId path string true "Answer ID (UUID)"
+// @Param request body object{user_id=int} true "User ID of the author"
+// @Success 200 {object} map[string]string "Answer accepted successfully"
+// @Failure 400 {object} map[string]string "Invalid request"
+// @Failure 403 {object} map[string]string "Forbidden: only author can accept"
+// @Failure 404 {object} map[string]string "Question or answer not found"
+// @Failure 500 {object} map[string]string "Server error"
+// @Router /api/questions/{id}/answers/{answerId}/accept [post]
 func (h *Handler) AcceptAnswer(c *gin.Context) {
 	questionId, err := gocql.ParseUUID(c.Param("id"))
 	if err != nil {
@@ -52,6 +66,20 @@ func (h *Handler) AcceptAnswer(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Answer accepted successfully"})
 }
 
+// @Summary Unaccept an answer
+// @Description Removes an answer from the accepted list by the question author
+// @Tags Answers
+// @Accept json
+// @Produce json
+// @Param id path string true "Question ID (UUID)"
+// @Param answerId path string true "Answer ID (UUID)"
+// @Param request body object{user_id=int} true "User ID of the author"
+// @Success 200 {object} map[string]string "Answer unaccepted successfully"
+// @Failure 400 {object} map[string]string "Invalid request"
+// @Failure 403 {object} map[string]string "Forbidden: only author can unaccept"
+// @Failure 404 {object} map[string]string "Question not found"
+// @Failure 500 {object} map[string]string "Server error"
+// @Router /api/questions/{id}/answers/{answerId}/accept [delete]
 func (h *Handler) UnacceptAnswer(c *gin.Context) {
 	questionId, err := gocql.ParseUUID(c.Param("id"))
 	if err != nil {

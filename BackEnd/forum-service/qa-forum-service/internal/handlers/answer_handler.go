@@ -11,6 +11,17 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// @Summary Create a new answer
+// @Description Adds a new answer to a specific question
+// @Tags Answers
+// @Accept json
+// @Produce json
+// @Param id path string true "Question ID (UUID)"
+// @Param answer body models.QuestionAnswer true "Answer data"
+// @Success 201 {object} models.QuestionAnswer "Created answer"
+// @Failure 400 {object} map[string]string "Invalid request"
+// @Failure 500 {object} map[string]string "Server error"
+// @Router /api/questions/{id}/answers [post]
 func (h *Handler) CreateAnswer(c *gin.Context) {
 	questionId, err := gocql.ParseUUID(c.Param("id"))
 	if err != nil {
@@ -52,6 +63,18 @@ func (h *Handler) CreateAnswer(c *gin.Context) {
 	c.JSON(http.StatusCreated, answer)
 }
 
+// @Summary Update an existing answer
+// @Description Updates an answer for a specific question
+// @Tags Answers
+// @Accept json
+// @Produce json
+// @Param id path string true "Question ID (UUID)"
+// @Param answerId path string true "Answer ID (UUID)"
+// @Param answer body models.QuestionAnswer true "Updated answer data"
+// @Success 200 {object} models.QuestionAnswer "Updated answer"
+// @Failure 400 {object} map[string]string "Invalid request"
+// @Failure 500 {object} map[string]string "Server error"
+// @Router /api/questions/{id}/answers/{answerId} [put]
 func (h *Handler) UpdateAnswer(c *gin.Context) {
 	questionId, err := gocql.ParseUUID(c.Param("id"))
 	if err != nil {
@@ -100,6 +123,16 @@ func (h *Handler) UpdateAnswer(c *gin.Context) {
 	c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve updated answer"})
 }
 
+// @Summary Delete an answer
+// @Description Deletes an answer from a specific question
+// @Tags Answers
+// @Produce json
+// @Param id path string true "Question ID (UUID)"
+// @Param answerId path string true "Answer ID (UUID)"
+// @Success 200 {object} map[string]string "Answer deleted successfully"
+// @Failure 400 {object} map[string]string "Invalid request"
+// @Failure 500 {object} map[string]string "Server error"
+// @Router /api/questions/{id}/answers/{answerId} [delete]
 func (h *Handler) DeleteAnswer(c *gin.Context) {
 	questionId, err := gocql.ParseUUID(c.Param("id"))
 	if err != nil {
