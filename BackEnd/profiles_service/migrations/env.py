@@ -6,6 +6,7 @@ from sqlalchemy import pool
 from models.regions import RegionOrm, ProfileRegionORM
 from models.categories import StartupCategoryOrm, StartupProfileCategoryORM, InvestorStartupCategoryOrm
 from models.profiles import StartupProfileOrm, InvestorProfileOrm
+from models.images import ProfileImage
 from models import Model
 
 from alembic import context

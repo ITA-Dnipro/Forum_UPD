@@ -1,4 +1,4 @@
-from sqlalchemy import DateTime, Numeric, String, Text, func
+from sqlalchemy import DateTime, ForeignKey, Numeric, String, Text, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from models import Model
 from schemas.profiles import StatusEnum
@@ -30,8 +30,16 @@ class StartupProfileOrm(Model):
     founded: Mapped[int] = mapped_column(nullable=True)
     startup_idea: Mapped[str] = mapped_column(Text, default=None, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=func.now())
-    updated_at: Mapped[datetime] = mapped_column(DateTime, nullable=True, onupdate=func.now()) 
+    updated_at: Mapped[datetime] = mapped_column(DateTime, nullable=True, onupdate=func.now())
 
+    banner_id: Mapped[int] = mapped_column(
+    ForeignKey("profile_images.id"), 
+    nullable=True)
+
+    banner: Mapped["ProfileImage"] = relationship(
+        back_populates="profile_banner", 
+        foreign_keys=[banner_id],
+        uselist=False)
 
 
 class InvestorProfileOrm(Model):
