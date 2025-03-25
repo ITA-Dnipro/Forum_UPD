@@ -33,6 +33,9 @@ func SetupRoutes(r *gin.Engine, h *handlers.Handler) {
 		questionsGroup.GET("/", h.GetQuestions)
 		questionsGroup.POST("/", h.CreateQuestion)
 
+		questionsGroup.GET("/reactions/liked", h.GetLikedQuestions)
+		questionsGroup.GET("/reactions/disliked", h.GetDislikedQuestions)
+
 		question := questionsGroup.Group("/:id")
 		{
 			question.GET("", h.GetQuestion)
@@ -56,15 +59,22 @@ func SetupRoutes(r *gin.Engine, h *handlers.Handler) {
 				answers.POST("/:answerId/accept", h.AcceptAnswer)
 				answers.DELETE("/:answerId/accept", h.UnacceptAnswer)
 
+				answers.POST("/:answerId/reaction", h.AddAnswerReaction)
+				answers.DELETE("/:answerId/reaction", h.DeleteAnswerReaction)
+
 				replies := answers.Group("/:answerId/replies")
 				{
 					replies.POST("", h.CreateReply)
 					replies.PUT("/:replyId", h.UpdateReply)
 					replies.DELETE("/:replyId", h.DeleteReply)
+
+					replies.POST("/:replyId/reaction", h.AddReplyReaction)
+					replies.DELETE("/:replyId/reaction", h.DeleteReplyReaction)
 				}
 			}
 		}
 
 		api.GET("/saved-questions", h.GetSavedQuestions)
+
 	}
 }
