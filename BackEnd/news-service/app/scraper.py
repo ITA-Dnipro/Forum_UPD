@@ -61,7 +61,7 @@ async def scrape_news():
             latest_news = []
             article_urls = []
 
-            for article_section in articles.find_all("div", class_="article_news", limit=10):
+            for article_section in articles.find_all("div", class_="article_news", limit=5):
                 title_section = article_section.find("div", class_="article_title")
                 if not title_section:
                     continue
@@ -147,7 +147,9 @@ async def scrape_and_store_news():
     logger.warning(f"Filtered news amount: {len(filtered_news)}")
     logger.warning(f"Filtered news: {filtered_news}")
 
+    print(saved_news)
     if saved_news:
+        print("entered", bool(saved_news))
         await NewsModel.insert_many(saved_news)
         await update_news_cache(saved_news)
 #   return {

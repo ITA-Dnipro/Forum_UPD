@@ -35,7 +35,7 @@ def setup_periodic_tasks():
     entry = RedBeatSchedulerEntry(
         "scrape_news_task",
         "app.tasks.scrape_news_task",
-        crontab(minute=0, hour='*/4'),  # Runs every 4 hours
+        crontab(minute=0, hour="12,15,18,21"),  # Runs every day in 12:00, 15:00, 18:00, 21:00
         app=celery,
     )
     entry.save()

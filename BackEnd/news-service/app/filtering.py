@@ -15,7 +15,7 @@ keyword_categories = {
     "stocks": [r"акці\w*", r"бірж\w*", r"цінн\w* папер\w*", r"облігац\w*", r"фондовий ринок"],
     "trade": [r"торгів\w*", r"експорт\w*", r"імпорт\w*", r"митниц\w*", r"товар\w*"],
     "inflation": [r"інфляц\w*", r"знецін\w*", r"індекс цін\w*"],
-    "technologies": [r"криптовалют\w*", r"новітн\w*", r"штучний інтелект", r"блокчейн"]
+    "technologies": [r"криптовалют\w*", r"новітн\w*", r"штучний інтелект", r"блокчейн\w*"]
 }
 
 compiled_patterns = {
@@ -28,11 +28,9 @@ def is_business_news(article_text: str, article_title: str) -> bool:
     matched_categories = set()
 
     for category, pattern in compiled_patterns.items():
-        print(category)
         if pattern.search(article_text) or pattern.search(article_title):
             matched_categories.add(category)  
 
-        print(matched_categories)
         if len(matched_categories) >= 3:
             return True
 
