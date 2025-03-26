@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
 from app.services.cassandra import async_init_cassandra, basic_init_cassandra, get_session, refresh_metadata
-from app.routes import posts, categories, tags
+from app.routes import comment_reactions, comment_reply_reactions, post_reactions, posts, categories, saved_posts, tags, comments, comment_replies
 import logging
 from fastapi.staticfiles import StaticFiles
 
@@ -34,6 +34,12 @@ def register_routers(app: FastAPI):
     app.include_router(posts.router, prefix="/api/posts", tags=["Posts"])
     app.include_router(categories.router, prefix="/api/categories", tags=["Categories"])
     app.include_router(tags.router, prefix="/api/tags", tags=["Tags"])
+    app.include_router(comments.router, prefix="/api/posts", tags=["Comments"])
+    app.include_router(comment_replies.router, prefix="/api/posts", tags=["CommentReplies"])
+    app.include_router(saved_posts.router, prefix="/api/saved-posts", tags=["SavedPosts"])
+    app.include_router(post_reactions.router, prefix="/api/posts", tags=["post_reactions"])
+    app.include_router(comment_reactions.router, prefix="/api/posts/{post_id}/comments/{comment_id}/reactions", tags=["comment_reactions"])
+    app.include_router(comment_reply_reactions.router, prefix="/api/posts/{post_id}/comments/{comment_id}/replies/{reply_id}/reactions", tags=["comment_reply_reactions"])
 
 @app.on_event("startup")
 async def startup_event():
