@@ -1,13 +1,13 @@
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from models import Model
-from models.profiles import ProfileOrm
+from models.profiles import StartupProfileOrm
 from sqlalchemy import ForeignKey
 
 
 class ProfileRegionORM(Model):
     __tablename__ = "profile_region"
     profile_id: Mapped[int] = mapped_column(
-        ForeignKey("profiles.id"),
+        ForeignKey("startup_profiles.id"),
         primary_key=True
     )
     region_id: Mapped[int] = mapped_column(
@@ -21,7 +21,7 @@ class RegionOrm(Model):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(unique=True)
-    region_profiles: Mapped[list["ProfileOrm"]] = relationship(
+    region_profiles: Mapped[list["StartupProfileOrm"]] = relationship(
         back_populates="profile_regions",
         secondary="profile_region"
         )

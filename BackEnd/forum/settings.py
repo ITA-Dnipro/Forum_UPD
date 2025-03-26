@@ -44,12 +44,15 @@ ALLOWED_HOSTS = [
     "0.0.0.0",
     config("ALLOWED_ENV_HOST"),
 ]
+# ALLOWED_HOSTS = ["*"]
 
 # Application definition
 
 INSTALLED_APPS = [
     "daphne",
     "channels",
+    "chat.apps.ChatConfig",
+    "chat_notifications.apps.ChatNotificationsConfig",
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.sessions",
@@ -66,7 +69,6 @@ INSTALLED_APPS = [
     "administration",
     "search",
     "images",
-    "chat",
 ]
 
 MIDDLEWARE = [

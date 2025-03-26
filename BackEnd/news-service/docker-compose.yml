@@ -1,0 +1,96 @@
+version: "3.8"
+
+networks:
+  app_network:
+    driver: bridge
+
+services:
+  fastapi:
+    build: .
+    container_name: fastapi_app
+    restart: always
+    env_file: .env
+    ports:
+      - "${APP_PORT:-8000}:8000"
+    networks:
+      - app_network
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    
+
+
+  mongodb:
+    image: mongo:5
+    container_name: mongodb
+    restart: always
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    env_file: .env
+    networks:
+      - app_network
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  redis:
+    image: redis:7
+    container_name: redis_cache
+    restart: always
+    ports:
+      - "6379:6379"
+    networks:
+      - app_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
+
+
+  celery_worker:
+    build:
+      context: .
+      dockerfile: Dockerfile.celery  # Use dedicated Celery Dockerfile
+    container_name: celery_worker
+    restart: always
+    env_file: .env
+    depends_on:
+      fastapi:
+        condition: service_started
+      redis:
+        condition: service_healthy
+    networks:
+      - app_network
+  
+
+  celery_beat:
+    build:
+      context: .
+      dockerfile: Dockerfile  # Using the same Dockerfile as celery_worker
+    container_name: celery_beat
+    restart: always
+    env_file: .env
+    volumes:
+      - celery_beat_data:/app  # Make sure Celery Beat has write access
+    depends_on:
+      - celery_worker
+      - redis
+    networks:
+      - app_network
+    command: ["sh", "-c", "celery -A app.celery beat --loglevel=info --scheduler redbeat.RedBeatScheduler"]
+
+
+volumes:
+  mongodb_data:
+    driver: local
+  celery_beat_data:
+    driver: local

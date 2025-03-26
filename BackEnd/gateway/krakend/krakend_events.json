@@ -1,0 +1,190 @@
+{
+  "version": 3,
+  "name": "Events Gateway",
+  "endpoints": [
+
+    {
+      "endpoint": "/events",
+      "method": "GET",
+      "extra_config": {
+        "auth/validator": {
+          "endpoint": "/check?requiredRole=Public",
+          "method": "GET",
+          "host": [
+            "http://auth-service:8080"
+          ],
+          "header": "Authorization",
+          "response_codes": [200],
+          "cache": false
+        }
+      },
+      "backend": [
+        {
+          "host": ["http://event-service:8000"],
+          "url_pattern": "/events"
+        }
+      ]
+    },
+
+    {
+      "endpoint": "/events",
+      "method": "POST",
+      "extra_config": {
+        "auth/validator": {
+          "endpoint": "/check?requiredRole=IsActive",
+          "method": "GET",
+          "host": [
+            "http://auth-service:8080"
+          ],
+          "header": "Authorization",
+          "response_codes": [200],
+          "cache": false
+        }
+      },
+      "backend": [
+        {
+          "host": ["http://event-service:8000"],
+          "url_pattern": "/events"
+        }
+      ]
+    },
+
+    {
+      "endpoint": "/events/{event_id}",
+      "method": "GET",
+      "extra_config": {
+        "auth/validator": {
+          "endpoint": "/check?requiredRole=Public",
+          "method": "GET",
+          "host": [
+            "http://auth-service:8080"
+          ],
+          "header": "Authorization",
+          "response_codes": [200],
+          "cache": false
+        }
+      },
+      "backend": [
+        {
+          "host": ["http://event-service:8000"],
+          "url_pattern": "/events/{event_id}"
+        }
+      ]
+    },
+
+    {
+      "endpoint": "/events/{event_id}",
+      "method": "PUT",
+      "extra_config": {
+        "auth/validator": {
+          "endpoint": "/check?requiredRole=IsActive",
+          "method": "GET",
+          "host": [
+            "http://auth-service:8080"
+          ],
+          "header": "Authorization",
+          "response_codes": [200],
+          "cache": false
+        }
+      },
+      "backend": [
+        {
+          "host": ["http://event-service:8000"],
+          "url_pattern": "/events/{event_id}"
+        }
+      ]
+    },
+
+    {
+      "endpoint": "/events/{event_id}",
+      "method": "DELETE",
+      "extra_config": {
+        "auth/validator": {
+          "endpoint": "/check?requiredRole=IsActive",
+          "method": "GET",
+          "host": [
+            "http://auth-service:8080"
+          ],
+          "header": "Authorization",
+          "response_codes": [200],
+          "cache": false
+        }
+      },
+      "backend": [
+        {
+          "host": ["http://event-service:8000"],
+          "url_pattern": "/events/{event_id}"
+        }
+      ]
+    },
+
+    {
+      "endpoint": "/events/{event_id}/register",
+      "method": "POST",
+      "extra_config": {
+        "auth/validator": {
+          "endpoint": "/check?requiredRole=IsActive",
+          "method": "GET",
+          "host": [
+            "http://auth-service:8080"
+          ],
+          "header": "Authorization",
+          "response_codes": [200],
+          "cache": false
+        }
+      },
+      "backend": [
+        {
+          "host": ["http://event-service:8000"],
+          "url_pattern": "/events/{event_id}/register"
+        }
+      ]
+    },
+
+    {
+      "endpoint": "/events/{event_id}/register",
+      "method": "DELETE",
+      "extra_config": {
+        "auth/validator": {
+          "endpoint": "/check?requiredRole=IsActive",
+          "method": "GET",
+          "host": [
+            "http://auth-service:8080"
+          ],
+          "header": "Authorization",
+          "response_codes": [200],
+          "cache": false
+        }
+      },
+      "backend": [
+        {
+          "host": ["http://event-service:8000"],
+          "url_pattern": "/events/{event_id}/register"
+        }
+      ]
+    },
+
+    {
+      "endpoint": "/events/{event_id}/attendees",
+      "method": "GET",
+      "extra_config": {
+        "auth/validator": {
+          "endpoint": "/check?requiredRole=IsActive",
+          "method": "GET",
+          "host": [
+            "http://auth-service:8080"
+          ],
+          "header": "Authorization",
+          "response_codes": [200],
+          "cache": false
+        }
+      },
+      "backend": [
+        {
+          "host": ["http://event-service:8000"],
+          "url_pattern": "/events/{event_id}/attendees"
+        }
+      ]
+    }
+  ]
+}

@@ -3,7 +3,7 @@ import uvicorn
 from routers import profiles, categories, regions
 
 app = FastAPI(root_path="/api/v1")
-app.include_router(profiles.router, prefix="/profiles")
+app.include_router(profiles.router, prefix="/startup_profiles")
 app.include_router(categories.router, prefix="/categories")
 app.include_router(regions.router, prefix="/regions")
 

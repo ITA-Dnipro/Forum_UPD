@@ -23,10 +23,12 @@ markdown-it-py==3.0.0
 MarkupSafe==3.0.2
 mdurl==0.1.2
 packaging==24.2
+phonenumbers==9.0.1
 pluggy==1.5.0
 psycopg==3.2.5
 psycopg-binary==3.2.5
 pydantic==2.10.6
+pydantic-extra-types==2.10.3
 pydantic_core==2.27.2
 Pygments==2.19.1
 pytest==8.3.4

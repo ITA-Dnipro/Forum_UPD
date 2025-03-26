@@ -29,7 +29,7 @@ async def create_category(
 
 
 @router.get("/{category_id}", status_code=200)
-async def categorys_detail(
+async def categories_detail(
     category_id: int,
     session: AsyncSession = Depends(get_async_session)
     ):
