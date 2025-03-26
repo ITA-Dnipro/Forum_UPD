@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+    event-api:
+      container_name: event_api
+      build: ./Backend/event-service
+      command: >
+        bash -c "
+        while ! </dev/tcp/db/5432; do 
+          echo 'Waiting for PostgreSQL to be available...'; 
+          sleep 1; 
+        done; 
+        echo 'PostgreSQL is ready!';
+        while ! </dev/tcp/redis/6379; do 
+          echo 'Waiting for Redis to be available...'; 
+          sleep 1; 
+        done; 
+        echo 'Redis is ready!';
+        gunicorn app.main:app 
+        --workers 4 
+        --worker-class uvicorn.workers.UvicornWorker 
+        --bind 0.0.0.0:8000"
+      volumes:
+        - ./BackEnd/event-service:/src
+      ports:
+        - ${EVENTS_HOST_PORT}:8000
+      restart: always
+      environment:
+        - PYTHONPATH=/src/app 
+      networks:
+        - forum_network
+
+volumes:
+  profiles_data:
+
+
+networks:
+  forum_network:
+    external: true

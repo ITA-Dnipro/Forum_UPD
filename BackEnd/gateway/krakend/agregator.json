@@ -1,0 +1,10 @@
+{
+  "version": 3,
+  "name": "My API Gateway",
+  "port": 8080,
+  "extra_config": {
+    "plugin/http-server": {
+    }
+  },
+  "endpoints": []
+}
