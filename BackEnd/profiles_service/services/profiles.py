@@ -1,4 +1,5 @@
 from models.categories import StartupCategoryOrm
+from models.images import ProfileImage
 from models.regions import RegionOrm
 from models.profiles import StatusEnum
 from schemas.profiles import Startup, StartupOptional, ModerationFeedback, ProfileModerationEnum
@@ -68,12 +69,26 @@ class ProfileStartupService:
     
     async def handle_moderation_feedback(self, profile_id, feedback: ModerationFeedback):
 
+        image_repo = BaseRepository(ProfileImage, session=self.repository.session)
+
         feedback_dict = feedback.model_dump()
         if feedback_dict["moderation_status"] == ProfileModerationEnum.APPROVED:  
-            update_fields = {"status": StatusEnum.APPROVED}
+            profile_update_fields = {"status": StatusEnum.APPROVED}
+            profile = await self.repository.partial_update(instance_id=profile_id, update_fields=profile_update_fields)
+
+            banner_id = profile.banner_id
+            
+            await image_repo.partial_update(instance_id=banner_id, update_fields={"is_approved": True})
+            
         elif feedback_dict["moderation_status"] == ProfileModerationEnum.REJECTED:
-            update_fields = {"status": StatusEnum.BLOCKED}
-        return await self.repository.partial_update(instance_id=profile_id, update_fields=update_fields)
+            profile_update_fields = {"status": StatusEnum.BLOCKED}
+            await self.repository.soft_delete(profile_id=profile_id)
+            profile = await self.repository.partial_update(instance_id=profile_id, update_fields=profile_update_fields)
+
+            banner_id = profile.banner_id
+            
+            await image_repo.partial_update(instance_id=banner_id, update_fields={"is_approved": False})
+        return profile
 
 
 
