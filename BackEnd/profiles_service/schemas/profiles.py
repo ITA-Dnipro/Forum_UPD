@@ -84,3 +84,10 @@ class Investor(Profile):
 
 InvestorOptional = create_optional_model(Investor)
 StartupOptional = create_optional_model(Startup)
+
+class ProfileModerationEnum(Enum):
+  APPROVED = "Approved"
+  REJECTED = "Rejected"
+
+class ModerationFeedback(BaseModel):
+  moderation_status: ProfileModerationEnum

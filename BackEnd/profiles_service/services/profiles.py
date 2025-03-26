@@ -1,7 +1,7 @@
 from models.categories import StartupCategoryOrm
 from models.regions import RegionOrm
 from models.profiles import StatusEnum
-from schemas.profiles import Startup, StartupOptional
+from schemas.profiles import Startup, StartupOptional, ModerationFeedback, ProfileModerationEnum
 from exceptions import InvalidRelatedEntityError, NotFoundError
 from utils.repositories import ProfileRepository, BaseRepository
 
@@ -64,4 +64,16 @@ class ProfileStartupService:
 
     async def startup_delete(self, profile_id: int):
         await self.repository.soft_delete(profile_id)
+
+    
+    async def handle_moderation_feedback(self, profile_id, feedback: ModerationFeedback):
+
+        feedback_dict = feedback.model_dump()
+        if feedback_dict["moderation_status"] == ProfileModerationEnum.APPROVED:  
+            update_fields = {"status": StatusEnum.APPROVED}
+        elif feedback_dict["moderation_status"] == ProfileModerationEnum.REJECTED:
+            update_fields = {"status": StatusEnum.BLOCKED}
+        return await self.repository.partial_update(instance_id=profile_id, update_fields=update_fields)
+
+
 

@@ -1,7 +1,7 @@
 from typing import Annotated
 from fastapi import APIRouter, Depends, Response
 from exceptions import NotFoundError, InvalidRelatedEntityError
-from schemas.profiles import StartupOptional, Startup
+from schemas.profiles import StartupOptional, Startup, ModerationFeedback
 from services.profiles import ProfileStartupService
 from dependencies import get_startup_service, startup_create_dependency, startup_optional_create_dependency
 from fastapi import HTTPException
@@ -98,3 +98,19 @@ async def startup_profile_delete(
             status_code=404, detail=f"{e}"
             )
     return Response(status_code=204)
+
+
+
+@router.patch("/{profile_id}/images_moderation")
+async def startup_images_moderation(
+    profile_id: int, 
+    moderation_feedback: Annotated[ModerationFeedback, Depends()],
+    service: Annotated[ProfileStartupService, Depends(dependency=get_startup_service)]
+    ):
+    try:
+        profile = await service.handle_moderation_feedback(profile_id, feedback=moderation_feedback)
+    except NotFoundError as e:
+        raise HTTPException(
+            status_code=404, detail=f"{e}"
+            )
+    return profile
