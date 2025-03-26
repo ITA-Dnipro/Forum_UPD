@@ -2,7 +2,10 @@ from datetime import datetime
 from typing import Annotated, Optional, Union
 from pydantic import BaseModel, conlist, constr, field_validator, model_validator
 from enum import Enum
+from models.profiles import StatusEnum
 from pydantic_extra_types.phone_numbers import PhoneNumberValidator, PhoneNumber
+from schemas.categories import CategoryResponse
+from schemas.regions import RegionResponse
 from utils.create_optional_model import create_optional_model
 
 
@@ -91,3 +94,35 @@ class ProfileModerationEnum(Enum):
 
 class ModerationFeedback(BaseModel):
   moderation_status: ProfileModerationEnum
+
+
+class ProfileImageResponse(BaseModel):
+  id: int
+  is_approved: bool
+  created_at: datetime
+  approved_image_path: str
+  class Config:
+      orm_mode = True 
+
+
+
+class StartupResponse(BaseModel):
+  id: int
+  name: str
+  status: StatusEnum
+  phone: Optional[MyNumberType]
+  edrpou: Optional[str]
+  rnokpp: Optional[str]
+  is_registered: bool
+  is_startup: bool
+  is_fop: bool
+  startup_idea: Optional[str]
+  founded: Optional[int]
+  banner_id: Optional[int]
+
+  profile_categories: Optional[list[CategoryResponse]]
+  profile_regions: Optional[list[RegionResponse]]
+  banner: Optional[ProfileImageResponse]
+
+  class Config:
+      from_attributes = True
