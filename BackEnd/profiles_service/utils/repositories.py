@@ -1,6 +1,6 @@
 from sqlalchemy import select, inspect
 from sqlalchemy.ext.asyncio import AsyncSession 
-from sqlalchemy.orm import selectinload
+from sqlalchemy.orm import selectinload, joinedload
 from exceptions import NotFoundError
 from models import Model
 
@@ -11,10 +11,20 @@ class BaseRepository:
         self.model = model
         self.session = session
         self.many_to_many = self._get_many_to_many_fields()
+        self.one_to_one = self._get_one_to_one_fields()
 
 
     def _get_query(self):
         return select(self.model)
+
+
+    def _get_relationship_fields(self):
+        many_to_many_fields = many_to_one_fields = []
+        for name, relationship in inspect(self.model).relationships.items():
+            if relationship.direction.name == "MANYTOMANY":
+                many_to_many_fields.append(name)
+            elif relationship.direction.name == "MANYTOONE":
+                many_to_one_fields.append(name)
 
 
     def _get_many_to_many_fields(self):
@@ -24,6 +34,14 @@ class BaseRepository:
                 many_to_many_fields.append(name)
 
         return many_to_many_fields
+    
+    def _get_one_to_one_fields(self):
+        one_to_one_fields = []
+        for name, relationship in inspect(self.model).relationships.items():
+            if relationship.direction.name == "MANYTOONE":
+                one_to_one_fields.append(name)
+
+        return one_to_one_fields
     
 
     async def add_one(self, data: dict):
@@ -45,6 +63,9 @@ class BaseRepository:
         for field in self.many_to_many:
             query = query.options(selectinload(getattr(self.model, field)))
 
+        for field in self.one_to_one:
+            query = query.options(joinedload(getattr(self.model, field)))
+
         result = await self.session.execute(query)
         instance_list = result.scalars().all()
         return instance_list
@@ -54,6 +75,8 @@ class BaseRepository:
         query = self._get_query().where(self.model.id == instance_id)
         for field in self.many_to_many:
             query = query.options(selectinload(getattr(self.model, field)))
+        for field in self.one_to_one:
+            query = query.options(joinedload(getattr(self.model, field)))
         result = await self.session.execute(query)
         profile = result.scalars().first()
         if not profile:
@@ -114,6 +137,7 @@ class ProfileRepository(BaseRepository):
         self.model = model
         self.session = session
         self.many_to_many = self._get_many_to_many_fields()
+        self.one_to_one = self._get_one_to_one_fields()
 
 
     def _get_query(self):
