@@ -31,7 +31,6 @@ class InvestorsService:
     async def add_investor(self, data: Investor):
         profile_dict = data.model_dump(exclude_unset=True, exclude_none=True)
         profile_dict = await self._fetch_related_by_id(profile_dict)
-        print(profile_dict)
         return await self.repository.add_one(profile_dict=profile_dict)
     
 

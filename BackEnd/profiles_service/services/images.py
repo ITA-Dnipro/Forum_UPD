@@ -35,9 +35,6 @@ class ImageService:
             with open(path, 'wb') as f:
                 f.write(contents)
         except Exception as e:
-            print("\n")
-            print(e)
-            print("\n")
             raise Exception('Something went wrong')
         finally:
             file.file.close()

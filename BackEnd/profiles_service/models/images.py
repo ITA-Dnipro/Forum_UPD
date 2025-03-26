@@ -17,8 +17,8 @@ class ProfileImage(Model):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=func.now())
-    # image_type: Mapped[ImageTypeEnum]
     image_path: Mapped[str] = mapped_column(String(255))
     is_approved: Mapped[bool] = mapped_column(default=False, nullable=False) 
     is_deleted: Mapped[bool] = mapped_column(default=False, nullable=False)
     profile_banner = relationship("StartupProfileOrm", back_populates="banner")
+    

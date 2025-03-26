@@ -29,7 +29,7 @@ def startup_create_dependency(
     founded: int = Body(None),
     profile_categories: List[int] = Body(None),
     profile_regions: List[int] = Body(None), 
-    profile_banner: int = Body(None)
+    banner_id: int = Body(None) 
 ) -> Startup:
     try:
         profile = Startup(
@@ -45,7 +45,7 @@ def startup_create_dependency(
             rnokpp=rnokpp,
             founded=founded,
             startup_idea=startup_idea,
-            profile_banner=profile_banner
+            banner_id=banner_id
         )
     except ValidationError as e:
         error_messages = [error['msg'] for error in e.errors()]
@@ -66,7 +66,7 @@ def startup_optional_create_dependency(
     founded: int = Body(None),
     profile_categories: List[int] = Body(None),
     profile_regions: List[int] = Body(None),
-    profile_banner: int = Body(None) 
+    banner_id: int = Body(None) 
     
 ) -> StartupOptional:
     try:
@@ -83,7 +83,7 @@ def startup_optional_create_dependency(
             rnokpp=rnokpp,
             founded=founded,
             startup_idea=startup_idea,
-            profile_banner=profile_banner
+            banner_id=banner_id
         )
     except ValidationError as e:
         error_messages = [error['msg'] for error in e.errors()]
