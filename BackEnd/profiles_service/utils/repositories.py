@@ -57,7 +57,7 @@ class BaseRepository:
         result = await self.session.execute(query)
         profile = result.scalars().first()
         if not profile:
-            raise NotFoundError("Object not foud")
+            raise NotFoundError("Object not found")
         return profile
     
 
