@@ -64,7 +64,7 @@ async def create_tables(session):
             tags list<uuid>,
             created_at timestamp,
             updated_at timestamp
-        ) WITH CLUSTERING ORDER BY (created_at DESC);
+        );
     """)
     
     session.execute("""

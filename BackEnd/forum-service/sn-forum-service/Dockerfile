@@ -13,6 +13,8 @@ RUN pip install --no-cache-dir --upgrade pip && \
 
 COPY . .
 
+RUN mkdir -p /app/uploads
+
 EXPOSE 8000
 
 ENV PYTHONUNBUFFERED=1
