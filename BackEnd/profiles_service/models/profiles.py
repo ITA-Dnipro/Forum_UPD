@@ -1,10 +1,16 @@
+from enum import Enum
 from sqlalchemy import DateTime, ForeignKey, Numeric, String, Text, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from models import Model
-from schemas.profiles import StatusEnum
 from datetime import datetime
 
 
+class StatusEnum(Enum):
+  UNDEFINED = "Undefined"
+  PENDING = "Pending"
+  BLOCKED = "Blocked"
+  APPROVED = "Approved"
+  AUTOAPPROVED = "Autopproved"
 
 class StartupProfileOrm(Model):
     __tablename__ = "startup_profiles"

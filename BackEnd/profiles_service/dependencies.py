@@ -7,7 +7,7 @@ from models.regions import RegionOrm
 from models.images import ProfileImage 
 from services.images import ImageService
 from utils.repositories import BaseRepository, ProfileRepository
-from schemas.profiles import StatusEnum, Startup, StartupOptional, Investor, InvestorOptional
+from schemas.profiles import Startup, StartupOptional, Investor, InvestorOptional
 from typing import List
 from database import new_session
 from services.categories import CategoryService
@@ -18,7 +18,6 @@ from services.regions import RegionService
 
 def startup_create_dependency(
     name: str = Body(...),
-    status: StatusEnum = Body(...),
     is_registered: bool = Body(False),
     is_startup: bool = Body(False),
     is_fop: bool = Body(False),
@@ -34,7 +33,6 @@ def startup_create_dependency(
     try:
         profile = Startup(
             name=name,
-            status=status,
             is_registered=is_registered,
             is_startup=is_startup,
             is_fop=is_fop,
@@ -55,7 +53,6 @@ def startup_create_dependency(
 
 def startup_optional_create_dependency(
     name: str = Body(None),
-    status: StatusEnum = Body(None),
     is_registered: bool = Body(False),
     is_startup: bool = Body(False),
     is_fop: bool = Body(False),
@@ -72,7 +69,6 @@ def startup_optional_create_dependency(
     try:
         profile = StartupOptional(
             name=name,
-            status=status,
             is_registered=is_registered,
             is_startup=is_startup,
             is_fop=is_fop,
@@ -93,7 +89,6 @@ def startup_optional_create_dependency(
 
 def investor_create_dependency(
     name: str = Body(...),
-    status: StatusEnum = Body(...),
     is_legal_entity: bool = Body(False),
     phone: str = Body(None),
     edrpou: str = Body(None),
@@ -103,7 +98,6 @@ def investor_create_dependency(
     try:
         profile = Investor(
             name=name,
-            status=status,
             is_legal_entity=is_legal_entity, 
             phone=phone,
             edrpou=edrpou,
@@ -118,7 +112,6 @@ def investor_create_dependency(
 
 def investor_optional_create_dependency(
     name: str = Body(None),
-    status: StatusEnum = Body(None),
     is_legal_entity=Body(False),
     phone: str = Body(None),
     edrpou: str = Body(None),
@@ -128,7 +121,6 @@ def investor_optional_create_dependency(
     try:
         profile = InvestorOptional(
             name=name,
-            status=status,
             is_legal_entity=is_legal_entity, 
             phone=phone,
             edrpou=edrpou,

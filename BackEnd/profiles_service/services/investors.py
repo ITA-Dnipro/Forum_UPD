@@ -1,4 +1,5 @@
 from models.categories import StartupCategoryOrm
+from models.profiles import StatusEnum
 from schemas.profiles import Investor, InvestorOptional
 from exceptions import InvalidRelatedEntityError, NotFoundError
 from utils.repositories import ProfileRepository, BaseRepository
@@ -30,6 +31,7 @@ class InvestorsService:
 
     async def add_investor(self, data: Investor):
         profile_dict = data.model_dump(exclude_unset=True, exclude_none=True)
+        profile_dict["status"] = StatusEnum.UNDEFINED
         profile_dict = await self._fetch_related_by_id(profile_dict)
         return await self.repository.add_one(profile_dict=profile_dict)
     

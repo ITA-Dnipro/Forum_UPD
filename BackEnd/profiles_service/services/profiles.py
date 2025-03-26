@@ -1,5 +1,6 @@
 from models.categories import StartupCategoryOrm
 from models.regions import RegionOrm
+from models.profiles import StatusEnum
 from schemas.profiles import Startup, StartupOptional
 from exceptions import InvalidRelatedEntityError, NotFoundError
 from utils.repositories import ProfileRepository, BaseRepository
@@ -38,18 +39,24 @@ class ProfileStartupService:
 
     async def add_startup(self, data: Startup):
         profile_dict = data.model_dump(exclude_unset=True, exclude_none=True)
+        profile_dict["status"] = StatusEnum.PENDING if "banner_id" in profile_dict else StatusEnum.UNDEFINED
         profile_dict = await self._fetch_related_by_id(profile_dict)
         return await self.repository.add_one(profile_dict=profile_dict)
     
 
     async def partial_startup_update(self, profile_id: int, data: StartupOptional):
         profile_dict = data.model_dump(exclude_unset=True, exclude_none=True)
+        if "banner_id" in profile_dict:
+            profile_dict["status"] = StatusEnum.PENDING 
         profile_dict = await self._fetch_related_by_id(data=profile_dict)
         return await self.repository.partial_update(instance_id=profile_id, update_fields=profile_dict)
 
 
     async def startup_update(self, profile_id: int, data: Startup):
         profile_dict = data.model_dump(exclude_unset=True, exclude_none=True)
+        if "banner_id" in profile_dict:
+            profile_dict["status"] = StatusEnum.PENDING 
+        profile_dict["status"] = StatusEnum.PENDING if "banner_id" in profile_dict else StatusEnum.UNDEFINED
         self._fetch_related_by_id(profile_dict)
         
         return await self.repository.update(instance_id=profile_id, profile_dict=profile_dict)

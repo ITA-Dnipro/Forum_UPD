@@ -14,16 +14,9 @@ MyNumberType = Annotated[
   )
 ]
 
-class StatusEnum(Enum):
-  UNDEFINED = "Undefined"
-  PENDING = "Pending"
-  BLOCKED = "Blocked"
-  APPROVED = "Approved"
-  AUTOAPPROVED = "Autopproved"
 
 class Profile(BaseModel):
   name: constr(max_length=45)
-  status: StatusEnum
   phone: Optional[MyNumberType] = None
   edrpou: Optional[str] = None
   rnokpp: Optional[str] = None
