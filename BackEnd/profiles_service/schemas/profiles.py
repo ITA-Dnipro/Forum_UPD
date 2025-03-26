@@ -126,3 +126,18 @@ class StartupResponse(BaseModel):
 
   class Config:
       from_attributes = True
+
+
+class InvestorResponse(BaseModel):
+  id: int
+  name: str
+  status: StatusEnum
+  phone: Optional[MyNumberType]
+  edrpou: Optional[str]
+  rnokpp: Optional[str]
+  is_legal_entity: bool
+  available_funds: Optional[float]
+  investment_categories: Optional[conlist(int, min_length=1)]
+
+  class Config:
+      from_attributes = True
