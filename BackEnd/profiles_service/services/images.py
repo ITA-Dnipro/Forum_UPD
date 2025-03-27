@@ -1,4 +1,3 @@
-import os
 from pathlib import Path
 import uuid
 from utils.repositories import BaseRepository
@@ -7,7 +6,6 @@ from settings import settings
 
 class ImageService:
 
-    # IMAGE_BASE_PATH = "static/media/startups"
     image_base_path = settings.IMAGE_BASE_PATH
     ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'webp'}
 

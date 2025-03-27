@@ -22,7 +22,10 @@ async def create_file(
 
 # @router.delete("/", status_code=201)
 # async def delete_image(
-
+#     image_id: int,
+#     service: Annotated[ImageService, Depends(dependency=get_image_service)]
 #     ):
-#     pass
+#     await service.investor_delete(image_id)
+
+    
 
