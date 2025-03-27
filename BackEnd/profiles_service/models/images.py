@@ -4,12 +4,13 @@ from sqlalchemy import DateTime, String, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from models import Model
 from sqlalchemy.orm import Mapped
+from settings import settings
 
 class ImageTypeEnum(Enum):
     BANNER = "Banner"
     LOGO = "Logo"
 
-DEFAULT_BANNER_URL = "static/media/startups/default_banner.jpg"
+DEFAULT_BANNER_URL = settings.DEFAULT_BANNER_URL
 
 
 class ProfileImage(Model):

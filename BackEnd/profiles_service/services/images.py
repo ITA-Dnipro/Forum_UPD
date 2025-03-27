@@ -2,11 +2,13 @@ import os
 from pathlib import Path
 import uuid
 from utils.repositories import BaseRepository
+from settings import settings
 
 
 class ImageService:
 
-    IMAGE_BASE_PATH = "static/media/startups"
+    # IMAGE_BASE_PATH = "static/media/startups"
+    image_base_path = settings.IMAGE_BASE_PATH
     ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'webp'}
 
 
@@ -15,7 +17,7 @@ class ImageService:
 
     
     def _create_storage_path(self, file_ext):
-        base_dir = Path(self.IMAGE_BASE_PATH)
+        base_dir = Path(self.image_base_path)
         base_dir.mkdir(parents=True, exist_ok=True)
         
         filename = f"{uuid.uuid4().hex}.{file_ext}"
