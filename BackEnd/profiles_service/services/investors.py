@@ -12,16 +12,6 @@ class InvestorsService:
         self.repository = repo
 
 
-    async def _fetch_related_by_id(self, data: dict):
-        if data.get("investment_categories") is not None:
-            category_repo = BaseRepository(model=StartupCategoryOrm, session=self.repository.session)
-            try:
-                data["investment_categories"] = await category_repo.get_list_by_ids(data["investment_categories"])
-            except NotFoundError: 
-                raise InvalidRelatedEntityError("One or more categories does not exist")
-        
-        return data
-
     async def investors_list(self):
         return await self.repository.get_all()
 
@@ -51,4 +41,15 @@ class InvestorsService:
 
     async def investor_delete(self, profile_id: int):
         await self.repository.soft_delete(profile_id)
+
+    
+    async def _fetch_related_by_id(self, data: dict):
+        if data.get("investment_categories") is not None:
+            category_repo = BaseRepository(model=StartupCategoryOrm, session=self.repository.session)
+            try:
+                data["investment_categories"] = await category_repo.get_list_by_ids(data["investment_categories"])
+            except NotFoundError: 
+                raise InvalidRelatedEntityError("One or more categories does not exist")
+        
+        return data
 
