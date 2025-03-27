@@ -1,5 +1,3 @@
-#!/bin/sh
-
 echo "Waiting for Cassandra to be ready..."
 
 until nc -z cassandra 9042; 

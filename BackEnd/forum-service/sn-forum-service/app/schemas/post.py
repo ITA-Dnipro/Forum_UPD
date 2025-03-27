@@ -1,41 +1,106 @@
 # app/schemas/post.py
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
+from uuid import UUID
 from typing import List, Optional
-from datetime import datetime, timezone
+from datetime import datetime
+from pydantic import BaseModel
+from typing import List, Optional
 
-class Category(BaseModel):
-    id: int
+class CategoryInfo(BaseModel):
+    id: UUID
     name: str
 
-class Tag(BaseModel):
-    id: int
+class TagInfo(BaseModel):
+    id: UUID
     name: str
+
+class Image(BaseModel):
+    url: str
+
+class CommentReplyCreate(BaseModel):
+    author_id: int
+    content: str
+
+class CommentReplyResponse(BaseModel):
+    id: UUID
+    author_id: int
+    content: str
+    created_at: datetime
+    likes: int
+    dislikes: int
+
+class PostCommentCreate(BaseModel):
+    author_id: int
+    content: str
+
+class PostCommentUpdate(BaseModel):
+    content: Optional[str] = None
+    likes: Optional[int] = None
+    dislikes: Optional[int] = None
+    replies: Optional[List[CommentReplyCreate]] = None
+
+class PostCommentResponse(BaseModel):
+    id: UUID
+    author_id: int
+    content: str
+    created_at: datetime
+    likes: int
+    dislikes: int
+    replies: List[CommentReplyResponse]
 
 class PostCreate(BaseModel):
     author_id: int
-    title: str = Field(..., min_length=3, max_length=255)
+    title: str
+    content: str
+    categories: Optional[List[CategoryInfo]] = []
+    tags: Optional[List[TagInfo]] = []
 
-    content: str = Field(..., min_length=10)
-
-    categories: Optional[List[Category]] = []
-    tags: Optional[List[Tag]] = []
+class PostUpdate(BaseModel):
+    title: Optional[str] = None
+    content: Optional[str] = None
+    categories: Optional[List[CategoryInfo]] = None
+    tags: Optional[List[TagInfo]] = None
 
 class PostResponse(BaseModel):
-    post_id: int
+    post_id: UUID
     author_id: int
-    title: str = Field(..., min_length=3, max_length=200)
-    content: str = Field(..., min_length=10)
-    
-    categories: Optional[List[Category]] = []
-    tags: Optional[List[Tag]] = []
+    title: str
+    content: str
+    images: List[Image]
+    categories: List[CategoryInfo]
+    tags: List[TagInfo]
+    likes_count: int
+    dislikes_count: int
+    saves_count: int
+    comments: List[PostCommentResponse]
+    created_at: datetime
+    updated_at: Optional[datetime] = None
 
-    views_count: int = Field(0, ge=0)  
-    likes_count: int = Field(0, ge=0)
+class PostByAuthor(BaseModel):
+    post_id: UUID
+    title: str
+    created_at: datetime
 
-    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+class CommentReplyUpdate(BaseModel):
+    author_id: Optional[int] = None
+    content: Optional[str] = None
 
-class PostList(BaseModel):
-    post_id: int
-    title: str = Field(..., min_length=3, max_length=200)
-    author_id: int
-    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+class SavePostRequest(BaseModel):
+    user_id: int
+
+class UnsavePostRequest(BaseModel):
+    user_id: int
+
+
+class PostByAuthorEnhanced(BaseModel):
+    post_id: UUID
+    title: str
+    content: str
+    images: List[Image] = []
+    categories: List[CategoryInfo] = []
+    tags: List[TagInfo] = []
+    likes_count: int = 0
+    dislikes_count: int = 0
+    saves_count: int = 0
+    created_at: datetime
+    updated_at: Optional[datetime] = None
