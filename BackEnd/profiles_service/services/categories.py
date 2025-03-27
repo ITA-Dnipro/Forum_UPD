@@ -1,4 +1,4 @@
-from exceptions import UniqueConstraintViolationError
+from core.exceptions import UniqueConstraintViolationError
 from utils.repositories import BaseRepository
 from schemas.categories import Category
 

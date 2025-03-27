@@ -10,7 +10,7 @@ from models.images import ProfileImage
 from models import Model
 
 from alembic import context
-from database import connect_str
+from core.database import connect_str
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

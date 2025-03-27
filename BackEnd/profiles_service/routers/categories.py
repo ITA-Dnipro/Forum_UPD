@@ -1,6 +1,6 @@
 from typing import Annotated, List
 from fastapi import APIRouter, Depends, HTTPException
-from exceptions import NotFoundError, UniqueConstraintViolationError
+from core.exceptions import NotFoundError, UniqueConstraintViolationError
 from schemas.categories import Category, CategoryResponse
 from services.categories import CategoryService
 from dependencies import get_caterory_service

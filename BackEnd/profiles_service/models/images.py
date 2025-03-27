@@ -4,7 +4,7 @@ from sqlalchemy import DateTime, String, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from models import Model
 from sqlalchemy.orm import Mapped
-from settings import settings
+from core.settings import settings
 
 class ImageTypeEnum(Enum):
     BANNER = "Banner"

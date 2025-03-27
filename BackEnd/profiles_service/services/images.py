@@ -1,7 +1,7 @@
 from pathlib import Path
 import uuid
 from utils.repositories import BaseRepository
-from settings import settings
+from core.settings import settings
 
 
 class ImageService:

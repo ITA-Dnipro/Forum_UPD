@@ -9,7 +9,7 @@ from services.images import ImageService
 from utils.repositories import BaseRepository, ProfileRepository
 from schemas.profiles import Startup, StartupOptional, Investor, InvestorOptional
 from typing import List
-from database import new_session
+from core.database import new_session
 from services.categories import CategoryService
 from services.profiles import ProfileStartupService
 from services.investors import InvestorsService 

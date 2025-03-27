@@ -1,6 +1,6 @@
 from typing import Annotated, List
 from fastapi import APIRouter, Depends, Response
-from exceptions import NotFoundError, InvalidRelatedEntityError
+from core.exceptions import NotFoundError, InvalidRelatedEntityError
 from schemas.profiles import Investor, InvestorOptional, InvestorResponse
 from services.investors import InvestorsService 
 from dependencies import get_investor_service, investor_create_dependency, investor_optional_create_dependency

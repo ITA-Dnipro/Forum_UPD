@@ -3,7 +3,7 @@ from models.images import ProfileImage
 from models.regions import RegionOrm
 from models.profiles import StatusEnum
 from schemas.profiles import Startup, StartupOptional, ModerationFeedback, ProfileModerationEnum
-from exceptions import InvalidRelatedEntityError, NotFoundError
+from core.exceptions import InvalidRelatedEntityError, NotFoundError
 from utils.repositories import ProfileRepository, BaseRepository
 
 

@@ -1,7 +1,7 @@
 from sqlalchemy import select, inspect
 from sqlalchemy.ext.asyncio import AsyncSession 
 from sqlalchemy.orm import selectinload, joinedload
-from exceptions import NotFoundError
+from core.exceptions import NotFoundError
 from models import Model
 
 

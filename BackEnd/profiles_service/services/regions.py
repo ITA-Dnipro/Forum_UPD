@@ -1,6 +1,6 @@
 from utils.repositories import BaseRepository
 from schemas.regions import Region
-from exceptions import UniqueConstraintViolationError
+from core.exceptions import UniqueConstraintViolationError
 
 class RegionService:
 

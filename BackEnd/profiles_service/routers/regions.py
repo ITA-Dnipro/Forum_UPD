@@ -1,6 +1,6 @@
 from typing import Annotated, List
 from fastapi import APIRouter, HTTPException, Depends
-from exceptions import NotFoundError, UniqueConstraintViolationError
+from core.exceptions import NotFoundError, UniqueConstraintViolationError
 from schemas.regions import Region, RegionResponse
 from services.regions import RegionService
 from dependencies import get_region_service
