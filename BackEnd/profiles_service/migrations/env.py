@@ -4,8 +4,8 @@ from sqlalchemy import engine_from_config
 from sqlalchemy import pool
 
 from models.regions import RegionOrm, ProfileRegionORM
-from models.categories import CategoryOrm, ProfileCategoryORM
-from models.profiles import StartupProfileOrm 
+from models.categories import StartupCategoryOrm, StartupProfileCategoryORM, InvestorStartupCategoryOrm
+from models.profiles import StartupProfileOrm, InvestorProfileOrm
 from models import Model
 
 from alembic import context

@@ -1,0 +1,82 @@
+{
+  "version": 3,
+  "name": "Validation Service Gateway",
+  "endpoints": [
+    {
+      "endpoint": "/validate/edrpou",
+      "method": "POST",
+      "backend": [
+        {
+          "host": [
+            "http://validation-service:8000"
+          ],
+          "url_pattern": "/validate/edrpou"
+        }
+      ],
+      "extra_config": {
+        "permissions": "Public"
+      }
+    },
+    {
+      "endpoint": "/validate/rnokpp",
+      "method": "POST",
+      "backend": [
+        {
+          "host": [
+            "http://validation-service:8000"
+          ],
+          "url_pattern": "/validate/rnokpp"
+        }
+      ],
+      "extra_config": {
+        "permissions": "Public"
+      }
+    },
+    {
+      "endpoint": "/validate/phone_number",
+      "method": "POST",
+      "backend": [
+        {
+          "host": [
+            "http://validation-service:8000"
+          ],
+          "url_pattern": "/validate/phone_number"
+        }
+      ],
+      "extra_config": {
+        "permissions": "Public"
+      }
+    },
+    {
+      "endpoint": "/validate/recaptcha",
+      "method": "POST",
+      "backend": [
+        {
+          "host": [
+            "http://validation-service:8000"
+          ],
+          "url_pattern": "/validate/recaptcha"
+        }
+      ],
+      "extra_config": {
+        "permissions": "Public"
+      }
+    },
+    {
+      "endpoint": "/validate/foundation_year",
+      "method": "POST",
+      "backend": [
+        {
+          "host": [
+            "http://validation-service:8000"
+          ],
+          "url_pattern": "/validate/foundation_year"
+        }
+      ],
+      "extra_config": {
+        "permissions": "Public"
+      }
+    }
+  ]
+}
+

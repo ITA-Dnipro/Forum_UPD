@@ -1,17 +1,14 @@
 from fastapi import FastAPI, HTTPException
 import uvicorn
-from routes import events#, registration
-from database import engine, Base
+from routes.events.urls import router as events_router
+from routes.participants.urls import router as participants_router
 
-async def init_models():
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
+app = FastAPI(title="Event Microservice")
 
-app = FastAPI(title="Event Microservice", on_startup=[init_models])
+app.include_router(events_router)
+app.include_router(participants_router)
 
-app.include_router(events.router)
-
-@app.get("/")
+@app.get("/", summary="Entry point to Event Service")
 def read_root():
     return {"message": "Welcome to Event Microservice!"}
 

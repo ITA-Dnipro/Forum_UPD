@@ -1,0 +1,528 @@
+{
+  "endpoints": [
+    {
+      "endpoint": "/posts",
+      "method": "POST",
+      "backend": [
+        {
+          "host": ["http://sn-forum-service:8000"],
+          "url_pattern": "/posts"
+        }
+      ],
+      "extra_config": {
+        "auth/validator": {
+          "endpoint": "/check?requiredRole=IsActive",
+          "method": "GET",
+          "host": ["http://auth-service:8080"],
+          "header": "Authorization",
+          "response_codes": [200],
+          "cache": false
+        }
+      }
+    },
+    {
+      "endpoint": "/posts",
+      "method": "GET",
+      "backend": [
+        {
+          "host": ["http://sn-forum-service:8000"],
+          "url_pattern": "/posts"
+        }
+      ],
+      "extra_config": {
+        "auth/validator": {
+          "endpoint": "/check?requiredRole=Public",
+          "method": "GET",
+          "host": ["http://auth-service:8080"],
+          "header": "Authorization",
+          "response_codes": [200],
+          "cache": false
+        }
+      }
+    },
+    {
+      "endpoint": "/posts/{post_id}",
+      "method": "GET",
+      "backend": [
+        {
+          "host": ["http://sn-forum-service:8000"],
+          "url_pattern": "/posts/{post_id}"
+        }
+      ],
+      "extra_config": {
+        "auth/validator": {
+          "endpoint": "/check?requiredRole=Public",
+          "method": "GET",
+          "host": ["http://auth-service:8080"],
+          "header": "Authorization",
+          "response_codes": [200],
+          "cache": false
+        }
+      }
+    },
+    {
+      "endpoint": "/posts/{post_id}",
+      "method": "PUT",
+      "backend": [
+        {
+          "host": ["http://sn-forum-service:8000"],
+          "url_pattern": "/posts/{post_id}"
+        }
+      ],
+      "extra_config": {
+        "auth/validator": {
+          "endpoint": "/check?requiredRole=IsActive",
+          "method": "GET",
+          "host": ["http://auth-service:8080"],
+          "header": "Authorization",
+          "response_codes": [200],
+          "cache": false
+        }
+      }
+    },
+    {
+      "endpoint": "/posts/{post_id}",
+      "method": "DELETE",
+      "backend": [
+        {
+          "host": ["http://sn-forum-service:8000"],
+          "url_pattern": "/posts/{post_id}"
+        }
+      ],
+      "extra_config": {
+        "auth/validator": {
+          "endpoint": "/check?requiredRole=IsActive",
+          "method": "GET",
+          "host": ["http://auth-service:8080"],
+          "header": "Authorization",
+          "response_codes": [200],
+          "cache": false
+        }
+      }
+    },
+    {
+      "endpoint": "/posts/{post_id}/like",
+      "method": "POST",
+      "backend": [
+        {
+          "host": ["http://sn-forum-service:8000"],
+          "url_pattern": "/posts/{post_id}/like"
+        }
+      ],
+      "extra_config": {
+        "auth/validator": {
+          "endpoint": "/check?requiredRole=IsActive",
+          "method": "GET",
+          "host": ["http://auth-service:8080"],
+          "header": "Authorization",
+          "response_codes": [200],
+          "cache": false
+        }
+      }
+    },
+    {
+      "endpoint": "/posts/{post_id}/save",
+      "method": "POST",
+      "backend": [
+        {
+          "host": ["http://sn-forum-service:8000"],
+          "url_pattern": "/posts/{post_id}/save"
+        }
+      ],
+      "extra_config": {
+        "auth/validator": {
+          "endpoint": "/check?requiredRole=IsActive",
+          "method": "GET",
+          "host": ["http://auth-service:8080"],
+          "header": "Authorization",
+          "response_codes": [200],
+          "cache": false
+        }
+      }
+    },
+
+    {
+      "endpoint": "/posts/{post_id}/comments",
+      "method": "POST",
+      "backend": [
+        {
+          "host": ["http://sn-forum-service:8000"],
+          "url_pattern": "/posts/{post_id}/comments"
+        }
+      ],
+      "extra_config": {
+        "auth/validator": {
+          "endpoint": "/check?requiredRole=IsActive",
+          "method": "GET",
+          "host": ["http://auth-service:8080"],
+          "header": "Authorization",
+          "response_codes": [200],
+          "cache": false
+        }
+      }
+    },
+    {
+      "endpoint": "/posts/{post_id}/comments",
+      "method": "GET",
+      "backend": [
+        {
+          "host": ["http://sn-forum-service:8000"],
+          "url_pattern": "/posts/{post_id}/comments"
+        }
+      ],
+      "extra_config": {
+        "auth/validator": {
+          "endpoint": "/check?requiredRole=Public",
+          "method": "GET",
+          "host": ["http://auth-service:8080"],
+          "header": "Authorization",
+          "response_codes": [200],
+          "cache": false
+        }
+      }
+    },
+    {
+      "endpoint": "/posts/{post_id}/comments/{comment_id}",
+      "method": "PUT",
+      "backend": [
+        {
+          "host": ["http://sn-forum-service:8000"],
+          "url_pattern": "/posts/{post_id}/comments/{comment_id}"
+        }
+      ],
+      "extra_config": {
+        "auth/validator": {
+          "endpoint": "/check?requiredRole=IsActive",
+          "method": "GET",
+          "host": ["http://auth-service:8080"],
+          "header": "Authorization",
+          "response_codes": [200],
+          "cache": false
+        }
+      }
+    },
+    {
+      "endpoint": "/posts/{post_id}/comments/{comment_id}",
+      "method": "DELETE",
+      "backend": [
+        {
+          "host": ["http://sn-forum-service:8000"],
+          "url_pattern": "/posts/{post_id}/comments/{comment_id}"
+        }
+      ],
+      "extra_config": {
+        "auth/validator": {
+          "endpoint": "/check?requiredRole=IsActive",
+          "method": "GET",
+          "host": ["http://auth-service:8080"],
+          "header": "Authorization",
+          "response_codes": [200],
+          "cache": false
+        }
+      }
+    },
+
+    {
+      "endpoint": "/posts/{post_id}/comments/{comment_id}/replies",
+      "method": "POST",
+      "backend": [
+        {
+          "host": ["http://sn-forum-service:8000"],
+          "url_pattern": "/posts/{post_id}/comments/{comment_id}/replies"
+        }
+      ],
+      "extra_config": {
+        "auth/validator": {
+          "endpoint": "/check?requiredRole=IsActive",
+          "method": "GET",
+          "host": ["http://auth-service:8080"],
+          "header": "Authorization",
+          "response_codes": [200],
+          "cache": false
+        }
+      }
+    },
+    {
+      "endpoint": "/posts/{post_id}/comments/{comment_id}/replies/{reply_id}",
+      "method": "PUT",
+      "backend": [
+        {
+          "host": ["http://sn-forum-service:8000"],
+          "url_pattern": "/posts/{post_id}/comments/{comment_id}/replies/{reply_id}"
+        }
+      ],
+      "extra_config": {
+        "auth/validator": {
+          "endpoint": "/check?requiredRole=IsActive",
+          "method": "GET",
+          "host": ["http://auth-service:8080"],
+          "header": "Authorization",
+          "response_codes": [200],
+          "cache": false
+        }
+      }
+    },
+    {
+      "endpoint": "/posts/{post_id}/comments/{comment_id}/replies/{reply_id}",
+      "method": "DELETE",
+      "backend": [
+        {
+          "host": ["http://sn-forum-service:8000"],
+          "url_pattern": "/posts/{post_id}/comments/{comment_id}/replies/{reply_id}"
+        }
+      ],
+      "extra_config": {
+        "auth/validator": {
+          "endpoint": "/check?requiredRole=IsActive",
+          "method": "GET",
+          "host": ["http://auth-service:8080"],
+          "header": "Authorization",
+          "response_codes": [200],
+          "cache": false
+        }
+      }
+    },
+
+    {
+      "endpoint": "/categories",
+      "method": "POST",
+      "backend": [
+        {
+          "host": ["http://sn-forum-service:8000"],
+          "url_pattern": "/categories"
+        }
+      ],
+      "extra_config": {
+        "auth/validator": {
+          "endpoint": "/check?requiredRole=Admin",
+          "method": "GET",
+          "host": ["http://auth-service:8080"],
+          "header": "Authorization",
+          "response_codes": [200],
+          "cache": false
+        }
+      }
+    },
+    {
+      "endpoint": "/categories",
+      "method": "GET",
+      "backend": [
+        {
+          "host": ["http://sn-forum-service:8000"],
+          "url_pattern": "/categories"
+        }
+      ],
+      "extra_config": {
+        "auth/validator": {
+          "endpoint": "/check?requiredRole=Public",
+          "method": "GET",
+          "host": ["http://auth-service:8080"],
+          "header": "Authorization",
+          "response_codes": [200],
+          "cache": false
+        }
+      }
+    },
+    {
+      "endpoint": "/categories/{category_id}",
+      "method": "GET",
+      "backend": [
+        {
+          "host": ["http://sn-forum-service:8000"],
+          "url_pattern": "/categories/{category_id}"
+        }
+      ],
+      "extra_config": {
+        "auth/validator": {
+          "endpoint": "/check?requiredRole=Public",
+          "method": "GET",
+          "host": ["http://auth-service:8080"],
+          "header": "Authorization",
+          "response_codes": [200],
+          "cache": false
+        }
+      }
+    },
+    {
+      "endpoint": "/categories/{category_id}",
+      "method": "PUT",
+      "backend": [
+        {
+          "host": ["http://sn-forum-service:8000"],
+          "url_pattern": "/categories/{category_id}"
+        }
+      ],
+      "extra_config": {
+        "auth/validator": {
+          "endpoint": "/check?requiredRole=Admin",
+          "method": "GET",
+          "host": ["http://auth-service:8080"],
+          "header": "Authorization",
+          "response_codes": [200],
+          "cache": false
+        }
+      }
+    },
+    {
+      "endpoint": "/categories/{category_id}",
+      "method": "DELETE",
+      "backend": [
+        {
+          "host": ["http://sn-forum-service:8000"],
+          "url_pattern": "/categories/{category_id}"
+        }
+      ],
+      "extra_config": {
+        "auth/validator": {
+          "endpoint": "/check?requiredRole=Admin",
+          "method": "GET",
+          "host": ["http://auth-service:8080"],
+          "header": "Authorization",
+          "response_codes": [200],
+          "cache": false
+        }
+      }
+    },
+
+    {
+      "endpoint": "/tags",
+      "method": "POST",
+      "backend": [
+        {
+          "host": ["http://sn-forum-service:8000"],
+          "url_pattern": "/tags"
+        }
+      ],
+      "extra_config": {
+        "auth/validator": {
+          "endpoint": "/check?requiredRole=Admin",
+          "method": "GET",
+          "host": ["http://auth-service:8080"],
+          "header": "Authorization",
+          "response_codes": [200],
+          "cache": false
+        }
+      }
+    },
+    {
+      "endpoint": "/tags",
+      "method": "GET",
+      "backend": [
+        {
+          "host": ["http://sn-forum-service:8000"],
+          "url_pattern": "/tags"
+        }
+      ],
+      "extra_config": {
+        "auth/validator": {
+          "endpoint": "/check?requiredRole=Public",
+          "method": "GET",
+          "host": ["http://auth-service:8080"],
+          "header": "Authorization",
+          "response_codes": [200],
+          "cache": false
+        }
+      }
+    },
+    {
+      "endpoint": "/tags/{tag_id}",
+      "method": "GET",
+      "backend": [
+        {
+          "host": ["http://sn-forum-service:8000"],
+          "url_pattern": "/tags/{tag_id}"
+        }
+      ],
+      "extra_config": {
+        "auth/validator": {
+          "endpoint": "/check?requiredRole=Public",
+          "method": "GET",
+          "host": ["http://auth-service:8080"],
+          "header": "Authorization",
+          "response_codes": [200],
+          "cache": false
+        }
+      }
+    },
+    {
+      "endpoint": "/tags/{tag_id}",
+      "method": "PUT",
+      "backend": [
+        {
+          "host": ["http://sn-forum-service:8000"],
+          "url_pattern": "/tags/{tag_id}"
+        }
+      ],
+      "extra_config": {
+        "auth/validator": {
+          "endpoint": "/check?requiredRole=Admin",
+          "method": "GET",
+          "host": ["http://auth-service:8080"],
+          "header": "Authorization",
+          "response_codes": [200],
+          "cache": false
+        }
+      }
+    },
+    {
+      "endpoint": "/tags/{tag_id}",
+      "method": "DELETE",
+      "backend": [
+        {
+          "host": ["http://sn-forum-service:8000"],
+          "url_pattern": "/tags/{tag_id}"
+        }
+      ],
+      "extra_config": {
+        "auth/validator": {
+          "endpoint": "/check?requiredRole=Admin",
+          "method": "GET",
+          "host": ["http://auth-service:8080"],
+          "header": "Authorization",
+          "response_codes": [200],
+          "cache": false
+        }
+      }
+    },
+    {
+      "endpoint": "/users/{user_id}/liked-posts",
+      "method": "GET",
+      "backend": [
+        {
+          "host": ["http://sn-forum-service:8000"],
+          "url_pattern": "/users/{user_id}/liked-posts"
+        }
+      ],
+      "extra_config": {
+        "auth/validator": {
+          "endpoint": "/check?requiredRole=IsActive",
+          "method": "GET",
+          "host": ["http://auth-service:8080"],
+          "header": "Authorization",
+          "response_codes": [200],
+          "cache": false
+        }
+      }
+    },
+    {
+      "endpoint": "/users/{user_id}/saved-posts",
+      "method": "GET",
+      "backend": [
+        {
+          "host": ["http://sn-forum-service:8000"],
+          "url_pattern": "/users/{user_id}/saved-posts"
+        }
+      ],
+      "extra_config": {
+        "auth/validator": {
+          "endpoint": "/check?requiredRole=IsActive",
+          "method": "GET",
+          "host": ["http://auth-service:8080"],
+          "header": "Authorization",
+          "response_codes": [200],
+          "cache": false
+        }
+      }
+    }
+  ]
+}

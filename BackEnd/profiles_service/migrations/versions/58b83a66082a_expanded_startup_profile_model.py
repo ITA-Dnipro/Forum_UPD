@@ -26,7 +26,7 @@ def upgrade() -> None:
     op.add_column('profiles', sa.Column('founded', sa.Integer()))
     op.add_column('profiles', sa.Column('startup_idea', sa.String(length=10)))
     op.add_column('profiles', sa.Column('created_at', sa.DateTime()))
-    op.add_column('profiles', sa.Column('updated_at', sa.DateTime()))
+    op.add_column('profiles', sa.Column('updated_at', sa.DateTime(), nullable=True, onupdate=sa.func.now()))
     op.create_unique_constraint("uq_profiles_rnokpp", "profiles", ["rnokpp"])
     op.create_unique_constraint("uq_profiles_edrpou", "profiles", ["edrpou"])
     # ### end Alembic commands ###

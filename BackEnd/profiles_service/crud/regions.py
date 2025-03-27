@@ -12,10 +12,14 @@ class RegionRepository:
         session: AsyncSession
         ):
         region_dict = data.model_dump()
-        region = RegionOrm(**region_dict)
-        session.add(region)
-        await session.commit()
-        return region
+        try:
+            region = RegionOrm(**region_dict)
+            session.add(region)
+            await session.commit()
+            return region
+        except Exception as e:
+            await session.rollback()
+            raise e
 
 
     @staticmethod
@@ -60,8 +64,15 @@ class RegionRepository:
         data: Region,
         session: AsyncSession
         ):
-        region = cls.get_by_id(region_id, session=session)
-        region.__dict__.update(data)
-        await session.commit()
-        return region
+        region_dict = data.model_dump()
+        try:
+            region = await cls.get_by_id(region_id, session=session)
+            
+            for key, value in region_dict.items():
+                setattr(region, key, value)
+            await session.commit()
+            return region
+        except Exception as e:
+            await session.rollback()
+            raise e
             
