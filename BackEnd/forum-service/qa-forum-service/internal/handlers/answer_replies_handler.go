@@ -10,6 +10,18 @@ import (
 	"github.com/gocql/gocql"
 )
 
+// @Summary Create a reply to an answer
+// @Description Creates a new reply to a specific answer within a question
+// @Tags Replies
+// @Accept json
+// @Produce json
+// @Param id path string true "Question ID"
+// @Param answerId path string true "Answer ID"
+// @Param reply body models.AnswerReply true "Reply data"
+// @Success 201 {object} models.AnswerReply "Created reply"
+// @Failure 400 {object} map[string]string "Invalid question ID, answer ID, or request"
+// @Failure 500 {object} map[string]string "Server error"
+// @Router /api/questions/{id}/answers/{answerId}/replies [post]
 func (h *Handler) CreateReply(c *gin.Context) {
 	questionId, err := gocql.ParseUUID(c.Param("id"))
 	if err != nil {
@@ -50,6 +62,19 @@ func (h *Handler) CreateReply(c *gin.Context) {
 	c.JSON(http.StatusCreated, reply)
 }
 
+// @Summary Update a reply
+// @Description Updates an existing reply to an answer within a question
+// @Tags Replies
+// @Accept json
+// @Produce json
+// @Param id path string true "Question ID"
+// @Param answerId path string true "Answer ID"
+// @Param replyId path string true "Reply ID"
+// @Param reply body models.AnswerReply true "Updated reply data"
+// @Success 200 {object} models.AnswerReply "Updated reply"
+// @Failure 400 {object} map[string]string "Invalid question ID, answer ID, reply ID, or request"
+// @Failure 500 {object} map[string]string "Server error"
+// @Router /api/questions/{id}/answers/{answerId}/replies/{replyId} [put]
 func (h *Handler) UpdateReply(c *gin.Context) {
 	questionId, err := gocql.ParseUUID(c.Param("id"))
 	if err != nil {
@@ -112,6 +137,17 @@ func (h *Handler) UpdateReply(c *gin.Context) {
 	c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve updated reply"})
 }
 
+// @Summary Delete a reply
+// @Description Deletes a specific reply from an answer within a question
+// @Tags Replies
+// @Produce json
+// @Param id path string true "Question ID"
+// @Param answerId path string true "Answer ID"
+// @Param replyId path string true "Reply ID"
+// @Success 200 {object} map[string]string "Success message"
+// @Failure 400 {object} map[string]string "Invalid question ID, answer ID, or reply ID"
+// @Failure 500 {object} map[string]string "Server error"
+// @Router /api/questions/{id}/answers/{answerId}/replies/{replyId} [delete]
 func (h *Handler) DeleteReply(c *gin.Context) {
 	questionId, err := gocql.ParseUUID(c.Param("id"))
 	if err != nil {
