@@ -1,12 +1,14 @@
 from elasticsearch_dsl import (
-    Document,
     Date,
     Text,
-    Keyword
+    Keyword,
+    AsyncDocument
 )
 
+from ...config import settings
 
-class NewsArticleDocument(Document):
+
+class NewsArticleDocument(AsyncDocument):
     """Document representing a news article."""
     id = Keyword()
 
@@ -16,7 +18,7 @@ class NewsArticleDocument(Document):
     published_at = Date()
 
     class Index:
-        name = "news_articles"
+        name = settings.NEWS_ARTICLES_INDEX
         settings = {
             "number_of_shards": 1,
             "number_of_replicas": 1

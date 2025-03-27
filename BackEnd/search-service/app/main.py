@@ -15,6 +15,8 @@ from .indexes.forum_service.question_answers import QuestionAnswerDocument
 from .indexes.forum_service.questions import QuestionDocument
 from .indexes.news_service.news_article import NewsArticleDocument
 from .routes.search import search_router
+from .services.redis import get_redis_client
+from .utils.seed_indexes import seed_all
 
 limiter = Limiter(key_func=get_remote_address)
 
@@ -31,7 +33,10 @@ async def lifespan(app: FastAPI):
     try:
         es_client = await elasticsearch_init()
         app.state.es_client = es_client
-    except Exception as e:
+
+        redis_client = await get_redis_client()
+        app.state.redis = redis_client
+    except Exception:
         logger.exception("Startup failed. Shutting down search service...")
         raise
 
@@ -43,8 +48,8 @@ async def lifespan(app: FastAPI):
     try:
         for cls in index_classes:
             index_name = cls.get_index_name()
-            if not es_client.indices.exists(index=index_name):
-                cls.init()
+            if not await es_client.indices.exists(index=index_name):
+                await cls.init()
                 logger.info(f"Created index: {index_name}")
             else:
                 logger.info(f"Index already exists: {index_name}")
@@ -52,16 +57,25 @@ async def lifespan(app: FastAPI):
         logger.exception(f"Error setting up Elasticsearch indices: {str(e)}")
         raise
 
+    if settings.DEBUG:
+        try:
+            await seed_all()
+        except Exception as e:
+            logger.exception(f"Error seeding data: {str(e)}")
+            raise
+
     try:
         yield
     finally:
+        await es_client.close()
+        await redis_client.close()
         logger.info("Shutdown: cleaning up...")
 
 
 app = FastAPI(
     lifespan=lifespan,
-    title=settings.service_name,
-    debug=settings.debug,
+    title=settings.SERVICE_NAME,
+    debug=settings.DEBUG,
 )
 
 

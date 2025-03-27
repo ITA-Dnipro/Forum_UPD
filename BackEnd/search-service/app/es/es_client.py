@@ -2,7 +2,7 @@ import asyncio
 
 from dotenv import load_dotenv
 from elasticsearch import ConnectionError
-from elasticsearch_dsl import connections
+from elasticsearch_dsl import async_connections
 
 from ..config import settings, logger
 
@@ -11,16 +11,16 @@ load_dotenv()
 
 async def elasticsearch_init():
     """Establishes a connection to Elasticsearch with retries."""
-    elasticsearch_host = settings.elasticsearch_host
-    retry = settings.elasticsearch_max_retries
-    delay = settings.elasticsearch_retry_delay
+    elasticsearch_host = settings.ELASTICSEARCH_HOST
+    retry = settings.ELASTICSEARCH_MAX_RETRIES
+    delay = settings.ELASTICSEARCH_RETRY_DELAY
 
     for attempt in range(retry):
         try:
-            connections.create_connection(hosts=[elasticsearch_host])
-            es = connections.get_connection()
+            async_connections.create_connection(hosts=[elasticsearch_host], alias="default")
+            es = async_connections.get_connection()
 
-            if es.ping():
+            if await es.ping():
                 logger.info("Elasticsearch connection is stable.")
                 return es
             else:

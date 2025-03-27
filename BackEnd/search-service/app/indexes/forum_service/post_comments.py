@@ -1,13 +1,15 @@
 from elasticsearch_dsl import (
-    Document,
     Date,
     Integer,
     Text,
-    Keyword
+    Keyword,
+    AsyncDocument
 )
 
+from ...config import settings
 
-class PostCommentDocument(Document):
+
+class PostCommentDocument(AsyncDocument):
     """Document representing a blog post comment."""
     id = Keyword()
     author_id = Keyword()
@@ -20,7 +22,7 @@ class PostCommentDocument(Document):
     created_at = Date()
 
     class Index:
-        name = "blog_comments"
+        name = settings.FORUM_BLOG_COMMENTS_INDEX
         settings = {
             "number_of_shards": 1,
             "number_of_replicas": 1

@@ -1,13 +1,15 @@
 from elasticsearch_dsl import (
-    Document,
     Date,
     Integer,
     Keyword,
-    Text
+    Text,
+    AsyncDocument
 )
 
+from ...config import settings
 
-class QuestionAnswerDocument(Document):
+
+class QuestionAnswerDocument(AsyncDocument):
     """Document representing a question answer."""
     id = Keyword()
     author_id = Keyword()
@@ -21,7 +23,7 @@ class QuestionAnswerDocument(Document):
     created_at = Date()
 
     class Index:
-        name = 'question_answers'
+        name = settings.FORUM_QUESTION_ANSWERS_INDEX
         settings = {
             "number_of_shards": 1,
             "number_of_replicas": 1

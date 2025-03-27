@@ -1,6 +1,7 @@
 #!/bin/bash
 set -e
 
+# Wait for ES
 ES_HOST="${ELASTICSEARCH_HOST:-http://elasticsearch:9200}"
 
 echo "Waiting for Elasticsearch at ${ES_HOST}..."
@@ -18,6 +19,26 @@ until curl -s ${ES_HOST} > /dev/null; do
   sleep 5
 done
 
-echo "Elasticsearch is up - starting search-service."
+echo "Elasticsearch is up - continuing."
+
+# Wait for Redis
+REDIS_HOST="${REDIS_HOST:-redis}"
+REDIS_PORT="${REDIS_PORT:-6379}"
+
+echo "Waiting for Redis at ${REDIS_HOST}:${REDIS_PORT}..."
+
+attempt_num=1
+
+until redis-cli -h ${REDIS_HOST} -p ${REDIS_PORT} ping | grep -q PONG; do
+  if [ ${attempt_num} -ge ${max_attempts} ]; then
+    echo "Redis is still not available after ${attempt_num} attempts. Exiting."
+    exit 1
+  fi
+  echo "Redis is unavailable - sleeping (attempt: ${attempt_num}/${max_attempts})..."
+  attempt_num=$((attempt_num+1))
+  sleep 5
+done
+
+echo "Redis is up - starting search-service."
 
 exec uvicorn app.main:app --host 0.0.0.0 --port 8000
