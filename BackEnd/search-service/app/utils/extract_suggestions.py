@@ -1,11 +1,15 @@
 def extract_suggestions(response):
     """
-    Extract suggestions from an Elasticsearch response object.
-    Returns a list of suggestion texts if available, otherwise an empty list.
+    Extracts suggestions from an Elasticsearch response object.
+    Returns a dictionary where each suggestion key maps to a list of suggestion texts.
     """
-    suggestions = []
+    suggestions = {}
     if hasattr(response, "suggest") and response.suggest:
-        suggestion_list = response.suggest.suggestions
-        if suggestion_list and suggestion_list[0].options:
-            suggestions = [option.text for option in suggestion_list[0].options]
+        for s_id, suggestion_list in response.suggest.items():
+            texts = []
+            for suggestion in suggestion_list:
+                if "options" in suggestion and suggestion["options"]:
+                    texts.extend([option["text"] for option in suggestion["options"]])
+            if texts:
+                suggestions[s_id] = texts
     return suggestions

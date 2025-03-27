@@ -88,9 +88,9 @@ class QuestionAnswerSearchParams(CommonParamsMixin, SortByValidatorMixin):
 
 class NewsSearchParams(CommonParamsMixin, SortByValidatorMixin):
     """Parameters for searching news articles."""
-    published_from: Optional[str] = Field(
+    published_from: Optional[date] = Field(
         None, description="Filter news articles published after this date (YYYY-MM-DD)"
     )
-    sort_by: Optional[date] = Field("published_at", description="Field to sort results by (default: published_at)")
+    sort_by: Optional[str] = Field("published_at", description="Field to sort results by (default: published_at)")
 
     ALLOWED_SORT_FIELDS: ClassVar[Set[str]] = {"published_at"}

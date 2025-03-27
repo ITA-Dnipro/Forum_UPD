@@ -14,16 +14,24 @@ faker = Faker()
 
 
 async def seed_events():
-    """Seed the events index if it's empty."""
+    """Seed the events index if it's empty with some real-like data."""
     doc_count = await EventDocument.search().count()
     if doc_count == 0:
         logger.info("events index is empty. Seeding...")
+        common_title_prefix = "Tech Conference: "
+        common_content_prefix = "Join us for a deep dive into technology trends. "
         for i in range(5):
+            title = f"{common_title_prefix}Event {i}" if i < 2 else f"Event {i}"
+            content = (
+                f"{common_content_prefix}{faker.text(max_nb_chars=150)}"
+                if i < 2
+                else faker.text(max_nb_chars=200)
+            )
             doc = EventDocument(
                 id=f"event_{i}",
                 organizer_id=faker.random_int(min=1, max=100),
-                title=f"Event {i}",
-                content=faker.text(max_nb_chars=200),
+                title=title,
+                content=content,
                 categories=[{"category_id": faker.random_int(min=1, max=5), "name": faker.word()}],
                 type=faker.random_element(elements=("online", "offline", "auction")),
                 status=faker.random_element(elements=("active", "inactive")),
@@ -41,16 +49,24 @@ async def seed_events():
 
 
 async def seed_blog_posts():
-    """Seed the blog_posts index if it's empty."""
+    """Seed the blog_posts index if it's empty with realistic content."""
     doc_count = await BlogPostDocument.search().count()
     if doc_count == 0:
         logger.info("blog_posts index is empty. Seeding...")
+        common_title_prefix = "Insight: "
+        common_content_prefix = "In today’s analysis, we explore the trends. "
         for i in range(5):
+            title = f"{common_title_prefix}Blog Post {i}" if i < 2 else f"Blog Post {i}"
+            content = (
+                f"{common_content_prefix}{faker.text(max_nb_chars=200)}"
+                if i < 2
+                else faker.text(max_nb_chars=300)
+            )
             doc = BlogPostDocument(
                 id=f"blog_post_{i}",
                 author_id=faker.random_int(min=1, max=50),
-                title=f"Blog Post {i}",
-                content=faker.text(max_nb_chars=300),
+                title=title,
+                content=content,
                 likes_count=faker.random_int(min=0, max=100),
                 categories=[{"category_id": faker.random_int(min=1, max=10), "name": faker.word()}],
                 tags=[{"tag_id": faker.random_int(min=1, max=10), "name": faker.word()}],
@@ -69,11 +85,17 @@ async def seed_post_comments():
     doc_count = await PostCommentDocument.search().count()
     if doc_count == 0:
         logger.info("blog_comments index is empty. Seeding...")
+        common_content_prefix = "I completely agree: "
         for i in range(5):
+            content = (
+                f"{common_content_prefix}{faker.sentence()}"
+                if i < 2
+                else faker.sentence()
+            )
             doc = PostCommentDocument(
                 id=f"comment_{i}",
                 author_id=str(faker.random_int(min=1, max=100)),
-                content=faker.sentence(),
+                content=content,
                 likes_count=faker.random_int(min=0, max=50),
                 dislikes_count=faker.random_int(min=0, max=10),
                 created_at=datetime.now(),
@@ -85,16 +107,22 @@ async def seed_post_comments():
 
 
 async def seed_question_answers():
-    """Seed the question_answers index if it's empty."""
+    """Seed the question_answers index if it's empty with realistic data."""
     doc_count = await QuestionAnswerDocument.search().count()
     if doc_count == 0:
         logger.info("question_answers index is empty. Seeding...")
+        common_content_prefix = "Based on my experience: "
         for i in range(5):
+            content = (
+                f"{common_content_prefix}{faker.text(max_nb_chars=200)}"
+                if i < 2
+                else faker.text(max_nb_chars=250)
+            )
             doc = QuestionAnswerDocument(
                 id=f"qa_{i}",
                 author_id=str(faker.random_int(min=1, max=100)),
                 author_name=faker.name(),
-                content=faker.text(max_nb_chars=250),
+                content=content,
                 likes_count=faker.random_int(min=0, max=50),
                 dislikes_count=faker.random_int(min=0, max=10),
                 created_at=datetime.now(),
@@ -106,15 +134,17 @@ async def seed_question_answers():
 
 
 async def seed_questions():
-    """Seed the questions index if it's empty."""
+    """Seed the questions index if it's empty with real-like questions."""
     doc_count = await QuestionDocument.search().count()
     if doc_count == 0:
         logger.info("questions index is empty. Seeding...")
+        common_title_prefix = "How do I: "
         for i in range(5):
+            title = f"{common_title_prefix}Question {i}" if i < 2 else f"Question {i}"
             doc = QuestionDocument(
                 id=f"question_{i}",
                 author_id=str(faker.random_int(min=1, max=100)),
-                title=f"Question {i}",
+                title=title,
                 content=faker.text(max_nb_chars=300),
                 status=faker.random_element(elements=("open", "closed", "in progress")),
                 likes_count=faker.random_int(min=0, max=50),
@@ -129,15 +159,23 @@ async def seed_questions():
 
 
 async def seed_news_articles():
-    """Seed the news_articles index if it's empty."""
+    """Seed the news_articles index if it's empty with realistic news data."""
     doc_count = await NewsArticleDocument.search().count()
     if doc_count == 0:
         logger.info("news_articles index is empty. Seeding...")
+        common_title_prefix = "Breaking News: "
+        common_content_prefix = "In today's top story, "
         for i in range(5):
+            title = f"{common_title_prefix}News article {i}" if i < 2 else f"News article {i}"
+            content = (
+                f"{common_content_prefix}{faker.text(max_nb_chars=300)}"
+                if i < 2
+                else faker.text(max_nb_chars=400)
+            )
             doc = NewsArticleDocument(
                 id=f"news_{i}",
-                title=f"News article {i}",
-                content=faker.text(max_nb_chars=400),
+                title=title,
+                content=content,
                 published_at=datetime.now(),
             )
             await doc.save(index=NewsArticleDocument.get_index_name())

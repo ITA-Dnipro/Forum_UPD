@@ -2,7 +2,7 @@ import json
 from collections import defaultdict
 
 from dotenv import load_dotenv
-from elasticsearch_dsl import AsyncSearch
+from elasticsearch_dsl import AsyncSearch, Q
 from fastapi import APIRouter, Depends, Request, HTTPException, Query, status
 from slowapi import Limiter
 from slowapi.util import get_remote_address
@@ -88,6 +88,7 @@ async def global_search(
 
     Response:
     - A JSON object with grouped search results; each key represents the source index.
+    Also includes total hits and suggestions if requested.
     """
     cache_key = f"global_search:{q}:{page}:{page_size}:{include_suggestions}"
     redis_client = request.app.state.redis
@@ -99,15 +100,16 @@ async def global_search(
 
     offset = (page - 1) * page_size
 
-    s = AsyncSearch(using=es_client, index=settings.global_search_indexes).query(
-        "multi_match",
-        query=q,
-        fields=settings.SEARCH_BY_TITLE_AND_CONTENT,
-        fuzziness="AUTO"
-    ).extra(from_=offset, size=page_size)
+    combined_query = Q("bool", should=[
+        Q("match_phrase", title={"query": q, "boost": 5}),
+        Q("multi_match", query=q, fields=settings.SEARCH_BY_TITLE_AND_CONTENT, fuzziness="AUTO")
+    ])
+
+    s = AsyncSearch(using=es_client, index=settings.global_search_indexes).query(combined_query).extra(from_=offset, size=page_size)
 
     if include_suggestions:
-        s = s.suggest("suggestions", q, term={"field": "title"})
+        for idx, word in enumerate(q.split()):
+            s = s.suggest(f"suggestion_{idx}", word, term={"field": "title"})
 
     try:
         response = await s.execute()

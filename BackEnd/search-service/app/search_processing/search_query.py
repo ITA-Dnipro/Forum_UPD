@@ -27,12 +27,21 @@ async def build_search_query(
     if query:
         if len(search_fields) == 1:
             field = search_fields[0]
-            s = s.query("match", **{field: {"query": query, "fuzziness": "AUTO"}})
+            combined_query = Q("bool", should=[
+                Q("match_phrase", **{field: {"query": query, "boost": 5}}),
+                Q("match", **{field: {"query": query, "fuzziness": "AUTO"}})
+            ])
         else:
-            s = s.query("multi_match", query=query, fields=search_fields, fuzziness="AUTO")
+            primary_field = search_fields[0]
+            combined_query = Q("bool", should=[
+                Q("match_phrase", **{primary_field: {"query": query, "boost": 5}}),
+                Q("multi_match", query=query, fields=search_fields, fuzziness="AUTO")
+            ])
+        s = s.query(combined_query)
 
         if include_suggestions:
-            s = s.suggest("suggestions", query, term={"field": suggest_field})
+            for idx, word in enumerate(query.split()):
+                s = s.suggest(f"suggestion_{idx}", word, term={"field": suggest_field})
     else:
         s = s.query("match_all")
     if filters:
