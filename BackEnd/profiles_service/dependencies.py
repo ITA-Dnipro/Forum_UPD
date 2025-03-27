@@ -31,6 +31,7 @@ def startup_create_dependency(
     banner_id: int = Body(None) 
 ) -> Startup:
     try:
+        print("edrpou", edrpou)
         profile = Startup(
             name=name,
             is_registered=is_registered,
@@ -45,6 +46,7 @@ def startup_create_dependency(
             startup_idea=startup_idea,
             banner_id=banner_id
         )
+        print("edrpou", profile)
     except ValidationError as e:
         error_messages = [error['msg'] for error in e.errors()]
         raise HTTPException(status_code=422, detail=error_messages)

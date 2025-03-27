@@ -32,6 +32,7 @@ class Profile(BaseModel):
       return value
     if not value.isdigit() or len(value) != 8:
       raise ValueError("EDRPOU must be exactly 8 digits.")
+    return value
   
 
   @field_validator('rnokpp', mode='after')
@@ -41,6 +42,7 @@ class Profile(BaseModel):
       return value
     if not value.isdigit() or len(value) != 10:
       raise ValueError("RNOKPP must be exactly 10 digits.")
+    return value
 
 
 class Startup(Profile):
@@ -62,6 +64,7 @@ class Startup(Profile):
     current_year = datetime.now().year
     if value < 1800 or value > current_year:
         raise ValueError(f"Foundation year must be between 1800 and {current_year}.")
+    return value
     
 
   @model_validator(mode='after')
@@ -137,7 +140,7 @@ class InvestorResponse(BaseModel):
   rnokpp: Optional[str]
   is_legal_entity: bool
   available_funds: Optional[float]
-  investment_categories: Optional[conlist(int, min_length=1)]
+  investment_categories: Optional[list[CategoryResponse]]
 
   class Config:
       from_attributes = True
