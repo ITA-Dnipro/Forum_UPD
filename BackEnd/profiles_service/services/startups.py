@@ -1,7 +1,7 @@
 from models.categories import StartupCategoryOrm
 from models.images import ProfileImage
 from models.regions import RegionOrm
-from models.profiles import StatusEnum
+from models.startups import StatusEnum
 from schemas.profiles import Startup, StartupOptional, ModerationFeedback, ProfileModerationEnum
 from core.exceptions import InvalidRelatedEntityError, NotFoundError
 from utils.repositories import ProfileRepository, BaseRepository

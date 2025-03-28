@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Annotated, Optional, Union
 from pydantic import BaseModel, conlist, constr, field_validator, model_validator
 from enum import Enum
-from models.profiles import StatusEnum
+from models.startups import StatusEnum
 from pydantic_extra_types.phone_numbers import PhoneNumberValidator, PhoneNumber
 from schemas.categories import CategoryResponse
 from schemas.regions import RegionResponse

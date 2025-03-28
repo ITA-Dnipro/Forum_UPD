@@ -1,5 +1,5 @@
 from models.categories import StartupCategoryOrm
-from models.profiles import StatusEnum
+from models.startups import StatusEnum
 from schemas.profiles import Investor, InvestorOptional
 from core.exceptions import InvalidRelatedEntityError, NotFoundError
 from utils.repositories import ProfileRepository, BaseRepository

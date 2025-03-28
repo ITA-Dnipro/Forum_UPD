@@ -1,7 +1,7 @@
-from fastapi import Body, Depends, HTTPException, UploadFile
+from fastapi import Body, Depends, HTTPException
 from pydantic import ValidationError
 from sqlalchemy.ext.asyncio import AsyncSession
-from models.profiles import StartupProfileOrm, InvestorProfileOrm
+from models.startups import StartupProfileOrm, InvestorProfileOrm
 from models.categories import StartupCategoryOrm
 from models.regions import RegionOrm
 from models.images import ProfileImage 
@@ -11,7 +11,7 @@ from schemas.profiles import Startup, StartupOptional, Investor, InvestorOptiona
 from typing import List
 from core.database import new_session
 from services.categories import CategoryService
-from services.profiles import ProfileStartupService
+from services.startups import ProfileStartupService
 from services.investors import InvestorsService 
 from services.regions import RegionService
 
@@ -133,22 +133,6 @@ def investor_optional_create_dependency(
         error_messages = [error['msg'] for error in e.errors()]
         raise HTTPException(status_code=422, detail=error_messages)
     return profile
-
-
-# def image_upload_dependency(
-#     created_by: int,
-#     image_type: ImageTypeEnum,
-#     file: UploadFile
-# ):
-#     try:
-#         image = ProfileImage(
-#             created_by=created_by,
-#             image_type = image_type
-#         )
-#     except ValidationError as e:
-#         error_messages = [error['msg'] for error in e.errors()]
-#         raise HTTPException(status_code=422, detail=error_messages)
-#     return image, file
 
 
 async def get_async_session() -> AsyncSession:

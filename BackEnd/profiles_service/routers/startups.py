@@ -2,7 +2,7 @@ from typing import Annotated, List
 from fastapi import APIRouter, Depends, Response
 from core.exceptions import NotFoundError, InvalidRelatedEntityError
 from schemas.profiles import StartupOptional, Startup, ModerationFeedback, StartupResponse
-from services.profiles import ProfileStartupService
+from services.startups import ProfileStartupService
 from dependencies import get_startup_service, startup_create_dependency, startup_optional_create_dependency
 from fastapi import HTTPException
 

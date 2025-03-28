@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from models import Model
-from models.profiles import InvestorProfileOrm, StartupProfileOrm
+from models.startups import InvestorProfileOrm, StartupProfileOrm
 from sqlalchemy import ForeignKey
 
 

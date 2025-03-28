@@ -9,7 +9,7 @@ from typing import Sequence, Union
 
 from alembic import op
 import sqlalchemy as sa
-from models.profiles import StatusEnum
+from models.startups import StatusEnum
 from sqlalchemy.dialects import postgresql
 
 
