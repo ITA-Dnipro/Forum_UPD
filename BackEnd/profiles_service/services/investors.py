@@ -1,4 +1,3 @@
-from models.categories import StartupCategoryOrm
 from models.startups import StatusEnum
 from schemas.profiles import Investor, InvestorOptional
 from core.exceptions import InvalidRelatedEntityError, NotFoundError
@@ -8,8 +7,9 @@ from utils.repositories import ProfileRepository, BaseRepository
 
 class InvestorsService:
 
-    def __init__(self, repo: ProfileRepository):
+    def __init__(self, repo: ProfileRepository, startup_category_repo: BaseRepository):
         self.repository = repo
+        self.startup_category_repo = startup_category_repo
 
 
     async def investors_list(self):
@@ -45,9 +45,8 @@ class InvestorsService:
     
     async def _fetch_related_by_id(self, data: dict):
         if data.get("investment_categories") is not None:
-            category_repo = BaseRepository(model=StartupCategoryOrm, session=self.repository.session)
             try:
-                data["investment_categories"] = await category_repo.get_list_by_ids(data["investment_categories"])
+                data["investment_categories"] = await self.startup_category_repo.get_list_by_ids(data["investment_categories"])
             except NotFoundError: 
                 raise InvalidRelatedEntityError("One or more categories does not exist")
         

@@ -142,13 +142,16 @@ async def get_async_session() -> AsyncSession:
 
 
 def get_startup_service(session: AsyncSession = Depends(get_async_session)):
-    repo = ProfileRepository(model=StartupProfileOrm, session=session)
-    return ProfileStartupService(repo)
+    profile_repo = ProfileRepository(model=StartupProfileOrm, session=session)
+    category_repo = BaseRepository(model=StartupCategoryOrm, session=session)
+    region_repo = BaseRepository(model=RegionOrm, session=session)
+    return ProfileStartupService(repo=profile_repo, category_repo=category_repo, region_repo=region_repo)
 
 
 def get_investor_service(session: AsyncSession = Depends(get_async_session)):
-    repo = ProfileRepository(model=InvestorProfileOrm, session=session)
-    return InvestorsService(repo)
+    profile_repo = ProfileRepository(model=InvestorProfileOrm, session=session)
+    startup_category_repo = BaseRepository(model=StartupCategoryOrm, session=session)
+    return InvestorsService(profile_repo, startup_category_repo=startup_category_repo)
 
 
 def get_caterory_service(session: AsyncSession = Depends(get_async_session)):
