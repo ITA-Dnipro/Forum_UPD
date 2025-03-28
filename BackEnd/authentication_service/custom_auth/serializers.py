@@ -10,8 +10,6 @@ from django.conf import settings as django_settings
 
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
-from ratelimit.decorators import RateLimitDecorator
-from ratelimit.exception import RateLimitException
 from rest_framework_simplejwt.tokens import RefreshToken, AccessToken
 
 from .validate_password import (
@@ -56,9 +54,9 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
 
             if user_role:
                 if user_role.status == UserRole.VALIDATED:
-                    token['role'] = "Startup"
+                    token['roles'] = "IsStartup"
                 elif user_role.status == UserRole.NOT_VALIDATED:
-                    token['role'] = "NotValidated"
+                    token['roles'] = "NotValidated"
             else:
                 raise serializers.ValidationError("Not registered as a startup")
 
@@ -68,9 +66,9 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
 
             if user_role:
                 if user_role.status == UserRole.VALIDATED:
-                    token['role'] = "Investor"
+                    token['roles'] = "IsInvestor"
                 elif user_role.status == UserRole.NOT_VALIDATED:
-                    token['role'] = "NotValidated"
+                    token['roles'] = "NotValidated"
             else:
                 raise serializers.ValidationError("Not registered as an investor")
 
