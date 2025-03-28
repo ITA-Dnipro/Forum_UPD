@@ -82,10 +82,10 @@ class Investor(Profile):
 
   @model_validator(mode='after')
   def validate_fop_and_identifiers(self):
-    if self.is_legal_entity and self.edrpou is not None:
-      raise ValueError("For the EDRPOU field filled out, is_legal_entity  must be set to False")
-    if self.rnokpp and not self.is_legal_entity:
-      raise ValueError("For the RNOKPP field filled out, is_legal_entity must be set to True")
+    if self.is_legal_entity and self.rnokpp is not None: 
+      raise ValueError("For the RNOKPP  field filled out, is_legal_entity must be set to False")
+    if not self.is_legal_entity and self.edrpou:
+      raise ValueError("For the field EDRPOU filled out, is_legal_entity must be set to True")
 
 
 InvestorOptional = create_optional_model(Investor)
