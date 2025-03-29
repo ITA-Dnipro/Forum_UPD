@@ -2,7 +2,7 @@ from sqlalchemy import select, inspect
 from sqlalchemy.ext.asyncio import AsyncSession 
 from sqlalchemy.orm import selectinload, joinedload
 from core.exceptions import NotFoundError
-from models import Model
+from models.base import Model
 
 
 class BaseRepository:
@@ -62,7 +62,6 @@ class BaseRepository:
 
     async def get_by_id(self, instance_id: int):
         query = self._get_query().where(self.model.id == instance_id)
-        print(query)
         query = self._apply_eager_loading(query=query)
         result = await self.session.execute(query)
         profile = result.scalars().first()

@@ -10,17 +10,16 @@ class Settings(BaseSettings):
     PROFILES_DB_NAME: str               
 
 
-    # Required fields (no defaults)
     POSTGRES_USER: str
     POSTGRES_PASSWORD: str
 
-    # File Storage
     IMAGE_BASE_PATH: str = "static/media/startups"
     DEFAULT_BANNER_URL: str = "static/media/startups/default_banner.jpg"
 
 
-    # App
     DEBUG: bool = False
+
+    REDIS_URL: str
 
     class Config:
         env_file = ".env" 

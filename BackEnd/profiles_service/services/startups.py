@@ -1,17 +1,21 @@
-from models.images import ProfileImage
 from models.startups import StatusEnum
 from schemas.profiles import Startup, StartupOptional, ModerationFeedback, ProfileModerationEnum
 from core.exceptions import InvalidRelatedEntityError, NotFoundError
 from utils.repositories import ProfileRepository, BaseRepository
+from task import autoapprove_image
 
+
+
+MODERATION_HOURS = 0.02
 
 
 class ProfileStartupService:
 
-    def __init__(self, repo: ProfileRepository, category_repo: BaseRepository, region_repo: BaseRepository):
+    def __init__(self, repo: ProfileRepository, category_repo: BaseRepository, region_repo: BaseRepository, image_repo):
         self.repository = repo
         self.category_repo = category_repo
         self.region_repo = region_repo
+        self.image_repo = image_repo
 
 
     async def _fetch_related_by_id(self, data: dict):
@@ -46,6 +50,8 @@ class ProfileStartupService:
         profile_dict = data.model_dump(exclude_unset=True, exclude_none=True)
         if "banner_id" in profile_dict:
             profile_dict["status"] = StatusEnum.PENDING 
+            autoapprove_image.apply_async(args=(profile_id,), countdown=MODERATION_HOURS*3600)
+
         profile_dict = await self._fetch_related_by_id(data=profile_dict)
         return await self.repository.partial_update(instance_id=profile_id, update_fields=profile_dict)
 
@@ -54,6 +60,8 @@ class ProfileStartupService:
         profile_dict = data.model_dump(exclude_unset=True, exclude_none=True)
         if "banner_id" in profile_dict:
             profile_dict["status"] = StatusEnum.PENDING 
+            autoapprove_image.delay(profile_id=profile_id)
+
         profile_dict["status"] = StatusEnum.PENDING if "banner_id" in profile_dict else StatusEnum.UNDEFINED
         self._fetch_related_by_id(profile_dict)
         
@@ -64,9 +72,7 @@ class ProfileStartupService:
         await self.repository.soft_delete(profile_id)
 
     
-    async def handle_moderation_feedback(self, profile_id, feedback: ModerationFeedback):
-
-        image_repo = BaseRepository(ProfileImage, session=self.repository.session)
+    async def handle_moderation_feedback(self, profile_id, feedback: ModerationFeedback):     
 
         feedback_dict = feedback.model_dump()
         if feedback_dict["moderation_status"] == ProfileModerationEnum.APPROVED:  
@@ -75,7 +81,7 @@ class ProfileStartupService:
 
             banner_id = profile.banner_id
             
-            await image_repo.partial_update(instance_id=banner_id, update_fields={"is_approved": True})
+            await self.image_repo.partial_update(instance_id=banner_id, update_fields={"is_approved": True})
             
         elif feedback_dict["moderation_status"] == ProfileModerationEnum.REJECTED:
             profile_update_fields = {"status": StatusEnum.BLOCKED}
@@ -84,7 +90,7 @@ class ProfileStartupService:
 
             banner_id = profile.banner_id
             
-            await image_repo.partial_update(instance_id=banner_id, update_fields={"is_approved": False})
+            await self.image_repo.partial_update(instance_id=banner_id, update_fields={"is_approved": False})
         return profile
 
 

@@ -1,7 +1,7 @@
 from enum import Enum
 from sqlalchemy import DateTime, ForeignKey, Numeric, String, Text, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from models import Model
+from models.base import Model
 from datetime import datetime
 
 
@@ -42,7 +42,7 @@ class StartupProfileOrm(Model):
     ForeignKey("profile_images.id"), 
     nullable=True)
 
-    banner: Mapped["ProfileImage"] = relationship(
+    banner: Mapped["ProfileImage"] = relationship( # type: ignore
         back_populates="profile_banner", 
         foreign_keys=[banner_id],
         uselist=False)

@@ -14,6 +14,7 @@ services:
 
   profiles:
     build: .
+    container_name: profiles_service
     depends_on:
       - db
     restart: on-failure
@@ -28,5 +29,27 @@ services:
     volumes:
       - ./:/app
 
+  redis:
+    image: redis:alpine
+    container_name: redis_container
+    restart: unless-stopped
+    ports: 
+      -  "6379:6379"
+    volumes:
+      - redis_data:/data
+
+  celery:
+    build: .
+    container_name: celery_container
+    depends_on:
+    - db
+    - profiles
+    - redis
+    restart: unless-stopped
+    command: celery --app=task.app worker --concurrency=1 --loglevel=DEBUG
+    volumes:
+      - ./:/app
+
 volumes:
   profiles_data:
+  redis_data:

@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from models import Model
+from models.base import Model
 from models.startups import StartupProfileOrm
 from sqlalchemy import ForeignKey
 

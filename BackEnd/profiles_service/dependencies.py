@@ -31,7 +31,6 @@ def startup_create_dependency(
     banner_id: int = Body(None) 
 ) -> Startup:
     try:
-        print("edrpou", edrpou)
         profile = Startup(
             name=name,
             is_registered=is_registered,
@@ -46,7 +45,6 @@ def startup_create_dependency(
             startup_idea=startup_idea,
             banner_id=banner_id
         )
-        print("edrpou", profile)
     except ValidationError as e:
         error_messages = [error['msg'] for error in e.errors()]
         raise HTTPException(status_code=422, detail=error_messages)
@@ -145,7 +143,8 @@ def get_startup_service(session: AsyncSession = Depends(get_async_session)):
     profile_repo = ProfileRepository(model=StartupProfileOrm, session=session)
     category_repo = BaseRepository(model=StartupCategoryOrm, session=session)
     region_repo = BaseRepository(model=RegionOrm, session=session)
-    return ProfileStartupService(repo=profile_repo, category_repo=category_repo, region_repo=region_repo)
+    image_repo = BaseRepository(model=ProfileImage, session=session)
+    return ProfileStartupService(repo=profile_repo, category_repo=category_repo, region_repo=region_repo, image_repo=image_repo)
 
 
 def get_investor_service(session: AsyncSession = Depends(get_async_session)):
