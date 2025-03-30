@@ -39,7 +39,7 @@ def load_lua_script(path):
         return None
     
 
-async def update_news_cache(news_articles, max_cache_size=8):
+async def update_news_cache(news_articles, max_cache_size=7):
     """Updates Redis cache with new news articles using Lua script."""
     cache_key = "recent_news"
 
