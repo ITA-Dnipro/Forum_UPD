@@ -221,12 +221,12 @@ func TestGetQuestions_ByAuthor(t *testing.T) {
 	questions := []models.Question{{
 		ID:            questionID,
 		Title:         "Test",
-		AuthorID:      0,           // Значення за замовчуванням
-		Description:   "",          // Значення за замовчуванням
-		Status:        "",          // Значення за замовчуванням
-		LikesCount:    0,           // Значення за замовчуванням
-		DislikesCount: 0,           // Значення за замовчуванням
-		SavesCount:    0,           // Значення за замовчуванням
+		AuthorID:      0,
+		Description:   "",
+		Status:        "",
+		LikesCount:    0,
+		DislikesCount: 0,
+		SavesCount:    0,
 		CreatedAt:     time.Time{}, // 0001-01-01T00:00:00Z
 		UpdatedAt:     time.Time{}, // 0001-01-01T00:00:00Z
 	}}
