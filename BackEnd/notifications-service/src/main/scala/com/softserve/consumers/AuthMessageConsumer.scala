@@ -17,6 +17,7 @@ object AuthMessageConsumer {
       for {
         consumer <- Consumer.make(
           ConsumerSettings(bootstrapServers).withGroupId("notifications-app")
+          .withProperty("auto.offset.reset", "earliest")
         )
         _ <- consumer
           .plainStream(Subscription.topics(TopicConstants.AUTHENTICATION), Serde.string, AuthMessageSerde.serde)
@@ -38,7 +39,7 @@ object AuthMessageConsumer {
                   List(email),
                   EmailConstants.CONFIRM_EMAIL_SUBJECT,
                   temp
-                ).provideLayer(EmailConstants.emailConfigLayer) // Provide the EmailConfig layer
+                ).provideLayer(EmailConstants.emailConfigLayer)
               } yield ()
               }
             }.flatten
