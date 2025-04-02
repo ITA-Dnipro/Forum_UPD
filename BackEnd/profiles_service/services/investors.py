@@ -1,7 +1,8 @@
 from models.startups import StatusEnum
 from schemas.profiles import Investor, InvestorOptional
 from core.exceptions import InvalidRelatedEntityError, NotFoundError
-from utils.repositories import ProfileRepository, BaseRepository
+from repositories.base import BaseRepository
+from repositories.profiles import ProfileRepository
 
 
 

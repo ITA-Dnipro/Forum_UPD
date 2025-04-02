@@ -1,5 +1,5 @@
 from core.exceptions import UniqueConstraintViolationError
-from utils.repositories import BaseRepository
+from repositories.base import BaseRepository
 from schemas.categories import Category
 
 class CategoryService:

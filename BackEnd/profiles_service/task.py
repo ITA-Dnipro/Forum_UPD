@@ -7,7 +7,8 @@ from core.settings import settings
 from core.database import new_session
 import os
 
-from utils.repositories import BaseRepository, ProfileRepository
+from repositories.base import BaseRepository
+from repositories.profiles import ProfileRepository
 
 
 redis_url = os.getenv("REDIS_URL", "redis://localhost:6379")

@@ -6,7 +6,8 @@ from models.categories import StartupCategoryOrm
 from models.regions import RegionOrm
 from models.images import ProfileImage 
 from services.images import ImageService
-from utils.repositories import BaseRepository, ProfileRepository
+from repositories.base import BaseRepository
+from repositories.profiles import ProfileRepository
 from schemas.profiles import Startup, StartupOptional, Investor, InvestorOptional
 from typing import List
 from core.database import new_session

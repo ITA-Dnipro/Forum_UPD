@@ -1,6 +1,7 @@
 from pathlib import Path
 import uuid
-from utils.repositories import BaseRepository
+from repositories.base import BaseRepository
+from repositories.profiles import ProfileRepository
 from core.settings import settings
 
 
