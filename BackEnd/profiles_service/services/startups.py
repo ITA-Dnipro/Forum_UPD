@@ -54,7 +54,7 @@ class ProfileStartupService:
             autoapprove_image.apply_async(args=(profile_id,), countdown=MODERATION_HOURS*3600)
 
         profile_dict = await self._fetch_related_by_id(data=profile_dict)
-        return await self.repository.partial_update(instance_id=profile_id, update_fields=profile_dict)
+        return await self.repository.update(instance_id=profile_id, data=profile_dict)
 
 
     async def startup_update(self, profile_id: int, data: Startup):
@@ -66,7 +66,7 @@ class ProfileStartupService:
         profile_dict["status"] = StatusEnum.PENDING if "banner_id" in profile_dict else StatusEnum.UNDEFINED
         self._fetch_related_by_id(profile_dict)
         
-        return await self.repository.update(instance_id=profile_id, profile_dict=profile_dict)
+        return await self.repository.update(instance_id=profile_id, data=profile_dict)
 
 
     async def startup_delete(self, profile_id: int):
@@ -78,20 +78,20 @@ class ProfileStartupService:
         feedback_dict = feedback.model_dump()
         if feedback_dict["moderation_status"] == ProfileModerationEnum.APPROVED:  
             profile_update_fields = {"status": StatusEnum.APPROVED}
-            profile = await self.repository.partial_update(instance_id=profile_id, update_fields=profile_update_fields)
+            profile = await self.repository.update(instance_id=profile_id, data=profile_update_fields)
 
             banner_id = profile.banner_id
             
-            await self.image_repo.partial_update(instance_id=banner_id, update_fields={"is_approved": True})
+            await self.image_repo.update(instance_id=banner_id, data={"is_approved": True})
             
         elif feedback_dict["moderation_status"] == ProfileModerationEnum.REJECTED:
             profile_update_fields = {"status": StatusEnum.BLOCKED}
             await self.repository.soft_delete(profile_id=profile_id)
-            profile = await self.repository.partial_update(instance_id=profile_id, update_fields=profile_update_fields)
+            profile = await self.repository.update(instance_id=profile_id, data=profile_update_fields)
 
             banner_id = profile.banner_id
             
-            await self.image_repo.partial_update(instance_id=banner_id, update_fields={"is_approved": False})
+            await self.image_repo.update(instance_id=banner_id, data={"is_approved": False})
         return profile
 
 

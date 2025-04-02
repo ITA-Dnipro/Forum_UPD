@@ -30,7 +30,7 @@ class InvestorsService:
     async def partial_investor_update(self, profile_id: int, data: InvestorOptional):
         profile_dict = data.model_dump(exclude_unset=True, exclude_none=True)
         profile_dict = await self._fetch_related_by_id(data=profile_dict)
-        return await self.repository.partial_update(instance_id=profile_id, update_fields=profile_dict)
+        return await self.repository.update(instance_id=profile_id, data=profile_dict)
 
 
     async def investor_update(self, profile_id: int, data: Investor):

@@ -97,19 +97,6 @@ class BaseRepository:
             raise e
     
 
-    async def partial_update(self, instance_id: int, update_fields: dict):
-        try: 
-            instance = await self.get_by_id(instance_id)
-            for key, value in update_fields.items():
-                setattr(instance, key, value)
-            await self.session.commit()
-            await self.session.refresh(instance) 
-            return instance
-        except Exception as e:
-            await self.session.rollback()
-            raise e
-
-
     async def soft_delete(self, instance_id: int):
         try: 
             instance = await self.get_by_id(instance_id)
