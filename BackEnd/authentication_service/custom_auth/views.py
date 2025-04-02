@@ -18,7 +18,8 @@ from drf_spectacular.utils import(
     OpenApiExample,
     OpenApiResponse,
 )
-from ratelimit.decorators import RateLimitDecorator
+from django_ratelimit.decorators import ratelimit
+from django.utils.decorators import method_decorator
 from rest_framework.views import APIView
 from django.contrib.auth import authenticate, get_user_model, logout
 from rest_framework import status
@@ -72,10 +73,7 @@ class UserRegistrationView(APIView):
             500: OpenApiResponse(description="Internal server error"),
         },
     )
-    @RateLimitDecorator(
-        calls=10,
-        period=600,
-    )
+    @method_decorator(ratelimit(key='ip', rate=f"{settings.RATE_LIMIT_MAX_CALLS}/{settings.RATE_LIMIT_PERIOD}s", method='POST', block=False))
     def post(self, request):
         if getattr(request, 'limited', False):
             return Response({"detail": "Request limit exceeded."}, status=status.HTTP_429_TOO_MANY_REQUESTS)
@@ -347,7 +345,7 @@ class PasswordResetRequestView(APIView):
             ),
         }
     )
-    @RateLimitDecorator(calls=1, period=60)
+    @method_decorator(ratelimit(key='ip', rate=f"{settings.RATE_LIMIT_MAX_CALLS}/{settings.RATE_LIMIT_PERIOD}s", method='POST', block=False))
     def post(self, request):
         if getattr(request, 'limited', False):
             return Response({"error": "Too many requests. Please, try again later."},
@@ -371,7 +369,7 @@ class PasswordResetRequestView(APIView):
 
         try:
             token = signer.sign(f"{user.pk}:{user.password}")
-            reset_link = f"https://frontend.com/reset-password/{token}/"
+            reset_link = f"{settings.FRONTEND_URL}/auth/password-reset/?token={token}"
             send_mail(
                 subject="Password Reset Request",
                 message=f"Please, click on the following link for password reset: {reset_link}",
