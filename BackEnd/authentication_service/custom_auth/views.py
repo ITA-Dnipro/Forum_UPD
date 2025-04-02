@@ -18,7 +18,8 @@ from drf_spectacular.utils import(
     OpenApiExample,
     OpenApiResponse,
 )
-from ratelimit.decorators import RateLimitDecorator
+from django_ratelimit.decorators import ratelimit
+from django.utils.decorators import method_decorator
 from rest_framework.views import APIView
 from django.contrib.auth import authenticate, get_user_model, logout
 from rest_framework import status
@@ -28,8 +29,6 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.permissions import IsAuthenticated, AllowAny
-from drf_yasg.utils import swagger_auto_schema
-from drf_yasg import openapi
 
 from .serializers import (
     CustomTokenObtainPairSerializer,
@@ -41,11 +40,12 @@ from .serializers import (
     PasswordChangeSerializer,
     signer
 )
-from validation.validate_password import (
+from .validate_password import (
     validate_password_long,
     validate_password_include_symbols,
     validate_password_strength
 )
+from .models import Role, UserRole
 
 logger = logging.getLogger(__name__)
 
@@ -66,17 +66,14 @@ class UserRegistrationView(APIView):
         request=UserRegistrationSerializer,
         responses={
             201: OpenApiResponse(
-                response=UserRegistrationSerializer,
+                response=UserRegistrationResponseSerializer,
                 description="User registration successful",
             ),
             400: OpenApiResponse(description="Bad request (validation error or missing fields)"),
             500: OpenApiResponse(description="Internal server error"),
         },
     )
-    @RateLimitDecorator(
-        calls=10,
-        period=600,
-    )
+    @method_decorator(ratelimit(key='ip', rate=f"{settings.RATE_LIMIT_MAX_CALLS}/{settings.RATE_LIMIT_PERIOD}s", method='POST', block=False))
     def post(self, request):
         if getattr(request, 'limited', False):
             return Response({"detail": "Request limit exceeded."}, status=status.HTTP_429_TOO_MANY_REQUESTS)
@@ -85,6 +82,13 @@ class UserRegistrationView(APIView):
             serializer = UserRegistrationSerializer(data=request.data)
             if serializer.is_valid():
                 user = serializer.save()
+
+                # Check if user is registering as a startup or investor
+                registration_type = request.data.get("registration_type")  # "Startup" or "Investor"
+                if registration_type not in ["Startup", "Investor"]:
+                    return Response({"error": "Invalid registration type."}, status=status.HTTP_400_BAD_REQUEST)
+
+
                 user_data = UserRegistrationResponseSerializer(user).data
                 logger.info("User created successfully")
 
@@ -94,10 +98,7 @@ class UserRegistrationView(APIView):
 
                 email_subject = "Account Activation"
                 activation_link = f"{settings.FRONTEND_URL}/auth/activate/?token={signed_token}"
-                email_message = render_to_string("email/custom_activation.html", {
-                    'user': user,
-                    'activation_link': activation_link,
-                })
+                email_message = f"Please, click on the following link to activate your account {activation_link}"
 
                 send_mail(
                     email_subject,
@@ -112,7 +113,6 @@ class UserRegistrationView(APIView):
         except Exception:
             logger.error(f"Unexpected error occurred.")
             return Response({"detail": "Internal server error. Please try again later."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
 
 class AccountActivationView(APIView):
     permission_classes = [AllowAny]
@@ -169,58 +169,90 @@ class AccountActivationView(APIView):
 
 
 class LoginView(APIView):
-    @swagger_auto_schema(
-        operation_description="User login with email and password",
-        request_body=openapi.Schema(
-            type=openapi.TYPE_OBJECT,
-            properties={
-                'email': openapi.Schema(type=openapi.TYPE_STRING),
-                'password': openapi.Schema(type=openapi.TYPE_STRING),
-            },
-            required=['email', 'password'],
-        ),
+    permission_classes = [AllowAny]
+
+    @extend_schema(
+        description="User login with email and password.",
+        request=CustomTokenObtainPairSerializer,
         responses={
-            200: "Login successful",
-            400: "Invalid credentials",
+            200: OpenApiResponse(
+                description="Login successful",
+                examples={
+                    "application/json": {
+                        "message": "Login successful."
+                    }
+                }
+            ),
+            401: OpenApiResponse(
+                description="Invalid credentials",
+                examples={
+                    "application/json": {
+                        "error": "Invalid credentials."
+                    }
+                }
+            ),
+            400: OpenApiResponse(
+                description="Unauthorized, wrong login option or unregistered role",
+                examples={
+                    "application/json": {
+                        "error": "Wrong login option or user role not found."
+                    }
+                }
+            ),
         }
     )
     def post(self, request):
         email = request.data.get('email')
         password = request.data.get('password')
+        login_option = request.data.get('login_option')  # Expecting "Startup" or "Investor"
 
         user = authenticate(request, email=email, password=password)
 
+        if user is None:
+            return Response(
+                {"error": "Invalid password or email"},
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+
         serializer = CustomTokenObtainPairSerializer(data=request.data)
-        if serializer.is_valid():
-            return Response({
-                'refresh': str(serializer.validated_data['refresh']),
-                'access': str(serializer.validated_data['access']),
-            })
-        return Response(
-            {"error": "Something went wrong with token generation"},
-            status=status.HTTP_400_BAD_REQUEST
-        )
+
+        try:
+            token = serializer.get_token(user, login_option)
+        except ValidationError as e:
+            return Response(
+                {"error": str(e)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        return Response({
+            'refresh': str(token),
+            'access': str(token.access_token),
+        }, status=status.HTTP_200_OK)
 
 
 class LogoutView(APIView):
     permission_classes = [IsAuthenticated]
 
-    @swagger_auto_schema(
-        operation_description="Logout by blacklisting the provided refresh token.",
-        request_body=openapi.Schema(
-            type=openapi.TYPE_OBJECT,
-            properties={
-                'refresh': openapi.Schema(
-                    type=openapi.TYPE_STRING,
-                    description='Refresh token to be blacklisted',
-                    example='your_refresh_token_here',
-                ),
-            },
-            required=['refresh'],
-        ),
+    @extend_schema(
+        description="Logout by blacklisting the provided refresh token.",
+        request=LogoutSerializer,
         responses={
-            200: "Logout successful",
-            400: "Invalid or missing refresh token",
+            200: OpenApiResponse(
+                description="Logout successful",
+                examples={
+                    "application/json": {
+                        "message": "Logout successful."
+                    }
+                }
+            ),
+            400: OpenApiResponse(
+                description="Invalid or missing refresh token",
+                examples={
+                    "application/json": {
+                        "error": "Invalid or missing refresh token."
+                    }
+                }
+            ),
         }
     )
     def post(self, request):
@@ -275,33 +307,35 @@ class PasswordResetRequestView(APIView):
     """
     permission_classes = [AllowAny]
 
-    @swagger_auto_schema(
-        operation_description="Request a password reset by providing your email address.",
-        request_body=openapi.Schema(
-            type=openapi.TYPE_OBJECT,
-            properties={
-                'email': openapi.Schema(type=openapi.TYPE_STRING, format='email', description='User\'s email address'),
-            },
-            required=['email'],
-        ),
+    @extend_schema(
+        description="Request a password reset by providing your email address.",
+        request=PasswordResetRequestSerializer,
         responses={
-            200: openapi.Response(
+            200: OpenApiResponse(
                 description="Password reset email sent successfully",
                 examples={
                     "application/json": {
-                        "message": "The link for password reset was sent. Please, check your mail."
+                        "message": "If an account with that email exists, a password reset link was sent."
                     }
                 }
             ),
-            400: openapi.Response(
+            400: OpenApiResponse(
                 description="Invalid email or user not found",
                 examples={
                     "application/json": {
-                        "error": "User does not exist."
+                        "error": "Invalid request."
                     }
                 }
             ),
-            500: openapi.Response(
+            429: OpenApiResponse(
+                description="Too many requests, please try again later.",
+                examples={
+                    "application/json": {
+                        "error": "Too many requests. Please, try again later."
+                    }
+                }
+            ),
+            500: OpenApiResponse(
                 description="Internal server error",
                 examples={
                     "application/json": {
@@ -311,7 +345,7 @@ class PasswordResetRequestView(APIView):
             ),
         }
     )
-    @RateLimitDecorator(calls=1, period=60)
+    @method_decorator(ratelimit(key='ip', rate=f"{settings.RATE_LIMIT_MAX_CALLS}/{settings.RATE_LIMIT_PERIOD}s", method='POST', block=False))
     def post(self, request):
         if getattr(request, 'limited', False):
             return Response({"error": "Too many requests. Please, try again later."},
@@ -335,7 +369,7 @@ class PasswordResetRequestView(APIView):
 
         try:
             token = signer.sign(f"{user.pk}:{user.password}")
-            reset_link = f"https://frontend.com/reset-password/{token}/"
+            reset_link = f"{settings.FRONTEND_URL}/auth/password-reset/?token={token}"
             send_mail(
                 subject="Password Reset Request",
                 message=f"Please, click on the following link for password reset: {reset_link}",
@@ -373,18 +407,11 @@ class PasswordResetConfirmView(APIView):
     """
     permission_classes = [AllowAny]
 
-    @swagger_auto_schema(
-        operation_description="Confirm password reset by providing the token and new password.",
-        request_body=openapi.Schema(
-            type=openapi.TYPE_OBJECT,
-            properties={
-                'token': openapi.Schema(type=openapi.TYPE_STRING, description='Reset token received via email'),
-                'new_password': openapi.Schema(type=openapi.TYPE_STRING, description='New password for the account'),
-            },
-            required=['token', 'new_password'],
-        ),
+    @extend_schema(
+        description="Confirm password reset by providing the token and new password.",
+        request=PasswordResetConfirmSerializer,  # Use the serializer here
         responses={
-            200: openapi.Response(
+            200: OpenApiResponse(
                 description="Password reset successful",
                 examples={
                     "application/json": {
@@ -392,7 +419,7 @@ class PasswordResetConfirmView(APIView):
                     }
                 }
             ),
-            400: openapi.Response(
+            400: OpenApiResponse(
                 description="Invalid or expired token",
                 examples={
                     "application/json": {
@@ -472,20 +499,11 @@ class PasswordChangeView(APIView):
     """
     permission_classes = [IsAuthenticated]
 
-    @swagger_auto_schema(
-        operation_description="Change the password of an authenticated user.",
-        request_body=openapi.Schema(
-            type=openapi.TYPE_OBJECT,
-            properties={
-                'old_password': openapi.Schema(type=openapi.TYPE_STRING, description='Current password'),
-                'new_password': openapi.Schema(type=openapi.TYPE_STRING, description='New password'),
-                'confirm_password': openapi.Schema(type=openapi.TYPE_STRING,
-                                                   description='Confirmation of the new password'),
-            },
-            required=['old_password', 'new_password', 'confirm_password'],
-        ),
+    @extend_schema(
+        description="Change the password of an authenticated user.",
+        request=PasswordChangeSerializer,
         responses={
-            200: openapi.Response(
+            200: OpenApiResponse(
                 description="Password changed successfully",
                 examples={
                     "application/json": {
@@ -493,11 +511,11 @@ class PasswordChangeView(APIView):
                     }
                 }
             ),
-            400: openapi.Response(
+            400: OpenApiResponse(
                 description="Invalid input or password mismatch",
                 examples={
                     "application/json": {
-                        "error": "Old password is incorrect."
+                        "error": "Old password is incorrect or passwords do not match."
                     }
                 }
             ),
