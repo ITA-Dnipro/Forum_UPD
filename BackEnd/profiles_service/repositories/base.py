@@ -42,6 +42,7 @@ class BaseRepository:
             instance = self.model(**data)
             self.session.add(instance)
             await self.session.commit()
+            await self.session.refresh(instance) 
             return instance
         except Exception as e:
             await self.session.rollback()
@@ -88,6 +89,7 @@ class BaseRepository:
             instance = await self.get_by_id(instance_id)
             for key, value in data.items():
                 setattr(instance, key, value)
+            await self.session.refresh(instance) 
             await self.session.commit()
             return instance
         except Exception as e:
@@ -101,6 +103,7 @@ class BaseRepository:
             for key, value in update_fields.items():
                 setattr(instance, key, value)
             await self.session.commit()
+            await self.session.refresh(instance) 
             return instance
         except Exception as e:
             await self.session.rollback()
@@ -111,31 +114,6 @@ class BaseRepository:
         try: 
             instance = await self.get_by_id(instance_id)
             instance.is_deleted = True
-            await self.session.commit()
-        except Exception as e:
-                await self.session.rollback()
-                raise e
-
-
-class ProfileRepository(BaseRepository):
-
-    def __init__(self, model: Model, session: AsyncSession):
-        super().__init__(model, session)
-
-
-    def _get_query(self):
-        return select(self.model).where(self.model.is_deleted == False)
-    
-
-    async def add_one(self, profile_dict: dict):
-        profile_dict["is_deleted"] = False
-        return await super().add_one(profile_dict)
-
-
-    async def soft_delete(self, profile_id: int):
-        try: 
-            profile = await self.get_by_id(profile_id)
-            profile.is_deleted = True
             await self.session.commit()
         except Exception as e:
                 await self.session.rollback()

@@ -24,11 +24,13 @@ class StartupProfileOrm(Model):
     is_deleted: Mapped[bool] = mapped_column(default=False, server_default="FALSE", nullable=False)
     profile_categories: Mapped[list["StartupCategoryOrm"]] = relationship( # type: ignore
         back_populates="startup_category_profiles", 
-        secondary="startup_profile_category"
+        secondary="startup_profile_category",
+        lazy="selectin"
         )
     profile_regions: Mapped[list["RegionOrm"]] = relationship( # type: ignore
         back_populates="region_profiles", 
-        secondary="profile_region"
+        secondary="profile_region",
+        lazy="selectin"
         )
     phone: Mapped[str] = mapped_column(String(15), default=None, nullable=True)
     edrpou: Mapped[str] = mapped_column(String(8), default=None, nullable=True)
@@ -64,5 +66,6 @@ class InvestorProfileOrm(Model):
     updated_at: Mapped[datetime] = mapped_column(DateTime, nullable=True, onupdate=func.now())
     investment_categories: Mapped[list["StartupCategoryOrm"]] = relationship( # type: ignore
         back_populates="investor_startup_categories", 
-        secondary="investor_startup_categories"
+        secondary="investor_startup_categories",
+        lazy="selectin"
         )
