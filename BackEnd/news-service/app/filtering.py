@@ -10,7 +10,7 @@ keyword_categories = {
     "budget": [r"бюджет\w*", r"дефіцит\w*", r"розподіл\w* фінанс\w*"],
     "business": [r"бізнес\w*", r"стартап\w*", r"корпорац\w*", r"партнерств\w*"],
     "profit": [r"прибут\w*", r"дохід\w*", r"маржа\w*", r"рентабельн\w*"],
-    "tax": [r"подат\w*", r"оподаткуван\w*", r"акциз\w*", r"мито\w*"],
+    "tax": [r"податк\w*", r"оподаткуван\w*", r"акциз\w*", r"мито\w*"],
     "market": [r"ринок\w*", r"конкуренц\w*", r"продаж\w*", r"монопол\w*"],
     "stocks": [r"акці\w*", r"бірж\w*", r"цінн\w* папер\w*", r"облігац\w*", r"фондовий ринок"],
     "trade": [r"торгів\w*", r"експорт\w*", r"імпорт\w*", r"митниц\w*", r"товар\w*"],
@@ -23,15 +23,11 @@ compiled_patterns = {
     for category, words in keyword_categories.items()
 }
 
-def is_business_news(article_text: str, article_title: str) -> bool:
-    """Checks if an article contains at least THREE distinct business-related keyword categories."""
-    matched_categories = set()
+def get_business_news_categories(article_text: str, article_title: str) -> set:
+    return {
+        category for category, pattern in compiled_patterns.items()
+        if pattern.search(article_text) or pattern.search(article_title)
+    }
 
-    for category, pattern in compiled_patterns.items():
-        if pattern.search(article_text) or pattern.search(article_title):
-            matched_categories.add(category)  
-
-        if len(matched_categories) >= 3:
-            return True
-
-    return False
+def is_business_news(article_text: str, article_title: str, min_categories: int = 3) -> bool:
+    return len(get_business_news_categories(article_text, article_title)) >= min_categories
