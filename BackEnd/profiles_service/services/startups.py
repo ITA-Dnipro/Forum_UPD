@@ -12,7 +12,7 @@ MODERATION_HOURS = 0.02
 
 class ProfileStartupService:
 
-    def __init__(self, repo: ProfileRepository, category_repo: BaseRepository, region_repo: BaseRepository, image_repo):
+    def __init__(self, repo: ProfileRepository, category_repo: BaseRepository, region_repo: BaseRepository, image_repo: BaseRepository):
         self.repository = repo
         self.category_repo = category_repo
         self.region_repo = region_repo
