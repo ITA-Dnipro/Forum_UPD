@@ -87,13 +87,8 @@ class PasswordResetTests(APITestCase):
             format="json"
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertTrue(
-            any(msg in response.data.get("error", "").lower() for msg in [
-                "must be at least 8 characters long",
-                "special character",
-                "must include at least one uppercase letter"
-                ])
-        )
+        self.assertIn("security requirements", response.data.get("error", "").lower())
+
 
     def test_password_change_authenticated(self):
         self.client.force_authenticate(user=self.user)

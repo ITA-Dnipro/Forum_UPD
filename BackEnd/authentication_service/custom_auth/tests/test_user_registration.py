@@ -1,5 +1,6 @@
 from unittest.mock import patch
 from django.urls import reverse
+from django.core.cache import cache
 from rest_framework import status
 from rest_framework.test import APITestCase
 from custom_auth.factories import UserFactory
@@ -10,6 +11,7 @@ url = reverse('authentication:register')
 
 class UserRegistrationAPITests(APITestCase):
     def setUp(self):
+        cache.clear()
         patcher = patch(
             "custom_auth.serializers.verify_recaptcha", return_value=True
         )

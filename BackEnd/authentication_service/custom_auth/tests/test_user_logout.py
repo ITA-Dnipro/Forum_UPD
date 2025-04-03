@@ -2,7 +2,7 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 
 from custom_auth.factories import UserFactory
-
+from custom_auth.models import Role
 
 class UserLogoutAPITests(APITestCase):
     def setUp(self):
@@ -10,12 +10,15 @@ class UserLogoutAPITests(APITestCase):
 
     def test_logout_successful(self):
         self.user.set_password("Test1234")
+        investor_role = Role.objects.get(name="Investor")
+        self.user.roles.add(investor_role)
         self.user.save()
         login_response = self.client.post(
             path="/api/auth/login/",
             data={
                 "email": "test@test.com",
                 "password": "Test1234",
+                "login_option": "Investor",
             },
         )
 
@@ -61,10 +64,15 @@ class UserLogoutAPITests(APITestCase):
 
     def test_logout_with_reused_token(self):
         self.user.set_password("Test1234")
+        investor_role = Role.objects.get(name="Investor")
+        self.user.roles.add(investor_role)
         self.user.save()
         login_response = self.client.post(
             path="/api/auth/login/",
-            data={"email": "test@test.com", "password": "Test1234"},
+            data={"email": "test@test.com",
+                "password": "Test1234",
+                "login_option": "Investor",
+                },
         )
         self.assertIn("refresh", login_response.data)
 
