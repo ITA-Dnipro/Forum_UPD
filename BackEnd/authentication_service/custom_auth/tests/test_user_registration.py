@@ -18,6 +18,11 @@ class UserRegistrationAPITests(APITestCase):
         self.mock_verify_recaptcha = patcher.start()
         self.addCleanup(patcher.stop)
 
+        patcher_kafka = patch("custom_auth.producers.send_activation_message")
+        self.mock_kafka_producer = patcher_kafka.start()
+        self.addCleanup(patcher_kafka.stop)
+        self.mock_kafka_producer.return_value = None
+
         self.existing_user = UserFactory.create(email="test@test.com")
 
         self.default_payload = {
