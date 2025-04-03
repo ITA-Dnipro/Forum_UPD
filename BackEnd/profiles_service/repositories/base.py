@@ -89,8 +89,8 @@ class BaseRepository:
             instance = await self.get_by_id(instance_id)
             for key, value in data.items():
                 setattr(instance, key, value)
-            await self.session.refresh(instance) 
             await self.session.commit()
+            await self.session.refresh(instance) 
             return instance
         except Exception as e:
             await self.session.rollback()
