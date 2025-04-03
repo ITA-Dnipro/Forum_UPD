@@ -12,11 +12,20 @@ MODERATION_HOURS = 0.02
 
 class ProfileStartupService:
 
-    def __init__(self, repo: ProfileRepository, category_repo: BaseRepository, region_repo: BaseRepository, image_repo: BaseRepository):
+    def __init__(
+            self, 
+            repo: ProfileRepository, 
+            category_repo: BaseRepository, 
+            region_repo: BaseRepository, 
+            image_repo: BaseRepository,
+            validation_repo: BaseRepository,
+            ):
+        
         self.repository = repo
         self.category_repo = category_repo
         self.region_repo = region_repo
         self.image_repo = image_repo
+        self.validation_repo = validation_repo
 
 
     async def _fetch_related_by_id(self, data: dict):
@@ -44,7 +53,17 @@ class ProfileStartupService:
         profile_dict = data.model_dump(exclude_unset=True, exclude_none=True)
         profile_dict["status"] = StatusEnum.UNDEFINED
         profile_dict = await self._fetch_related_by_id(profile_dict)
-        return await self.repository.add_one(profile_dict=profile_dict)
+
+        profile = await self.repository.add_one(profile_dict=profile_dict)
+        if "edrpou" in profile_dict:
+            
+            if profile.validations:
+                await self.validation_repo.update(profile.validations.id, {"profile_id": profile.id})
+            
+            else:
+                await self.validation_repo.add_one({"profile_id": profile.id})
+            
+        return profile
 
 
     async def partial_startup_update(self, profile_id: int, data: StartupOptional):
@@ -54,7 +73,15 @@ class ProfileStartupService:
             autoapprove_image.apply_async(args=(profile_id,), countdown=MODERATION_HOURS*3600)
 
         profile_dict = await self._fetch_related_by_id(data=profile_dict)
-        return await self.repository.update(instance_id=profile_id, data=profile_dict)
+        profile = await self.repository.update(instance_id=profile_id, data=profile_dict)
+        if "edrpou" in profile_dict:
+
+            if profile.validations:
+                res = await self.validation_repo.update(profile.validations.id, {"profile_id": profile.id})
+            
+            else:
+                await self.validation_repo.add_one({"profile_id": profile.id})
+        return profile
 
 
     async def startup_update(self, profile_id: int, data: Startup):

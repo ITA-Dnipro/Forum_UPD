@@ -5,9 +5,11 @@ from models.startups import StartupProfileOrm, InvestorProfileOrm
 from models.categories import StartupCategoryOrm
 from models.regions import RegionOrm
 from models.images import ProfileImage 
+from models.validation import ProfileValidationOrm
 from services.images import ImageService
 from repositories.base import BaseRepository
 from repositories.profiles import ProfileRepository
+from repositories.validation import ValidationRepository
 from schemas.profiles import Startup, StartupOptional, Investor, InvestorOptional
 from typing import List
 from core.database import new_session
@@ -145,7 +147,13 @@ def get_startup_service(session: AsyncSession = Depends(get_async_session)):
     category_repo = BaseRepository(model=StartupCategoryOrm, session=session)
     region_repo = BaseRepository(model=RegionOrm, session=session)
     image_repo = BaseRepository(model=ProfileImage, session=session)
-    return ProfileStartupService(repo=profile_repo, category_repo=category_repo, region_repo=region_repo, image_repo=image_repo)
+    validation_repo = ValidationRepository(model=ProfileValidationOrm, session=session)
+    return ProfileStartupService(
+        repo=profile_repo, 
+        category_repo=category_repo, 
+        region_repo=region_repo, 
+        image_repo=image_repo,
+        validation_repo=validation_repo)
 
 
 def get_investor_service(session: AsyncSession = Depends(get_async_session)):

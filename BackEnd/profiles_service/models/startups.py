@@ -48,7 +48,17 @@ class StartupProfileOrm(Model):
         back_populates="profile_banner", 
         foreign_keys=[banner_id],
         uselist=False)
+    
+    validations: Mapped["ProfileValidationOrm"] = relationship( # type: ignore
+        back_populates="profile",
+        uselist=False,
+        cascade="all, delete-orphan",
+        lazy='joined'
+    )
 
+    def __repr__(self):
+        attrs = ", ".join(f"{key}={value!r}" for key, value in vars(self).items())
+        return f"{self.__class__.__name__}({attrs})"
 
 class InvestorProfileOrm(Model):
     __tablename__ = "investor_profiles"
