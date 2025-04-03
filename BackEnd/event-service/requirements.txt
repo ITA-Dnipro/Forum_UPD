@@ -7,3 +7,5 @@ python-dotenv==1.0.1
 redis
 asyncpg==0.30.0
 gunicorn
+alembic==1.14.1
+black
