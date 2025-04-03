@@ -12,7 +12,7 @@ services:
     volumes:
       - auth_postgres_data:/var/lib/postgresql/data
 
-  auth_service:
+  authentication_service:
     build: .
     container_name: auth_service
     depends_on:
