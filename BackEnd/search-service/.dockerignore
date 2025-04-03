@@ -10,7 +10,7 @@
 .taskcluster.yml
 
 # Docker
-docker-compose.yml
+search-service/docker-compose.search.yml
 Dockerfile
 .docker
 .dockerignore

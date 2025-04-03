@@ -2,7 +2,7 @@ import logging
 import sys
 from typing import List, Dict
 
-from pydantic import Field
+from pydantic import Field, ConfigDict
 from pydantic_settings import BaseSettings
 
 
@@ -16,13 +16,19 @@ news_articles = "news_articles"
 
 class Settings(BaseSettings):
     """App config settings are loaded from .env file"""
+    model_config = ConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        extra="allow",
+        populate_by_name=True,
+    )
 
-    SERVICE_NAME: str = Field("search-service", env="SERVICE_NAME")
-    DEBUG: bool = Field(True, env="DEBUG")
+    SERVICE_NAME: str = Field("search-service", alias="SERVICE_NAME")
+    DEBUG: bool = Field(True, alias="DEBUG")
 
-    ELASTICSEARCH_HOST: str = Field("http://elasticsearch:9200", env="ELASTICSEARCH_HOST")
-    ELASTICSEARCH_MAX_RETRIES: int = Field(5, env="ELASTICSEARCH_MAX_RETRIES")
-    ELASTICSEARCH_RETRY_DELAY: int = Field(2, env="ELASTICSEARCH_RETRY_DELAY")
+    ELASTICSEARCH_HOST: str = Field("http://elasticsearch:9200", alias="ELASTICSEARCH_HOST")
+    ELASTICSEARCH_MAX_RETRIES: int = Field(5, alias="ELASTICSEARCH_MAX_RETRIES")
+    ELASTICSEARCH_RETRY_DELAY: int = Field(2, alias="ELASTICSEARCH_RETRY_DELAY")
 
     EVENTS_INDEX: str = Field(events)
     FORUM_BLOG_POSTS_INDEX: str = Field(blog_posts)
@@ -34,7 +40,7 @@ class Settings(BaseSettings):
     SEARCH_BY_TITLE_AND_CONTENT: List[str] = Field(["title^2", "content"])
     SEARCH_BY_CONTENT: List[str] = Field(["content"])
 
-    REDIS_URL: str = Field("redis://redis:6379", env="REDIS_URL")
+    REDIS_URL: str = Field("redis://redis:6379", alias="REDIS_URL")
     REDIS_CACHE_TTL_CONFIG: Dict[str, int] = Field({
         events: 300,
         blog_posts: 180,
@@ -54,11 +60,7 @@ class Settings(BaseSettings):
             self.NEWS_ARTICLES_INDEX,
         ]
 
-    LOG_LEVEL: str = Field("INFO", env="LOG_LEVEL")
-
-    class Config:
-        env_file = ".env"
-        env_file_encoding = "utf-8"
+    LOG_LEVEL: str = Field("INFO", alias="LOG_LEVEL")
 
 
 settings = Settings()
