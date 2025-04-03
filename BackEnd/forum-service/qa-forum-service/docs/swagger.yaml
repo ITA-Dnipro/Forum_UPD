@@ -1,0 +1,1105 @@
+basePath: /api
+definitions:
+  models.AnswerReply:
+    properties:
+      author_id:
+        type: integer
+      content:
+        type: string
+      created_at:
+        type: string
+      dislikes:
+        type: integer
+      id:
+        type: string
+      likes:
+        type: integer
+      updated_at:
+        type: string
+    type: object
+  models.Question:
+    properties:
+      accepted_answer_ids:
+        items:
+          type: string
+        type: array
+      answers:
+        items:
+          $ref: '#/definitions/models.QuestionAnswer'
+        type: array
+      author_id:
+        type: integer
+      created_at:
+        type: string
+      description:
+        type: string
+      dislikes_count:
+        type: integer
+      id:
+        type: string
+      likes_count:
+        type: integer
+      saves_count:
+        type: integer
+      status:
+        type: string
+      title:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  models.QuestionAnswer:
+    properties:
+      author_id:
+        type: integer
+      content:
+        type: string
+      created_at:
+        type: string
+      dislikes_count:
+        type: integer
+      id:
+        type: string
+      is_accepted:
+        type: boolean
+      likes_count:
+        type: integer
+      replies:
+        items:
+          $ref: '#/definitions/models.AnswerReply'
+        type: array
+      updated_at:
+        type: string
+    type: object
+  models.UnsaveRequest:
+    properties:
+      user_id:
+        example: 101
+        type: integer
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: This is the API for the Forum Q&A microservice built with Go and ScyllaDB.
+  title: Forum Q&A Service API
+  version: "1.0"
+paths:
+  /api/questions:
+    get:
+      description: Retrieves a list of questions with optional filters
+      parameters:
+      - description: Filter by author ID
+        in: query
+        name: author_id
+        type: integer
+      - description: Filter by status (e.g., open, closed)
+        in: query
+        name: status
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of questions
+          schema:
+            items:
+              $ref: '#/definitions/models.Question'
+            type: array
+        "400":
+          description: Invalid parameters
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get list of questions
+      tags:
+      - Questions
+    post:
+      consumes:
+      - application/json
+      description: Creates a new question in the forum
+      parameters:
+      - description: Question data
+        in: body
+        name: question
+        required: true
+        schema:
+          $ref: '#/definitions/models.Question'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created question
+          schema:
+            $ref: '#/definitions/models.Question'
+        "400":
+          description: Invalid request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Create a new question
+      tags:
+      - Questions
+  /api/questions/{id}:
+    delete:
+      description: Deletes a question by its ID
+      parameters:
+      - description: Question ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success message
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Invalid ID format
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Delete a question
+      tags:
+      - Questions
+    get:
+      description: Retrieves a specific question by its ID
+      parameters:
+      - description: Question ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Question data
+          schema:
+            $ref: '#/definitions/models.Question'
+        "400":
+          description: Invalid ID format
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Question not found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get a question by ID
+      tags:
+      - Questions
+    put:
+      consumes:
+      - application/json
+      description: Updates an existing question by its ID
+      parameters:
+      - description: Question ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Updated question data
+        in: body
+        name: question
+        required: true
+        schema:
+          $ref: '#/definitions/models.Question'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Updated question
+          schema:
+            $ref: '#/definitions/models.Question'
+        "400":
+          description: Invalid request or ID format
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Question not found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Update a question
+      tags:
+      - Questions
+  /api/questions/{id}/answers:
+    post:
+      consumes:
+      - application/json
+      description: Adds a new answer to a specific question
+      parameters:
+      - description: Question ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Answer data
+        in: body
+        name: answer
+        required: true
+        schema:
+          $ref: '#/definitions/models.QuestionAnswer'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created answer
+          schema:
+            $ref: '#/definitions/models.QuestionAnswer'
+        "400":
+          description: Invalid request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Create a new answer
+      tags:
+      - Answers
+  /api/questions/{id}/answers/{answerId}:
+    delete:
+      description: Deletes an answer from a specific question
+      parameters:
+      - description: Question ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Answer ID (UUID)
+        in: path
+        name: answerId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Answer deleted successfully
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Invalid request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Delete an answer
+      tags:
+      - Answers
+    put:
+      consumes:
+      - application/json
+      description: Updates an answer for a specific question
+      parameters:
+      - description: Question ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Answer ID (UUID)
+        in: path
+        name: answerId
+        required: true
+        type: string
+      - description: Updated answer data
+        in: body
+        name: answer
+        required: true
+        schema:
+          $ref: '#/definitions/models.QuestionAnswer'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Updated answer
+          schema:
+            $ref: '#/definitions/models.QuestionAnswer'
+        "400":
+          description: Invalid request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Update an existing answer
+      tags:
+      - Answers
+  /api/questions/{id}/answers/{answerId}/accept:
+    delete:
+      consumes:
+      - application/json
+      description: Removes an answer from the accepted list by the question author
+      parameters:
+      - description: Question ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Answer ID (UUID)
+        in: path
+        name: answerId
+        required: true
+        type: string
+      - description: User ID of the author
+        in: body
+        name: request
+        required: true
+        schema:
+          properties:
+            user_id:
+              type: integer
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Answer unaccepted successfully
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Invalid request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: 'Forbidden: only author can unaccept'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Question not found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Unaccept an answer
+      tags:
+      - Answers
+    post:
+      consumes:
+      - application/json
+      description: Marks an answer as accepted by the question author
+      parameters:
+      - description: Question ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Answer ID (UUID)
+        in: path
+        name: answerId
+        required: true
+        type: string
+      - description: User ID of the author
+        in: body
+        name: request
+        required: true
+        schema:
+          properties:
+            user_id:
+              type: integer
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Answer accepted successfully
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Invalid request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: 'Forbidden: only author can accept'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Question or answer not found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Accept an answer
+      tags:
+      - Answers
+  /api/questions/{id}/answers/{answerId}/reaction:
+    delete:
+      consumes:
+      - application/json
+      description: Removes a user's reaction from a specific answer
+      parameters:
+      - description: Question ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Answer ID
+        in: path
+        name: answerId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success message
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Invalid question ID, answer ID, or request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Delete a reaction from an answer
+      tags:
+      - Reactions
+    post:
+      consumes:
+      - application/json
+      description: Adds a reaction (like/dislike) to a given answer.
+      parameters:
+      - description: Question ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Answer ID (UUID)
+        in: path
+        name: answerId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Reaction added successfully
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Invalid request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Add reaction to an answer
+      tags:
+      - Reactions
+  /api/questions/{id}/answers/{answerId}/replies:
+    post:
+      consumes:
+      - application/json
+      description: Creates a new reply to a specific answer within a question
+      parameters:
+      - description: Question ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Answer ID
+        in: path
+        name: answerId
+        required: true
+        type: string
+      - description: Reply data
+        in: body
+        name: reply
+        required: true
+        schema:
+          $ref: '#/definitions/models.AnswerReply'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created reply
+          schema:
+            $ref: '#/definitions/models.AnswerReply'
+        "400":
+          description: Invalid question ID, answer ID, or request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Create a reply to an answer
+      tags:
+      - Replies
+  /api/questions/{id}/answers/{answerId}/replies/{replyId}:
+    delete:
+      description: Deletes a specific reply from an answer within a question
+      parameters:
+      - description: Question ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Answer ID
+        in: path
+        name: answerId
+        required: true
+        type: string
+      - description: Reply ID
+        in: path
+        name: replyId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success message
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Invalid question ID, answer ID, or reply ID
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Delete a reply
+      tags:
+      - Replies
+    put:
+      consumes:
+      - application/json
+      description: Updates an existing reply to an answer within a question
+      parameters:
+      - description: Question ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Answer ID
+        in: path
+        name: answerId
+        required: true
+        type: string
+      - description: Reply ID
+        in: path
+        name: replyId
+        required: true
+        type: string
+      - description: Updated reply data
+        in: body
+        name: reply
+        required: true
+        schema:
+          $ref: '#/definitions/models.AnswerReply'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Updated reply
+          schema:
+            $ref: '#/definitions/models.AnswerReply'
+        "400":
+          description: Invalid question ID, answer ID, reply ID, or request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Update a reply
+      tags:
+      - Replies
+  /api/questions/{id}/answers/{answerId}/replies/{replyId}/reaction:
+    delete:
+      consumes:
+      - application/json
+      description: Removes a user's reaction from a specific reply
+      parameters:
+      - description: Question ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Answer ID
+        in: path
+        name: answerId
+        required: true
+        type: string
+      - description: Reply ID
+        in: path
+        name: replyId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success message
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Invalid question ID, answer ID, reply ID, or request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Delete a reaction from a reply
+      tags:
+      - Reactions
+    post:
+      consumes:
+      - application/json
+      description: Adds a reaction (like/dislike) to a given reply.
+      parameters:
+      - description: Question ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Answer ID (UUID)
+        in: path
+        name: answerId
+        required: true
+        type: string
+      - description: Reply ID (UUID)
+        in: path
+        name: replyId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Reaction added successfully
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Invalid request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Add reaction to a reply
+      tags:
+      - Reactions
+  /api/questions/{id}/reactions:
+    delete:
+      consumes:
+      - application/json
+      description: Removes a user's reaction from a specific question
+      parameters:
+      - description: Question ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success message
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Invalid question ID or request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Remove a reaction from a question
+      tags:
+      - Reactions
+    get:
+      description: Retrieves all reactions for a specific question
+      parameters:
+      - description: Question ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "400":
+          description: Invalid question ID
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Question not found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get reactions for a question
+      tags:
+      - Reactions
+    post:
+      consumes:
+      - application/json
+      description: Adds a like or dislike reaction to a specific question
+      parameters:
+      - description: Question ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success message
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Invalid question ID or request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Add a reaction to a question
+      tags:
+      - Reactions
+  /api/questions/{id}/save:
+    post:
+      consumes:
+      - application/json
+      description: Saves a question to a user's saved list
+      parameters:
+      - description: Question ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success message
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Invalid question ID or request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Save a question for a user
+      tags:
+      - Questions
+  /api/questions/{id}/unsave:
+    delete:
+      consumes:
+      - application/json
+      description: Removes a saved question for a user
+      parameters:
+      - description: Question ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Unsave request body
+        in: body
+        name: unsaveRequest
+        required: true
+        schema:
+          $ref: '#/definitions/models.UnsaveRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Question unsaved successfully
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Invalid request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Unsave a question
+      tags:
+      - Questions
+  /api/questions/reactions/disliked:
+    get:
+      description: Retrieves questions disliked by a specific user
+      parameters:
+      - description: User ID
+        in: query
+        name: user_id
+        required: true
+        type: integer
+      - default: 10
+        description: Limit number of questions
+        in: query
+        name: limit
+        type: integer
+      - description: Paging state for pagination
+        in: query
+        name: paging_state
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Disliked questions with paging state
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Invalid user ID
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get disliked questions by user
+      tags:
+      - Reactions
+  /api/questions/reactions/liked:
+    get:
+      description: Retrieves questions liked by a specific user
+      parameters:
+      - description: User ID
+        in: query
+        name: user_id
+        required: true
+        type: integer
+      - default: 10
+        description: Limit number of questions
+        in: query
+        name: limit
+        type: integer
+      - description: Paging state for pagination
+        in: query
+        name: paging_state
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Liked questions with paging state
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Invalid user ID
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get liked questions by user
+      tags:
+      - Reactions
+  /api/questions/saved:
+    get:
+      description: Retrieves a list of questions saved by a specific user
+      parameters:
+      - description: User ID
+        in: query
+        name: user_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of saved questions
+          schema:
+            items:
+              $ref: '#/definitions/models.Question'
+            type: array
+        "400":
+          description: Invalid user ID
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get saved questions for a user
+      tags:
+      - Questions
+swagger: "2.0"
