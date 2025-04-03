@@ -1,0 +1,59 @@
+services:
+  fastapi:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: fastapi
+    restart: always
+    ports:
+      - "8000:8000"
+    depends_on:
+      - rabbitmq
+      - redis
+    command: bash -c 'uvicorn app.main:app --host 0.0.0.0 --reload'
+    environment:
+      - REDIS_URL=${REDIS_URL}
+      - RABBITMQ_URL=${RABBITMQ_URL}
+    volumes:
+      - .:/app
+
+  rabbitmq:
+    image: "rabbitmq:3-management"
+    container_name: rabbitmq
+    restart: always
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
+      RABBITMQ_DEFAULT_VHOST: "/"
+
+  redis:
+    image: "redis:latest"
+    container_name: redis
+    restart: always
+    ports:
+      - "6379:6379"
+
+  celery_worker:
+    build: .
+    container_name: celery_worker
+    restart: always
+    depends_on:
+      - rabbitmq
+      - redis
+    command: celery -A app.celery_config.celery_app worker --loglevel=info --uid=nobody
+    environment:
+      - REDIS_URL=${REDIS_URL}
+      - RABBITMQ_URL=${RABBITMQ_URL}
+    volumes:
+      - .:/app
+
+  selenium:
+    image: "selenium/standalone-chrome"
+    container_name: selenium
+    restart: always
+    ports:
+      - "4444:4444"
+    shm_size: "2g"
