@@ -1,10 +1,9 @@
 from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException
-from exceptions import NotFoundError
+from exceptions import NotFoundError, UniqueConstraintViolationError
 from schemas.categories import Category
-from crud.categories import CategoryRepository
-from sqlalchemy.ext.asyncio import AsyncSession
-from dependencies import get_async_session
+from services.categories import CategoryService
+from dependencies import get_caterory_service
 
 
 router = APIRouter(
@@ -13,28 +12,35 @@ router = APIRouter(
 
 
 @router.get("/", status_code=200)
-async def categories_list(session: AsyncSession = Depends(get_async_session)):
-    categories = await CategoryRepository.get_all(session=session)
+async def categories_list(
+    service: CategoryService = Depends(get_caterory_service)
+    ):
+    categories = await service.get_all()
     return categories
 
 
 @router.post("/", status_code=201)
 async def create_category(
     category: Annotated[Category, Depends()],
-    session: AsyncSession = Depends(get_async_session)
+    service: CategoryService = Depends(get_caterory_service)
     ):
-    category = await CategoryRepository.add_one(category, session=session)
+    try:
+        category = await service.add_one(category)
+    except UniqueConstraintViolationError:
+        raise HTTPException(
+            status_code=400, detail="Category already exists"
+            )
     
     return category
 
 
 @router.get("/{category_id}", status_code=200)
-async def categorys_detail(
+async def categories_detail(
     category_id: int,
-    session: AsyncSession = Depends(get_async_session)
+    service: CategoryService = Depends(get_caterory_service)
     ):
     try:
-        category = await CategoryRepository.get_by_id(category_id, session=session)
+        category = await service.get_by_id(category_id)
     except NotFoundError as e:
         raise HTTPException(
             status_code=404, detail=f"{e}"
@@ -46,13 +52,12 @@ async def categorys_detail(
 async def category_update(
     category_id: int, 
     category_data: Annotated[Category, Depends()],
-    session: AsyncSession = Depends(get_async_session)
+    service: CategoryService = Depends(get_caterory_service)
     ):
     try:
-        category = await CategoryRepository.update(category_id, category_data, session=session)
+        category = await service.update(category_id, category_data)
     except NotFoundError as e:
         raise HTTPException(
             status_code=404, detail=f"{e}"
             )
     return category
-

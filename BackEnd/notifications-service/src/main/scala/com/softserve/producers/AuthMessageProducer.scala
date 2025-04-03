@@ -13,9 +13,9 @@ object AuthMessageProducer {
     .withProperty("acks", "all")
     .withProperty("retries", "5")
     .withProperty("enable.idempotence", "true")
-    .withProperty("request.timeout.ms", "5000") // 5-second timeout for Kafka requests
+    .withProperty("request.timeout.ms", "5000")
 
-    val retryStrategy = Schedule.exponential(500.milliseconds)  >>> Schedule.recurs(5)// 10 retries with exponential backoff starting at 500ms
+    val retryStrategy = Schedule.exponential(500.milliseconds)  >>> Schedule.recurs(5)
 
     ZIO.scoped {
       for {
