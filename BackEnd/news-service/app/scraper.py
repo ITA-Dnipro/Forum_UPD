@@ -6,6 +6,7 @@ from datetime import datetime, timedelta
 from app.models import NewsModel
 import logging
 from app.utils import update_news_cache
+from app.filtering import is_business_news
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -60,7 +61,7 @@ async def scrape_news():
             latest_news = []
             article_urls = []
 
-            for article_section in articles.find_all("div", class_="article_news", limit=5):
+            for article_section in articles.find_all("div", class_="article_news", limit=10):
                 title_section = article_section.find("div", class_="article_title")
                 if not title_section:
                     continue
@@ -117,10 +118,15 @@ async def scrape_article(session, article_url):
     
 
 async def scrape_and_store_news():
-    """Scrapes the latest 5 news articles and stores them in MongoDB if not duplicates."""
+    """Scrapes the latest 10 news articles and stores them in MongoDB if not duplicates."""
     latest_news = await scrape_news()
     if not latest_news:
         raise HTTPException(status_code=404, detail="No news found")
+
+    latest_news.sort(key=lambda news: news.published_at, reverse=True)
+
+    saved_news = []
+    filtered_news = []
 
     news_links = [news.link for news in latest_news]
 
@@ -134,9 +140,17 @@ async def scrape_and_store_news():
 
     new_news = [news for news in latest_news if news.link not in existing_links]
 
-    if new_news:
-        await NewsModel.insert_many(new_news)
-        await update_news_cache(new_news)
+    for news in new_news:
+        if is_business_news(news.content, news.title):
+            saved_news.append(news)
+        else:
+            filtered_news.append(news)
+
+    logger.warning(f"Filtered news amount: {len(filtered_news)}")
+
+    if saved_news:
+        await NewsModel.insert_many(saved_news)
+        await update_news_cache(saved_news)
 #   return {
 #       "message": "Scraping completed",
 #      "saved_news_count": len(saved_news),
