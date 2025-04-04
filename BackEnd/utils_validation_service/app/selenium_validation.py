@@ -10,6 +10,8 @@ from settings import LOGGING
 logging.config.dictConfig(LOGGING)
 logger = logging.getLogger('utils_validation_service')
 
+YOUCONTROL_URL = "https://youcontrol.com.ua/"
+
 def get_selenium_driver():
     chrome_options = Options()
     chrome_options.add_argument("--headless")
@@ -23,7 +25,7 @@ def validate_code(code: str):
     driver = get_selenium_driver()
     status = 'Valid'
     try:
-        driver.get("https://youcontrol.com.ua/")
+        driver.get(YOUCONTROL_URL)
 
         WebDriverWait(driver, 10).until(ec.presence_of_element_located((By.ID, "q-l"))).send_keys(code)
 
@@ -32,11 +34,11 @@ def validate_code(code: str):
         driver.execute_script("arguments[0].click();", search_button)
 
         try:
-            result_text = WebDriverWait(driver, 5).until(ec.presence_of_element_located((By.CSS_SELECTOR, "h4"))).text == "На жаль, за Вашим запитом контрагентів не знайдено"
-            status = 'Invalid' if result_text else 'Valid'
+            result_text = WebDriverWait(driver, 5).until(ec.presence_of_element_located((By.CSS_SELECTOR, "h4"))).text
+            if 'контрагентів не знайдено' in result_text:
+                status = 'Invalid'
             logger.info(f'{code} is {status.lower()}')
-        except Exception as e1:
-            logger.error(e1)
+        except Exception:
             pass
 
     except Exception as e2:
