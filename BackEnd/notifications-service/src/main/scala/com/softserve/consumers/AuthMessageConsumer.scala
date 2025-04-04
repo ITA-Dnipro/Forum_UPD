@@ -28,15 +28,12 @@ object AuthMessageConsumer {
               if (validationErrors.nonEmpty) {
                 ZIO.debug(s"Validation failed: ${validationErrors.mkString(", ")}")
               } else {
-                val email = authMessage.email
-                val link = authMessage.activationLink
-                val name = authMessage.name
                 val sourceDataPath = new File(s"${EmailConstants.EmailTemplates.TEMPLATES_PATH}/${EmailConstants.EmailTemplates.CONFIRM_NAME}").getCanonicalPath
-                val someAttributes = Map("name" -> name, "link" -> link)
+                val someAttributes = Map("name" -> authMessage.name, "link" -> authMessage.activationLink)
                 val temp = templateEngine.layout(sourceDataPath, someAttributes).toString()
                 for {
                 _ <- SmtpEmailSender.sendEmail(
-                  List(email),
+                  List(authMessage.email),
                   EmailConstants.CONFIRM_EMAIL_SUBJECT,
                   temp
                 ).provideLayer(EmailConstants.emailConfigLayer)
