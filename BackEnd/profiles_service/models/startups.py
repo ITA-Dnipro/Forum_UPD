@@ -47,7 +47,8 @@ class StartupProfileOrm(Model):
     banner: Mapped["ProfileImage"] = relationship( # type: ignore
         back_populates="profile_banner", 
         foreign_keys=[banner_id],
-        uselist=False)
+        uselist=False,
+        lazy='joined')
     
     validations: Mapped["ProfileValidationOrm"] = relationship( # type: ignore
         back_populates="profile",

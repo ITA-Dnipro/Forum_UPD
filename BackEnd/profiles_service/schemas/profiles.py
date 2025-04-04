@@ -108,15 +108,22 @@ class ProfileModerationEnum(Enum):
 class ModerationFeedback(BaseModel):
   moderation_status: ProfileModerationEnum
 
-
 class ProfileImageResponse(BaseModel):
   id: int
   is_approved: bool
   created_at: datetime
   approved_image_path: str
   class Config:
-      orm_mode = True 
+      from_attributes = True 
 
+
+class ProfileImageUnverifiedResponse(BaseModel):
+  id: int
+  is_approved: bool
+  created_at: datetime
+  image_path: str
+  class Config:
+      from_attributes = True 
 
 
 class StartupResponse(BaseModel):
@@ -139,6 +146,9 @@ class StartupResponse(BaseModel):
 
   class Config:
       from_attributes = True
+
+class StartupResponseUnverified(StartupResponse):
+  banner: Optional[ProfileImageUnverifiedResponse]
 
 
 class InvestorResponse(BaseModel):
