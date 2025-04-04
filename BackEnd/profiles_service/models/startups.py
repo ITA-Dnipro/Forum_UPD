@@ -17,6 +17,7 @@ class StartupProfileOrm(Model):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(45), nullable=False)
+    user_id: Mapped[int] = mapped_column(nullable=False, autoincrement=True, default=1)
     status: Mapped[StatusEnum]
     is_registered: Mapped[bool]
     is_startup: Mapped[bool]
@@ -67,6 +68,7 @@ class InvestorProfileOrm(Model):
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(45), nullable=False)
     status: Mapped[StatusEnum]
+    user_id: Mapped[int] = mapped_column(nullable=False, autoincrement=True, default=1)
     is_legal_entity: Mapped[bool]
     is_deleted: Mapped[bool] = mapped_column(default=False, server_default="FALSE", nullable=False)
     phone: Mapped[str] = mapped_column(String(15), default=None, nullable=True)

@@ -4,8 +4,9 @@ from core.exceptions import InvalidRelatedEntityError, NotFoundError
 from repositories.base import BaseRepository
 from repositories.profiles import ProfileRepository
 from task import autoapprove_image
-from utils.producer import send_approval_email
+from utils.producer import send_approval_email, send_valid_profile_message
 from utils.time import to_local_time
+from utils.profile_validation import validate_startup
 
 
 
@@ -88,7 +89,6 @@ class ProfileStartupService:
         else:
             profile = await self.repository.update(instance_id=profile_id, data=profile_dict)
 
-
         if "edrpou" in profile_dict:
 
             if profile.validations:
@@ -96,6 +96,15 @@ class ProfileStartupService:
             
             else:
                 await self.validation_repo.add_one({"profile_id": profile.id})
+
+
+        if validate_startup(profile):
+            send_valid_profile_message(
+                user_id=profile.user_id, 
+                profile_type="startup",
+                status="valid"
+                )
+
         return profile
 
 
