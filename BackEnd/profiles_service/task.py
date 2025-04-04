@@ -2,7 +2,7 @@ import asyncio
 from celery.app import Celery
 from models import *
 from models.images import ProfileImage
-from models.startups import StatusEnum
+from models.startups import StatusEnum, StartupProfileOrm
 from core.settings import settings
 from core.database import new_session
 import os
@@ -28,7 +28,7 @@ def autoapprove_image(profile_id):
             profile_dict = {"status": StatusEnum.AUTOAPPROVED}
             profile = await profile_repo.update(instance_id=profile_id, data=profile_dict)
             banner_id = profile.banner_id
-            await image_repo.partial_update(instance_id=banner_id, update_fields={"is_approved": True})
+            await image_repo.update(instance_id=banner_id, data={"is_approved": True})
 
     coroutine = async_autoapprove() 
     return asyncio.run(coroutine)
