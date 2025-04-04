@@ -16,10 +16,14 @@ class Settings(BaseSettings):
     IMAGE_BASE_PATH: str = "static/media/startups"
     DEFAULT_BANNER_URL: str = "static/media/startups/default_banner.jpg"
 
+    KAFKA_BROKER: str ='kafka:9092'
+
 
     DEBUG: bool = False
 
     REDIS_URL: str
+
+    IMAGE_MODERATOR_EMAIL: str
 
     class Config:
         env_file = ".env" 

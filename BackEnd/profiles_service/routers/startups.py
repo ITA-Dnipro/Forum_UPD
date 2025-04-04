@@ -1,7 +1,7 @@
 from typing import Annotated, List
 from fastapi import APIRouter, Depends, Response
 from core.exceptions import NotFoundError, InvalidRelatedEntityError
-from schemas.profiles import StartupOptional, Startup, ModerationFeedback, StartupResponse
+from schemas.profiles import StartupOptional, Startup, ModerationFeedback, StartupResponse, StartupResponseUnverified
 from services.startups import ProfileStartupService
 from dependencies import get_startup_service, startup_create_dependency, startup_optional_create_dependency
 from fastapi import HTTPException
@@ -109,6 +109,20 @@ async def startup_images_moderation(
     ):
     try:
         profile = await service.handle_moderation_feedback(profile_id, feedback=moderation_feedback)
+    except NotFoundError as e:
+        raise HTTPException(
+            status_code=404, detail=f"{e}"
+            )
+    return profile
+
+
+@router.get("/{profile_id}/images_moderation", response_model=StartupResponseUnverified)
+async def startup_view_unmoderated_profile(
+    profile_id: int, 
+    service: Annotated[ProfileStartupService, Depends(dependency=get_startup_service)]
+    ):
+    try:
+        profile = await service.get_startup_by_id(profile_id)
     except NotFoundError as e:
         raise HTTPException(
             status_code=404, detail=f"{e}"

@@ -1,9 +1,11 @@
-from models.startups import StatusEnum
+from models.startups import StartupProfileOrm, StatusEnum
 from schemas.profiles import Startup, StartupOptional, ModerationFeedback, ProfileModerationEnum
 from core.exceptions import InvalidRelatedEntityError, NotFoundError
 from repositories.base import BaseRepository
 from repositories.profiles import ProfileRepository
 from task import autoapprove_image
+from utils.producer import send_approval_email
+from utils.time import to_local_time
 
 
 
@@ -71,9 +73,22 @@ class ProfileStartupService:
         if "banner_id" in profile_dict:
             profile_dict["status"] = StatusEnum.PENDING 
             autoapprove_image.apply_async(args=(profile_id,), countdown=MODERATION_HOURS*3600)
+            profile_dict = await self._fetch_related_by_id(data=profile_dict)
+            profile = await self.repository.update(instance_id=profile_id, data=profile_dict)
 
-        profile_dict = await self._fetch_related_by_id(data=profile_dict)
-        profile = await self.repository.update(instance_id=profile_id, data=profile_dict)
+            profile_view_url = f"http://localhost:8000/api/startup_profiles/{profile.id}/images_moderation"
+
+            send_approval_email(
+            profile_name=profile.name,
+            updated_at=to_local_time(profile.updated_at),
+            moderation_time=MODERATION_HOURS,
+            image_path=profile.banner.image_path,
+            profile_view_url=profile_view_url
+            )
+        else:
+            profile = await self.repository.update(instance_id=profile_id, data=profile_dict)
+
+
         if "edrpou" in profile_dict:
 
             if profile.validations:
@@ -93,7 +108,18 @@ class ProfileStartupService:
         profile_dict["status"] = StatusEnum.PENDING if "banner_id" in profile_dict else StatusEnum.UNDEFINED
         self._fetch_related_by_id(profile_dict)
         
-        return await self.repository.update(instance_id=profile_id, data=profile_dict)
+        profile: StartupProfileOrm = await self.repository.update(instance_id=profile_id, data=profile_dict)
+
+        profile_view_url = f"http://localhost:8000/api/startup_profiles/{profile.id}/images_moderation"
+
+        send_approval_email(
+           profile_name=profile.name,
+           updated_at=to_local_time(profile.updated_at),
+           moderation_time=MODERATION_HOURS,
+           image_path=profile.banner.image_path,
+           profile_view_url=profile_view_url
+        )
+        return profile
 
 
     async def startup_delete(self, profile_id: int):

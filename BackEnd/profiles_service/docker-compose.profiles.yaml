@@ -11,6 +11,8 @@ services:
         - "5433:5432"
       volumes:
         - profiles_data:/var/lib/postgresql/data
+      networks:
+      - forum_network
 
   profiles:
     build: .
@@ -28,6 +30,8 @@ services:
       - "8000:8000"
     volumes:
       - ./:/app
+    networks:
+      - forum_network
 
   redis:
     image: redis:alpine
@@ -37,6 +41,8 @@ services:
       -  "6379:6379"
     volumes:
       - redis_data:/data
+    networks:
+      - forum_network
 
   celery:
     build: .
@@ -49,7 +55,13 @@ services:
     command: celery --app=task.app worker --concurrency=1 --loglevel=DEBUG
     volumes:
       - ./:/app
+    networks:
+      - forum_network
 
 volumes:
   profiles_data:
   redis_data:
+
+networks:
+  forum_network:
+    external: true 
