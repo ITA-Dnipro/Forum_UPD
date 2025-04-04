@@ -13,7 +13,7 @@ router = APIRouter()
 
 @router.get("/news")
 async def get_news(skip: int = 0, limit: int = 3):
-    news = await NewsModel.find(NewsModel.deleted == False).skip(skip).limit(limit).to_list()
+    news = await NewsModel.find(NewsModel.deleted == False).sort(-NewsModel.published_at).skip(skip).limit(limit).to_list()
     if not news:
         raise HTTPException(status_code=404, detail="News not found")
 

@@ -59,7 +59,7 @@ services:
   celery_worker:
     build:
       context: .
-      dockerfile: Dockerfile.celery  # Use dedicated Celery Dockerfile
+      dockerfile: Dockerfile.celery
     container_name: celery_worker
     restart: always
     env_file: .env
@@ -75,12 +75,12 @@ services:
   celery_beat:
     build:
       context: .
-      dockerfile: Dockerfile  # Using the same Dockerfile as celery_worker
+      dockerfile: Dockerfile
     container_name: celery_beat
     restart: always
     env_file: .env
     volumes:
-      - celery_beat_data:/app  # Make sure Celery Beat has write access
+      - celery_beat_data:/app
     depends_on:
       - celery_worker
       - redis
