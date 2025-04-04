@@ -20,6 +20,7 @@ class AccountActivationAPITests(APITestCase):
         self.test_user = UserFactory.create(is_active=False)
         self.signer = TimestampSigner()
 
+
     def test_account_activation_success(self):
         token = self.signer.sign(str(self.test_user.pk))
         response = self.client.get(f"{url}?token={token}")

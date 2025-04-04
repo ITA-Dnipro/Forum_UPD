@@ -18,7 +18,7 @@ class UserRegistrationAPITests(APITestCase):
         self.mock_verify_recaptcha = patcher.start()
         self.addCleanup(patcher.stop)
 
-        patcher_kafka = patch("custom_auth.producers.send_activation_message")
+        patcher_kafka = patch("custom_auth.producers.send_message")
         self.mock_kafka_producer = patcher_kafka.start()
         self.addCleanup(patcher_kafka.stop)
         self.mock_kafka_producer.return_value = None
