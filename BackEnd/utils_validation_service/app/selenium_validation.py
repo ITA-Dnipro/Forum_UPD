@@ -5,7 +5,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as ec
 
 import logging.config
-from app.settings import LOGGING
+from settings import LOGGING
 
 logging.config.dictConfig(LOGGING)
 logger = logging.getLogger('utils_validation_service')
@@ -21,6 +21,7 @@ def get_selenium_driver():
 
 def validate_code(code: str):
     driver = get_selenium_driver()
+    status = 'Valid'
     try:
         driver.get("https://youcontrol.com.ua/")
 
@@ -30,7 +31,6 @@ def validate_code(code: str):
         driver.execute_script("arguments[0].scrollIntoView();", search_button)
         driver.execute_script("arguments[0].click();", search_button)
 
-        status = 'Valid'
         try:
             result_text = WebDriverWait(driver, 5).until(ec.presence_of_element_located((By.CSS_SELECTOR, "h4"))).text == "На жаль, за Вашим запитом контрагентів не знайдено"
             status = 'Invalid' if result_text else 'Valid'
@@ -43,8 +43,8 @@ def validate_code(code: str):
         logger.error(e2)
         return f'Error {e2}'
     finally:
-        driver.quit()
+        try:
+            driver.quit()
+        except Exception as e:
+            logger.error(f"Error while closing driver: {e}")
     return status
-
-
-validate_code(2248000330)
