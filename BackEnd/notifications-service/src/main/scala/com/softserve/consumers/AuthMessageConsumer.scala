@@ -29,7 +29,7 @@ object AuthMessageConsumer {
                 ZIO.debug(s"Validation failed: ${validationErrors.mkString(", ")}")
               } else {
                 val sourceDataPath = new File(s"${EmailConstants.EmailTemplates.TEMPLATES_PATH}/${EmailConstants.EmailTemplates.CONFIRM_NAME}").getCanonicalPath
-                val someAttributes = Map("name" -> authMessage.name, "link" -> authMessage.activationLink)
+                val someAttributes = Map("name" -> authMessage.name, "link" -> authMessage.link)
                 val temp = templateEngine.layout(sourceDataPath, someAttributes).toString()
                 for {
                 _ <- SmtpEmailSender.sendEmail(

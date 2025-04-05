@@ -7,7 +7,10 @@ import com.softserve.models._
 
 object AuthMessageSerde {
   val serde: Serde[Any, AuthMessage] =
-    Serde.string.inmapZIO[Any, AuthMessage](
-      s => ZIO.fromEither(s.fromJson[AuthMessage]).mapError(e => new RuntimeException(e))
-    )(msg => ZIO.succeed(msg.toJson))
+    Serde.string.inmap(
+      _.fromJson[AuthMessage].getOrElse {
+        println("Invalid AuthMessage JSON, using fallback.")
+        AuthMessage.empty
+      }
+    )(_.toJson)
 }

@@ -1,0 +1,19 @@
+services:
+  scala-mail-service:
+    image: sbtscala/scala-sbt:graalvm-ce-22.3.3-b1-java17_1.10.7_3.3.5
+    container_name: scala-mail-service
+    working_dir: /app
+    volumes:
+      - ../notifications-service:/app
+    env_file:
+      - ../../.env  
+    command: [
+      "sbt", "reload", "clean", "compile", "run"]
+    ports:
+      - "9093:9093"
+    networks:
+      - forum_network
+
+networks: 
+  forum_network:
+    external: true
