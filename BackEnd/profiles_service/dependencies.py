@@ -97,6 +97,7 @@ def investor_create_dependency(
     phone: str = Body(None),
     edrpou: str = Body(None),
     rnokpp: str = Body(None),
+    available_funds: float = Body(None),
     investment_categories: List[int] = Body(None),
 ) -> Investor:
     try:
@@ -106,6 +107,7 @@ def investor_create_dependency(
             phone=phone,
             edrpou=edrpou,
             rnokpp=rnokpp,
+            available_funds=available_funds,
             investment_categories=investment_categories,
         )
     except ValidationError as e:
@@ -120,6 +122,7 @@ def investor_optional_create_dependency(
     phone: str = Body(None),
     edrpou: str = Body(None),
     rnokpp: str = Body(None),
+    available_funds: float = Body(None),
     investment_categories: List[int] = Body(None),
 ) -> InvestorOptional:
     try:
@@ -129,6 +132,7 @@ def investor_optional_create_dependency(
             phone=phone,
             edrpou=edrpou,
             rnokpp=rnokpp,
+            available_funds=available_funds,
             investment_categories=investment_categories,
         )
     except ValidationError as e:
