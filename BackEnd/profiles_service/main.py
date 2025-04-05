@@ -1,9 +1,28 @@
+import asyncio
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 import uvicorn
+from utils.producer import init_producer, shutdown_producer
 from routers import investors, categories, regions, images, startups
+from utils.consumers import ConsumerManager
+from consumers.new_profile import consume_new_user_profiles
+from contextlib import asynccontextmanager
+from core.settings import settings
 
-app = FastAPI(root_path="/api")
+
+
+@asynccontextmanager
+async def lifespan(app):
+    await init_producer(settings.KAFKA_BROKER)
+    consumer = await ConsumerManager.create_consumer(topic="user_role_update")
+    asyncio.create_task(consume_new_user_profiles(consumer=consumer))
+    yield
+    await shutdown_producer()
+    await ConsumerManager.shutdown_all()
+
+
+
+app = FastAPI(root_path="/api", lifespan=lifespan)
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
@@ -13,6 +32,22 @@ app.include_router(categories.router, prefix="/startup_categories")
 app.include_router(regions.router, prefix="/regions")
 app.include_router(images.router, prefix="/images")
 
+
+
+# @app.on_event("startup")
+# async def startup():
+#     app.state.producer = startup_producer()
+#     consumer = await ConsumerManager.create_consumer(topic="user_role_update")
+#     asyncio.create_task(consume_new_user_profiles(consumer=consumer))
+    
+# @app.on_event("shutdown")
+# async def shutdown():
+#     # await shutdown_producer(BaseProducer)
+#     await app.state.producer.stop()
+#     await ConsumerManager.shutdown_all()
+
+
+    
 
 if __name__ == "__main__":
     uvicorn.run("main:app", host="0.0.0.0", reload=True)

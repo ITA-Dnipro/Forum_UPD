@@ -1,10 +1,11 @@
+from aiokafka import AIOKafkaProducer
 from models.startups import StartupProfileOrm, StatusEnum
 from schemas.profiles import Startup, StartupOptional, ModerationFeedback, ProfileModerationEnum
 from core.exceptions import InvalidRelatedEntityError, NotFoundError
 from repositories.base import BaseRepository
 from repositories.profiles import ProfileRepository
 from task import autoapprove_image
-from utils.producer import send_approval_email, send_valid_profile_message
+from utils.producer import send_approval_email, send_valid_profile_message, get_producer
 from utils.time import to_local_time
 from utils.profile_validation import validate_startup
 
@@ -79,7 +80,8 @@ class ProfileStartupService:
 
             profile_view_url = f"http://localhost:8000/api/startup_profiles/{profile.id}/images_moderation"
 
-            send_approval_email(
+            await send_approval_email(
+            producer = await get_producer(),
             profile_name=profile.name,
             updated_at=to_local_time(profile.updated_at),
             moderation_time=MODERATION_HOURS,
@@ -99,7 +101,8 @@ class ProfileStartupService:
 
 
         if validate_startup(profile):
-            send_valid_profile_message(
+            await send_valid_profile_message(
+                producer=await get_producer(),
                 user_id=profile.user_id, 
                 profile_type="startup",
                 status="valid"

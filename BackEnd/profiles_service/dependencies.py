@@ -19,6 +19,7 @@ from services.investors import InvestorsService
 from services.regions import RegionService
 
 
+
 def startup_create_dependency(
     name: str = Body(...),
     is_registered: bool = Body(False),
