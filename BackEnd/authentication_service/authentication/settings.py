@@ -123,7 +123,7 @@ DATABASES = {
         'NAME': os.getenv('POSTGRES_DB', 'auth_db'),
         'USER': os.getenv('POSTGRES_USER', 'auth_user'),
         'PASSWORD': os.getenv('POSTGRES_PASSWORD', 'auth_password'),
-        'HOST': os.getenv('POSTGRES_HOST', 'postgres'),
+        'HOST': os.getenv('POSTGRES_HOST', 'authentication_postgres'),
         'PORT': os.getenv('POSTGRES_PORT', '5432'),
     }
 }
@@ -285,3 +285,5 @@ RECAPTCHA_V2_PRIVATE_KEY = config("RECAPTCHA_V2_PRIVATE_KEY")
 RECAPTCHA_URL = config("RECAPTCHA_URL")
 
 DJANGO_SETTINGS_MODULE = config("DJANGO_SETTINGS_MODULE")
+
+KAFKA_BROKER = 'kafka:9092'
