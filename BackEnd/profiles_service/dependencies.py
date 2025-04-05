@@ -8,7 +8,7 @@ from models.images import ProfileImage
 from models.validation import ProfileValidationOrm
 from services.images import ImageService
 from repositories.base import BaseRepository
-from repositories.profiles import ProfileRepository
+from repositories.profiles import InvestorRepository, StartupRepository
 from repositories.validation import ValidationRepository
 from schemas.profiles import Startup, StartupOptional, Investor, InvestorOptional
 from typing import List
@@ -148,23 +148,26 @@ async def get_async_session() -> AsyncSession:
 
 
 def get_startup_service(session: AsyncSession = Depends(get_async_session)):
-    profile_repo = ProfileRepository(model=StartupProfileOrm, session=session)
-    category_repo = BaseRepository(model=StartupCategoryOrm, session=session)
     region_repo = BaseRepository(model=RegionOrm, session=session)
     image_repo = BaseRepository(model=ProfileImage, session=session)
+    category_repo = BaseRepository(model=StartupCategoryOrm, session=session)
     validation_repo = ValidationRepository(model=ProfileValidationOrm, session=session)
+    profile_repo = StartupRepository(
+        model=StartupProfileOrm, 
+        session=session, 
+        region_repo=region_repo, 
+        category_repo=category_repo)
+    
     return ProfileStartupService(
         repo=profile_repo, 
-        category_repo=category_repo, 
-        region_repo=region_repo, 
         image_repo=image_repo,
         validation_repo=validation_repo)
 
 
 def get_investor_service(session: AsyncSession = Depends(get_async_session)):
-    profile_repo = ProfileRepository(model=InvestorProfileOrm, session=session)
     startup_category_repo = BaseRepository(model=StartupCategoryOrm, session=session)
-    return InvestorsService(profile_repo, startup_category_repo=startup_category_repo)
+    profile_repo = InvestorRepository(model=InvestorProfileOrm, session=session, startup_category_repo=startup_category_repo)
+    return InvestorsService(profile_repo)
 
 
 def get_caterory_service(session: AsyncSession = Depends(get_async_session)):
