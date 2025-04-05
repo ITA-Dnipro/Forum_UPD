@@ -27,17 +27,10 @@ class InvestorsService:
         return await self.repository.add_one(profile_dict=profile_dict)
     
 
-    async def partial_investor_update(self, profile_id: int, data: InvestorOptional):
+    async def investor_update(self, profile_id: int, data: InvestorOptional):
         profile_dict = data.model_dump(exclude_unset=True, exclude_none=True)
         profile_dict = await self._fetch_related_by_id(data=profile_dict)
         return await self.repository.update(instance_id=profile_id, data=profile_dict)
-
-
-    async def investor_update(self, profile_id: int, data: Investor):
-        profile_dict = data.model_dump(exclude_unset=True, exclude_none=True)
-        self._fetch_related_by_id(profile_dict)
-        
-        return await self.repository.update(instance_id=profile_id, profile_dict=profile_dict)
 
 
     async def investor_delete(self, profile_id: int):

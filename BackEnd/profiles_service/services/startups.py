@@ -111,29 +111,6 @@ class ProfileStartupService:
         return profile
 
 
-    async def startup_update(self, profile_id: int, data: Startup):
-        profile_dict = data.model_dump(exclude_unset=True, exclude_none=True)
-        if "banner_id" in profile_dict:
-            profile_dict["status"] = StatusEnum.PENDING 
-            autoapprove_image.delay(profile_id=profile_id)
-
-        profile_dict["status"] = StatusEnum.PENDING if "banner_id" in profile_dict else StatusEnum.UNDEFINED
-        self._fetch_related_by_id(profile_dict)
-        
-        profile: StartupProfileOrm = await self.repository.update(instance_id=profile_id, data=profile_dict)
-
-        profile_view_url = f"http://localhost:8000/api/startup_profiles/{profile.id}/images_moderation"
-
-        send_approval_email(
-           profile_name=profile.name,
-           updated_at=to_local_time(profile.updated_at),
-           moderation_time=MODERATION_HOURS,
-           image_path=profile.banner.image_path,
-           profile_view_url=profile_view_url
-        )
-        return profile
-
-
     async def startup_delete(self, profile_id: int):
         await self.repository.soft_delete(profile_id)
 
