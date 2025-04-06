@@ -81,12 +81,14 @@ MIDDLEWARE = [
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_ALL_ORIGINS = False
 
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:8080",
-    "http://127.0.0.1",
-    "http://0.0.0.0",
-] + config("CORS_ALLOWED_ORIGINS", default="", cast=str).split(",")
+# CORS_ALLOWED_ORIGINS = [
+#     "http://localhost:8080",
+#     "http://127.0.0.1",
+#     "http://0.0.0.0",
+# ] + config("CORS_ALLOWED_ORIGINS", default="", cast=str).split(",")
 
+CORS_ALLOW_ALL_ORIGINS = True#
+#
 CORS_ALLOW_HEADERS = list(default_headers) + [
     "Access-Control-Expose-Headers",
     "Access-Control-Allow-Headers",
