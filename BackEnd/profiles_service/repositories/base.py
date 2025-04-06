@@ -24,6 +24,8 @@ class BaseRepository:
         for name, relationship in inspect(self.model).relationships.items():
             if relationship.direction.name == "MANYTOMANY":
                 self.many_to_many_fields.append(name)
+            elif relationship.direction.name == "ONETOMANY":
+                self.many_to_many_fields.append(name)
             elif relationship.direction.name == "MANYTOONE":
                 self.many_to_one_fields.append(name)
     
@@ -38,15 +40,16 @@ class BaseRepository:
     
 
     async def add_one(self, data: dict):
-        try:
+        # try:
             instance = self.model(**data)
             self.session.add(instance)
-            await self.session.commit()
-            await self.session.refresh(instance) 
+            await self.session.flush()
+            # await self.session.commit()
+            # await self.session.refresh(instance) 
             return instance
-        except Exception as e:
-            await self.session.rollback()
-            raise e
+        # except Exception as e:
+        #     await self.session.rollback()
+        #     raise e
 
 
     async def get_all(self, **filters):
@@ -85,23 +88,25 @@ class BaseRepository:
 
 
     async def update(self, instance_id: int, data: dict):
-        try:
+        # try:
             instance = await self.get_by_id(instance_id)
             for key, value in data.items():
                 setattr(instance, key, value)
-            await self.session.commit()
-            await self.session.refresh(instance) 
+            await self.session.flush()
+            # await self.session.commit()
+            # await self.session.refresh(instance) 
             return instance
-        except Exception as e:
-            await self.session.rollback()
-            raise e
+        # except Exception as e:
+        #     await self.session.rollback()
+        #     raise e
     
 
     async def soft_delete(self, instance_id: int):
-        try: 
+        # try: 
             instance = await self.get_by_id(instance_id)
             instance.is_deleted = True
-            await self.session.commit()
-        except Exception as e:
-                await self.session.rollback()
-                raise e
+            await self.session.flush()
+            # await self.session.commit()
+        # except Exception as e:
+        #         await self.session.rollback()
+        #         raise e

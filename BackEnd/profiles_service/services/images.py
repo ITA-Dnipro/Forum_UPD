@@ -1,7 +1,7 @@
 from pathlib import Path
 import uuid
+from utils.uow import UOW
 from repositories.base import BaseRepository
-from repositories.profiles import ProfileRepository
 from core.settings import settings
 
 
@@ -11,8 +11,9 @@ class ImageService:
     ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'webp'}
 
 
-    def __init__(self, repo: BaseRepository):
+    def __init__(self, uow: UOW,  repo: BaseRepository):
         self.repository = repo
+        self.uow = uow
 
     
     def _create_storage_path(self, file_ext):
@@ -42,5 +43,6 @@ class ImageService:
 
         image_dict = {}
         image_dict["image_path"] = str(path)
-        return await self.repository.add_one(image_dict)
+        async with self.uow as uow:
+            return await self.repository.add_one(image_dict)
 

@@ -21,7 +21,7 @@ class ProfileValidationOrm(Model):
     profile_id: Mapped[int] = mapped_column(
         ForeignKey("startup_profiles.id")
     )
-    profile: Mapped["StartupProfileOrm"] = relationship(
+    profile: Mapped[StartupProfileOrm] = relationship(
         back_populates="validations",
         uselist=False
         )

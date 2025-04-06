@@ -14,7 +14,7 @@ from core.settings import settings
 @asynccontextmanager
 async def lifespan(app):
     await init_producer(settings.KAFKA_BROKER)
-    consumer = await ConsumerManager.create_consumer(topic="user_role_update")
+    consumer = await ConsumerManager.create_consumer(topic="new_user_profile")
     asyncio.create_task(consume_new_user_profiles(consumer=consumer))
     yield
     await shutdown_producer()

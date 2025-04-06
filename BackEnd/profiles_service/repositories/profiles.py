@@ -42,8 +42,12 @@ class InvestorRepository(ProfileRepository):
         return data
 
     async def add_one(self, profile_dict):
+        print('Im here')
         profile_dict = await self._fetch_related_by_id(profile_dict)
-        return await super().add_one(profile_dict)
+        
+        profile = await super().add_one(profile_dict)
+        
+        return profile
     
     async def update(self, instance_id, data):
         data = await self._fetch_related_by_id(data)
@@ -75,7 +79,8 @@ class InvestorRepository(ProfileRepository):
 
     async def add_one(self, profile_dict):
         profile_dict = await self._fetch_related_by_id(profile_dict)
-        return await super().add_one(profile_dict)
+        profile = await super().add_one(profile_dict)
+        return profile
     
     async def update(self, instance_id, data):
         data = await self._fetch_related_by_id(data)

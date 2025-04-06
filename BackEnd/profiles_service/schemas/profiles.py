@@ -22,6 +22,7 @@ class Profile(BaseModel):
   phone: Optional[MyNumberType] = None
   edrpou: Optional[str] = None
   rnokpp: Optional[str] = None
+  user_id: Optional[int] = None
   
 
   @field_validator('edrpou', mode='after')

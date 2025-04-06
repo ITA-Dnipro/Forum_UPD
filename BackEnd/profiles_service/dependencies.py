@@ -1,6 +1,8 @@
+from contextlib import asynccontextmanager
 from fastapi import Body, Depends, HTTPException
 from pydantic import ValidationError
 from sqlalchemy.ext.asyncio import AsyncSession
+from utils.uow import UOW
 from models.startups import StartupProfileOrm, InvestorProfileOrm
 from models.categories import StartupCategoryOrm
 from models.regions import RegionOrm
@@ -145,40 +147,54 @@ async def get_async_session() -> AsyncSession:
     async with new_session() as session:
         yield session
 
+def get_async_ouw(session: AsyncSession = Depends(get_async_session)) -> UOW:
+    return UOW(session=session)
 
 
-def get_startup_service(session: AsyncSession = Depends(get_async_session)):
-    region_repo = BaseRepository(model=RegionOrm, session=session)
-    image_repo = BaseRepository(model=ProfileImage, session=session)
-    category_repo = BaseRepository(model=StartupCategoryOrm, session=session)
-    validation_repo = ValidationRepository(model=ProfileValidationOrm, session=session)
+def get_startup_service(uow: UOW = Depends(get_async_ouw)):
+
+    region_repo = BaseRepository(model=RegionOrm, session=uow.session)
+    image_repo = BaseRepository(model=ProfileImage, session=uow.session)
+    category_repo = BaseRepository(model=StartupCategoryOrm, session=uow.session)
+    validation_repo = ValidationRepository(model=ProfileValidationOrm, session=uow.session)
     profile_repo = StartupRepository(
         model=StartupProfileOrm, 
-        session=session, 
+        session=uow.session, 
         region_repo=region_repo, 
         category_repo=category_repo)
     
     return ProfileStartupService(
+        uow=uow,
         repo=profile_repo, 
         image_repo=image_repo,
         validation_repo=validation_repo)
 
 
-def get_investor_service(session: AsyncSession = Depends(get_async_session)):
-    startup_category_repo = BaseRepository(model=StartupCategoryOrm, session=session)
-    profile_repo = InvestorRepository(model=InvestorProfileOrm, session=session, startup_category_repo=startup_category_repo)
-    return InvestorsService(profile_repo)
+
+# def get_investor_service(session: AsyncSession = Depends(get_async_session)):
+#     startup_category_repo = BaseRepository(model=StartupCategoryOrm, session=session)
+#     profile_repo = InvestorRepository(model=InvestorProfileOrm, session=session, startup_category_repo=startup_category_repo)
+#     return InvestorsService(profile_repo)
+
+def get_investor_service(uow: UOW = Depends(get_async_ouw)):
+    startup_category_repo = BaseRepository(model=StartupCategoryOrm, session=uow.session)
+    profile_repo = InvestorRepository(model=InvestorProfileOrm, session=uow.session, startup_category_repo=startup_category_repo)
+    return InvestorsService(uow=uow, repo=profile_repo)
+
+# def get_caterory_service(session: AsyncSession = Depends(get_async_session)):
+#     repo = BaseRepository(model=StartupCategoryOrm, session=session)
+#     return CategoryService(repo)
+
+def get_caterory_service(uow: UOW = Depends(get_async_ouw)):
+    repo = BaseRepository(model=StartupCategoryOrm, session=uow.session)
+    return CategoryService(uow, repo)
 
 
-def get_caterory_service(session: AsyncSession = Depends(get_async_session)):
-    repo = BaseRepository(model=StartupCategoryOrm, session=session)
-    return CategoryService(repo)
+def get_region_service(uow: UOW = Depends(get_async_ouw)):
+    repo = BaseRepository(model=RegionOrm, session=uow.session)
+    return RegionService(uow, repo)
 
 
-def get_region_service(session: AsyncSession = Depends(get_async_session)):
-    repo = BaseRepository(model=RegionOrm, session=session)
-    return RegionService(repo)
-
-def get_image_service(session: AsyncSession = Depends(get_async_session)):
-    repo = BaseRepository(model=ProfileImage, session=session)
-    return ImageService(repo)
+def get_image_service(uow: UOW = Depends(get_async_ouw)):
+    repo = BaseRepository(model=ProfileImage, session=uow.session)
+    return ImageService(uow, repo)

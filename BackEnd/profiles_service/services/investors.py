@@ -1,3 +1,4 @@
+from utils.uow import UOW
 from models.startups import StatusEnum
 from schemas.profiles import Investor, InvestorOptional
 from repositories.base import BaseRepository
@@ -7,7 +8,8 @@ from repositories.profiles import ProfileRepository
 
 class InvestorsService:
 
-    def __init__(self, repo: ProfileRepository):
+    def __init__(self, uow: UOW, repo: ProfileRepository):
+        self.uow=uow
         self.repository = repo
 
 
@@ -21,15 +23,19 @@ class InvestorsService:
     async def add_investor(self, data: Investor):
         profile_dict = data.model_dump(exclude_unset=True, exclude_none=True)
         profile_dict["status"] = StatusEnum.UNDEFINED
-        return await self.repository.add_one(profile_dict=profile_dict)
+        async with self.uow as uow:
+            return await self.repository.add_one(profile_dict=profile_dict)
     
 
     async def investor_update(self, profile_id: int, data: InvestorOptional):
         profile_dict = data.model_dump(exclude_unset=True, exclude_none=True)
-        return await self.repository.update(instance_id=profile_id, data=profile_dict)
+        async with self.uow as uow:
+            return  await self.repository.update(instance_id=profile_id, data=profile_dict)
+        
 
 
     async def investor_delete(self, profile_id: int):
-        await self.repository.soft_delete(profile_id)
+        async with self.uow as uow:
+            return await self.repository.soft_delete(profile_id)
 
 
