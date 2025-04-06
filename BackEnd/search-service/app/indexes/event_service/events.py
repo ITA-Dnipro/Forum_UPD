@@ -32,7 +32,7 @@ class EventDocument(AsyncDocument):
     location = Keyword()
     image = Keyword()
     available_slots = Integer()
-    max_participants = Integer()
+    capacity = Integer()
 
     date = Date()
     starting_time = Date()

@@ -38,7 +38,7 @@ async def seed_events():
                 location=faker.city(),
                 image=faker.image_url(),
                 available_slots=faker.random_int(min=10, max=100),
-                max_participants=100,
+                capacity=100,
                 date=datetime.now(),
                 starting_time=datetime.now(),
             )

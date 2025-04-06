@@ -23,6 +23,7 @@ services:
       image: postgres:13
       ports:
         - ${POSTRGRES_DB_HOST_PORT}:5432
+      command: postgres -c wal_level=logical
       environment:
         - POSTGRES_DB=${POSTGRES_DB}
         - POSTGRES_USER=${POSTGRES_USER}

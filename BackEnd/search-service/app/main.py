@@ -1,3 +1,4 @@
+import asyncio
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -7,6 +8,7 @@ from slowapi.errors import RateLimitExceeded
 from slowapi.util import get_remote_address
 
 from .config import settings, logger
+from .consumers.event_consumer import run_event_consumer
 from .es.es_client import elasticsearch_init
 from .indexes.event_service.events import EventDocument
 from .indexes.forum_service.blog_posts import BlogPostDocument
@@ -63,6 +65,17 @@ async def lifespan(app: FastAPI):
         except Exception as e:
             logger.exception(f"Error seeding data: {str(e)}")
             raise
+
+    try:
+        loop = asyncio.get_running_loop()
+        event_thread = run_event_consumer(loop)
+        app.state.consumers = {
+            "event": event_thread,
+        }
+        logger.info("Consumer threads started successfully.")
+    except Exception as e:
+        logger.exception("Failed to start consumer threads.")
+        raise
 
     try:
         yield

@@ -1,0 +1,14 @@
+FROM debezium/connect:1.9.7.Final
+
+USER root
+
+COPY custom-connectors/ /kafka/connect/
+RUN chown -R kafka:kafka /kafka/connect
+
+COPY scripts/init-connector.sh /usr/local/bin/init-connector.sh
+RUN chmod +x /usr/local/bin/init-connector.sh
+
+USER kafka
+ENV CONNECT_PLUGIN_PATH="/kafka/connect"
+
+ENTRYPOINT ["/usr/local/bin/init-connector.sh"]
