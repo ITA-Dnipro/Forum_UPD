@@ -1,9 +1,7 @@
-version: '3.8'
-
 services:
-  postgres:
+  authentication_postgres:
     image: postgres:15
-    container_name: postgres
+    container_name: authentication_postgres
     restart: always
     env_file:
       - .env
@@ -11,12 +9,15 @@ services:
       - "5433:${POSTGRES_PORT}"
     volumes:
       - auth_postgres_data:/var/lib/postgresql/data
+    networks:
+      - forum_network
 
-  auth_service:
+  authentication_service:
     build: .
-    container_name: auth_service
+    container_name: authentication_service
+    restart: on-failure
     depends_on:
-      - postgres
+      - authentication_postgres
     env_file:
       - .env
     ports:
@@ -27,6 +28,13 @@ services:
       sh -c "python manage.py makemigrations &&
              python manage.py migrate &&
              python manage.py runserver 0.0.0.0:8000"
+    networks:
+      - forum_network
+
 
 volumes:
   auth_postgres_data:
+
+networks:
+  forum_network:
+    external: true

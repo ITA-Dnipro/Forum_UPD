@@ -4,6 +4,6 @@ venv/
 env/
 .env
 *.log
-
+/logs
 .idea/
 .vscode/

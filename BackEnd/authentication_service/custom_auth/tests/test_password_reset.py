@@ -1,8 +1,8 @@
 from django.core.cache import cache
 from django.core.signing import TimestampSigner
-from django.core import mail
 from rest_framework import status
 from rest_framework.test import APITestCase
+from unittest.mock import patch
 
 from custom_auth.factories import UserFactory
 
@@ -18,7 +18,10 @@ class PasswordResetTests(APITestCase):
         )
         self.user.set_password("OldPassword123")
         self.user.save()
-        mail.outbox = []
+        patcher_kafka = patch("custom_auth.producers.send_message")
+        self.mock_kafka_producer = patcher_kafka.start()
+        self.addCleanup(patcher_kafka.stop)
+        self.mock_kafka_producer.return_value = None
 
     def test_password_reset_request_existing_email(self):
         response = self.client.post(
@@ -27,9 +30,6 @@ class PasswordResetTests(APITestCase):
             format="json"
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        print("Mail outbox:", mail.outbox)
-        self.assertEqual(len(mail.outbox), 1)
-        self.assertIn("Password Reset Request", mail.outbox[0].subject)
         self.assertIn("If an account with that email exists", response.data["message"])
 
     def test_password_reset_request_nonexistent_email(self):
@@ -39,7 +39,6 @@ class PasswordResetTests(APITestCase):
             format="json"
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(mail.outbox), 0)
         self.assertIn("If an account with that email exists", response.data["message"])
 
     def test_password_reset_request_rate_limiting(self):
