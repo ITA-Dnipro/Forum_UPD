@@ -10,6 +10,6 @@ object FieldConstants {
 object TopicConstants {
   final lazy val EVENT: String = "event"
   final lazy val AUTHENTICATION: String = "auth"
-  final lazy val PROFILE: String = "profile"
+  final lazy val PROFILE_IMAGE: String = "profile_image"
   final lazy val FORUM: String = "forum"
 }

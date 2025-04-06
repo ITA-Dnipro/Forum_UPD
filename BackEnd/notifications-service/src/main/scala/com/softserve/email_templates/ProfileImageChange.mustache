@@ -43,13 +43,18 @@
 <body>
     <div>
         <img src="image_path" alt="CRAFTMERGE"/>
-        <p>Доброго дня, {{name}}</p>
-        <p>Нам надійшов запит на зміну пароля.</p>
-        <p>Підтвердьте цю дію, за посиланням.</p>
-        <div style="margin: 20px 0;">
-            <a href="{{link}}" class="button button-approve">ПІДТВЕРДИТИ</a>
+        <p>Доброго дня,</p>
+        <p>Вам надійшов запит на затвердження змін в обліковому записі компанії {{ profile_name }} на сайті CraftMerge.</p>
+        <p>Перегляньте зміни та затвердіть або скасуйте їх.</p>
+        <p><b>Дата змін: </b>{{ updated_at }} UTC</p>
+        <p><b>Банер:</b></p>
+        <div class="banner">
+            <img src="cid:{{ image_path }}" alt="Банер"/>
         </div>
-        <p>Якщо ви не замовляли цієї дії, можете проігнорувати це повідомлення.</p>
+        <div style="margin: 20px 0;">
+            <a href="{{profile_view_url}}" class="button button-approve">ПЕРЕГЛЯНУТИ</a>
+        </div>
+        <p><b>Примітка:</b> <i>запит буде автоматично затверджений через {{ moderation_time }}</i></p>
         <p>З повагою,</p>
         <p>Команда CraftMerge</p>
     </div>

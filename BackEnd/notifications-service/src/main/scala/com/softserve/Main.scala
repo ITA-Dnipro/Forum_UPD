@@ -19,12 +19,12 @@ import com.softserve.constants.EmailConstants._
 object Main extends ZIOAppDefault {
   val bootstrapServers = sys.env.getOrElse("KAFKA_BROKER", "kafka:9092").split(",").toList
   val templateEngine = new TemplateEngine()
-  val topic = TopicConstants.AUTHENTICATION
+
 
   override def run: ZIO[Any, Throwable, Unit] = 
       ZIO.scoped {(for {
       _ <- useEmailFields.provideLayer(emailConfigLayer)
-      _ <- AuthMessageConsumer.run(bootstrapServers, templateEngine)
+      _ <- MessageConsumer.run(bootstrapServers, templateEngine)
     } yield ()).tapError(err => ZIO.debug(s"Error: ${err.getMessage}"))
 }
 }
