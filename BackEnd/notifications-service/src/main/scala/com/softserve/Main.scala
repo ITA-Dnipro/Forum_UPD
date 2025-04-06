@@ -16,7 +16,6 @@ import com.softserve.producers._
 import com.softserve.models._
 import com.softserve.serde._
 import com.softserve.constants.EmailConstants._
-
 object Main extends ZIOAppDefault {
   val bootstrapServers = sys.env.getOrElse("KAFKA_BROKER", "kafka:9092").split(",").toList
   val templateEngine = new TemplateEngine()

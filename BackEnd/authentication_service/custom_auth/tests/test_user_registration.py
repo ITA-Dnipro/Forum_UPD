@@ -18,6 +18,11 @@ class UserRegistrationAPITests(APITestCase):
         self.mock_verify_recaptcha = patcher.start()
         self.addCleanup(patcher.stop)
 
+        patcher_kafka = patch("custom_auth.producers.send_message")
+        self.mock_kafka_producer = patcher_kafka.start()
+        self.addCleanup(patcher_kafka.stop)
+        self.mock_kafka_producer.return_value = None
+
         self.existing_user = UserFactory.create(email="test@test.com")
 
         self.default_payload = {
@@ -27,13 +32,12 @@ class UserRegistrationAPITests(APITestCase):
             "name": "Jane",
             "surname": "Smith",
             "captcha": "dummy_captcha",
-            "company": {
+            "company1": {
                 "name": "My Company",
                 "is_registered": True,
                 "is_startup": False,
                 "is_fop": False,
             },
-            "registration_type": "Investor"
         }
 
     def test_register_user_email_incorrect(self):
@@ -77,7 +81,7 @@ class UserRegistrationAPITests(APITestCase):
         test_user = UserFactory.build()
         payload = self.default_payload.copy()
         payload["email"] = test_user.email
-        payload["company"] = {
+        payload["company1"] = {
             "name": "My Company Empty",
             "is_registered": False,
             "is_startup": False,
@@ -86,13 +90,16 @@ class UserRegistrationAPITests(APITestCase):
 
         response = self.client.post(url, data=payload, format="json")
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual({"comp_status": ["Please choose who you represent."]}, response.json())
+        self.assertEqual(
+            response.json(),
+            {"company1": ["Please choose who you represent."]}
+        )
 
-    def test_register_user_both_companies_chosen(self):
+    def test_register_user_startup_fop(self):
         test_user = UserFactory.build()
         payload = self.default_payload.copy()
         payload["email"] = test_user.email
-        payload["company"] = {
+        payload["company1"] = {
             "name": "My Company Startup FOP",
             "is_registered": True,
             "is_startup": True,
@@ -107,7 +114,7 @@ class UserRegistrationAPITests(APITestCase):
         test_user = UserFactory.build()
         payload = self.default_payload.copy()
         payload["email"] = test_user.email
-        payload["company"] = {
+        payload["company1"] = {
             "name": "My Company yurosoba",
             "is_registered": True,
             "is_startup": False,
@@ -122,7 +129,7 @@ class UserRegistrationAPITests(APITestCase):
         test_user = UserFactory.build()
         payload = self.default_payload.copy()
         payload["email"] = test_user.email
-        payload["company"] = {
+        payload["company1"] = {
             "name": "My Company FOP",
             "is_registered": True,
             "is_startup": False,
@@ -132,3 +139,49 @@ class UserRegistrationAPITests(APITestCase):
         response = self.client.post(url, data=payload, format="json")
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual({"name": "Jane", "surname": "Smith"}, response.json())
+
+    def test_register_user_two_companies_valid(self):
+        test_user = UserFactory.build()
+        payload = self.default_payload.copy()
+        payload["email"] = test_user.email
+        payload["company1"] = {
+            "name": "Startup Co",
+            "is_registered": True,
+            "is_startup": True,
+            "is_fop": False,
+        }
+        payload["company2"] = {
+            "name": "Investor Co",
+            "is_registered": True,
+            "is_startup": False,
+            "is_fop": False,
+        }
+
+        response = self.client.post(url, data=payload, format="json")
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual({"name": "Jane", "surname": "Smith"}, response.json())
+
+    def test_register_user_two_companies_same_type(self):
+        test_user = UserFactory.build()
+        payload = self.default_payload.copy()
+        payload["email"] = test_user.email
+        payload["company1"] = {
+            "name": "Startup Co 1",
+            "is_registered": True,
+            "is_startup": True,
+            "is_fop": False,
+        }
+        payload["company2"] = {
+            "name": "Startup Co 2",
+            "is_registered": True,
+            "is_startup": True,
+            "is_fop": False,
+        }
+
+        response = self.client.post(url, data=payload, format="json")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("company2", response.json())
+        self.assertEqual(
+            response.json(),
+            {"company2": ["Both companies must have different is_startup values."]}
+        )

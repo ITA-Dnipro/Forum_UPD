@@ -46,6 +46,8 @@ from .validate_password import (
     validate_password_strength
 )
 from .models import Role, UserRole
+from .producers import send_message, send_company_profile
+
 
 logger = logging.getLogger(__name__)
 
@@ -60,9 +62,10 @@ class UserRegistrationView(APIView):
     permission_classes = [AllowAny]
 
     @extend_schema(
-        operation_id="user_register",
+        operation_id="register",
         summary="Register a new user",
-        description="Register as a new user with email, password, name, surname, and company details.",
+        description="Register a new user with email, password, personal details, and one or two companies. "
+                "`company1` is required. `company2` is optional, but must have a different `is_startup` value.",
         request=UserRegistrationSerializer,
         responses={
             201: OpenApiResponse(
@@ -81,13 +84,10 @@ class UserRegistrationView(APIView):
         try:
             serializer = UserRegistrationSerializer(data=request.data)
             if serializer.is_valid():
-                user = serializer.save()
-
-                # Check if user is registering as a startup or investor
-                registration_type = request.data.get("registration_type")  # "Startup" or "Investor"
-                if registration_type not in ["Startup", "Investor"]:
-                    return Response({"error": "Invalid registration type."}, status=status.HTTP_400_BAD_REQUEST)
-
+                user, company_data = serializer.save()
+                for company in company_data:
+                    if company:
+                        send_company_profile(user_id=user.id, company_info=company)
 
                 user_data = UserRegistrationResponseSerializer(user).data
                 logger.info("User created successfully")
@@ -95,17 +95,9 @@ class UserRegistrationView(APIView):
                 signer = TimestampSigner()
                 uid = str(user.pk)
                 signed_token = signer.sign(uid)
-
-                email_subject = "Account Activation"
                 activation_link = f"{settings.FRONTEND_URL}/auth/activate/?token={signed_token}"
-                email_message = f"Please, click on the following link to activate your account {activation_link}"
+                send_message(message_type="activation", email=user.email, link=activation_link, name=user.name)
 
-                send_mail(
-                    email_subject,
-                    email_message,
-                    'noreply@example.com',
-                    [user.email]
-                )
 
                 return Response(user_data, status=status.HTTP_201_CREATED)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -118,7 +110,7 @@ class AccountActivationView(APIView):
     permission_classes = [AllowAny]
 
     @extend_schema(
-        operation_id="activate_account",
+        operation_id="activate",
         summary="Activate a user account",
         description="Activate a newly registered user account by providing a signed token as a query parameter.",
         parameters=[
@@ -172,6 +164,7 @@ class LoginView(APIView):
     permission_classes = [AllowAny]
 
     @extend_schema(
+        operation_id="login",
         description="User login with email and password.",
         request=CustomTokenObtainPairSerializer,
         responses={
@@ -234,6 +227,7 @@ class LogoutView(APIView):
     permission_classes = [IsAuthenticated]
 
     @extend_schema(
+        operation_id="logout",
         description="Logout by blacklisting the provided refresh token.",
         request=LogoutSerializer,
         responses={
@@ -308,6 +302,7 @@ class PasswordResetRequestView(APIView):
     permission_classes = [AllowAny]
 
     @extend_schema(
+        operation_id="password-reset",
         description="Request a password reset by providing your email address.",
         request=PasswordResetRequestSerializer,
         responses={
@@ -370,12 +365,8 @@ class PasswordResetRequestView(APIView):
         try:
             token = signer.sign(f"{user.pk}:{user.password}")
             reset_link = f"{settings.FRONTEND_URL}/auth/password-reset/?token={token}"
-            send_mail(
-                subject="Password Reset Request",
-                message=f"Please, click on the following link for password reset: {reset_link}",
-                from_email="noreply@example.com",
-                recipient_list=[email],
-            )
+            send_message(message_type="password-reset", email=email, link=reset_link, name=user.name)
+
             logger.info("Password reset email sent.")
             return Response({"message": "If an account with that email exists, a password reset link was sent."},
                             status=status.HTTP_200_OK)
@@ -408,6 +399,7 @@ class PasswordResetConfirmView(APIView):
     permission_classes = [AllowAny]
 
     @extend_schema(
+        operation_id="password-reset-confirm",
         description="Confirm password reset by providing the token and new password.",
         request=PasswordResetConfirmSerializer,  # Use the serializer here
         responses={
@@ -500,6 +492,7 @@ class PasswordChangeView(APIView):
     permission_classes = [IsAuthenticated]
 
     @extend_schema(
+        operation_id="password-change",
         description="Change the password of an authenticated user.",
         request=PasswordChangeSerializer,
         responses={

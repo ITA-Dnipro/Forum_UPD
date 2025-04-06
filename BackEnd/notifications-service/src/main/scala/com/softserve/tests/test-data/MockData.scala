@@ -2,10 +2,10 @@ package com.softserve.testData
 import com.softserve.models._
 
 object MockData {
-  final lazy val auth_message = AuthMessage(
+  final lazy val auth_activation_message = AuthMessage(
       email = "email.example@gmail.com",
-      actionType = "register",
+      message_type = "activation",
       name = "User#1",
-      activationLink = "http://example.com"
+      link = "http://example.com"
   )
 }
