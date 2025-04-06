@@ -67,7 +67,7 @@ async def startup_profile_update(
     return profile
 
 
-@router.patch("/{profile_id}")
+@router.patch("/{profile_id}", response_model=StartupResponse)
 async def startup_profile_partial_update(
     profile_id: int, 
     profile_data: Annotated[StartupOptional, Depends(dependency=startup_optional_create_dependency)],

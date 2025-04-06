@@ -5,7 +5,7 @@ from repositories.base import BaseRepository
 from repositories.profiles import ProfileRepository
 from task import autoapprove_image
 from utils.producer import send_approval_email, send_valid_profile_message, get_producer
-from utils.time import to_local_time
+from utils.time import to_local_time, update_time_to_str
 from utils.profile_validation import validate_startup
 
 
@@ -51,7 +51,7 @@ class ProfileStartupService:
         async with self.uow as uow:
             if "banner_id" in profile_dict:
                 profile_dict["status"] = StatusEnum.PENDING 
-                # autoapprove_image.apply_async(args=(profile_id,), countdown=MODERATION_HOURS*3600)
+                autoapprove_image.apply_async(args=(profile_id,), countdown=MODERATION_HOURS*3600)
                 profile = await self.repository.update(instance_id=profile_id, data=profile_dict)
 
                 profile_view_url = f"http://localhost:8000/api/startup_profiles/{profile.id}/images_moderation"
@@ -59,7 +59,7 @@ class ProfileStartupService:
                 await send_approval_email(
                 producer = await get_producer(),
                 profile_name=profile.name,
-                updated_at=to_local_time(profile.updated_at),
+                updated_at=profile.updated_at,
                 moderation_time=MODERATION_HOURS,
                 image_path=profile.banner.image_path,
                 profile_view_url=profile_view_url
@@ -81,11 +81,9 @@ class ProfileStartupService:
                 producer=await get_producer(),
                 user_id=profile.user_id, 
                 profile_type="startup",
-                status="valid"
+                status="validated"
                 )
             
-            profile = await self.get_startup_by_id(profile.id)
-             
         return profile
 
 

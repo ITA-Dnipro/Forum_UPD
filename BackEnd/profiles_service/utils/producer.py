@@ -1,7 +1,7 @@
 import json
 from core.settings import settings
 from aiokafka.producer import AIOKafkaProducer
-
+from utils.time import moderation_time_to_str, update_time_to_str
 
 def producer_serializer(message):
     return json.dumps(message).encode('utf-8')
@@ -42,8 +42,8 @@ async def send_approval_email(producer: AIOKafkaProducer, profile_name, updated_
     data = {
     "email": settings.IMAGE_MODERATOR_EMAIL,
     "profile_name": profile_name,
-    "updated_at": updated_at,
-    "moderation_time": moderation_time,
+    "updated_at": update_time_to_str(updated_at),
+    "moderation_time": moderation_time_to_str(moderation_time),
     "image_path": image_path, 
     "profile_view_url": profile_view_url
 }
