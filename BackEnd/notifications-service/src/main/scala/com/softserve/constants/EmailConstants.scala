@@ -11,6 +11,7 @@ case class EmailConfig(
 
 object EmailConstants {
   final lazy val CONFIRM_EMAIL_SUBJECT: String = "Confirm your e-mail"
+  final lazy val PROFILE_EMAIL_SUBJECT: String = "Підтвердження змін профілю"
   final lazy val MISSING_REQUIRED_ENV_VAR: String = "Missing required environment variable:"
   final lazy val EMAIL_SENT_SUCCESSFULLY_TO: String = "Email sent successfully to"
   final lazy val ERROR_SENDING_EMAIL: String = "Error sending email"
@@ -30,8 +31,10 @@ object EmailConstants {
 
   object EmailTemplates {
     final lazy val TEMPLATES_PATH: String = sys.env.getOrElse("EMAIL_TEMPLATES_PATH", "src/main/scala/com/softserve/email_templates") 
-    final lazy val CONFIRM_NAME: String = "ConfirmEmailTemplate.mustache"
+    final lazy val AUTH_CONFIRM: String = "ConfirmEmailTemplate.mustache"
     final lazy val EVENT_NAME: String = "EventActionTemplate.mustache"
-    final lazy val RESET_PASSWORD_NAME: String = "ResetPasswordTemplate.mustache"
+    final lazy val AUTH_RESET: String = "ResetPasswordTemplate.mustache"
+    final lazy val PROFILE: String = "ProfileImageChange.mustache"
+
   }
   }
