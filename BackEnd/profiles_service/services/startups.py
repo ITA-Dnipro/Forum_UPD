@@ -51,11 +51,11 @@ class ProfileStartupService:
         async with self.uow as uow:
             if "banner_id" in profile_dict:
                 profile_dict["status"] = StatusEnum.PENDING 
-                autoapprove_image.apply_async(args=(profile_id,), countdown=MODERATION_HOURS*3600)
+                # autoapprove_image.apply_async(args=(profile_id,), countdown=MODERATION_HOURS*3600)
                 profile = await self.repository.update(instance_id=profile_id, data=profile_dict)
 
                 profile_view_url = f"http://localhost:8000/api/startup_profiles/{profile.id}/images_moderation"
-
+                await uow.session.refresh(profile)
                 await send_approval_email(
                 producer = await get_producer(),
                 profile_name=profile.name,
@@ -66,6 +66,7 @@ class ProfileStartupService:
                 )
             else:
                 profile = await self.repository.update(instance_id=profile_id, data=profile_dict)
+                await uow.session.refresh(profile)
 
             if "edrpou" in profile_dict:
 
@@ -73,7 +74,6 @@ class ProfileStartupService:
                     await self.validation_repo.update(profile.validations.id, {"profile_id": profile.id})
                 else:
                     await self.validation_repo.add_one({"profile_id": profile.id})
-                uow.session.refresh(profile)
 
 
         if validate_startup(profile):
@@ -83,7 +83,9 @@ class ProfileStartupService:
                 profile_type="startup",
                 status="valid"
                 )
-
+            
+            profile = await self.get_startup_by_id(profile.id)
+             
         return profile
 
 
