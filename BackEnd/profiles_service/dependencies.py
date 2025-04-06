@@ -1,4 +1,3 @@
-from contextlib import asynccontextmanager
 from fastapi import Body, Depends, HTTPException
 from pydantic import ValidationError
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -170,20 +169,11 @@ def get_startup_service(uow: UOW = Depends(get_async_ouw)):
         validation_repo=validation_repo)
 
 
-
-# def get_investor_service(session: AsyncSession = Depends(get_async_session)):
-#     startup_category_repo = BaseRepository(model=StartupCategoryOrm, session=session)
-#     profile_repo = InvestorRepository(model=InvestorProfileOrm, session=session, startup_category_repo=startup_category_repo)
-#     return InvestorsService(profile_repo)
-
 def get_investor_service(uow: UOW = Depends(get_async_ouw)):
     startup_category_repo = BaseRepository(model=StartupCategoryOrm, session=uow.session)
     profile_repo = InvestorRepository(model=InvestorProfileOrm, session=uow.session, startup_category_repo=startup_category_repo)
     return InvestorsService(uow=uow, repo=profile_repo)
 
-# def get_caterory_service(session: AsyncSession = Depends(get_async_session)):
-#     repo = BaseRepository(model=StartupCategoryOrm, session=session)
-#     return CategoryService(repo)
 
 def get_caterory_service(uow: UOW = Depends(get_async_ouw)):
     repo = BaseRepository(model=StartupCategoryOrm, session=uow.session)

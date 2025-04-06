@@ -40,16 +40,10 @@ class BaseRepository:
     
 
     async def add_one(self, data: dict):
-        # try:
-            instance = self.model(**data)
-            self.session.add(instance)
-            await self.session.flush()
-            # await self.session.commit()
-            # await self.session.refresh(instance) 
-            return instance
-        # except Exception as e:
-        #     await self.session.rollback()
-        #     raise e
+        instance = self.model(**data)
+        self.session.add(instance)
+        await self.session.flush()
+        return instance
 
 
     async def get_all(self, **filters):
@@ -88,25 +82,14 @@ class BaseRepository:
 
 
     async def update(self, instance_id: int, data: dict):
-        # try:
-            instance = await self.get_by_id(instance_id)
-            for key, value in data.items():
-                setattr(instance, key, value)
-            await self.session.flush()
-            # await self.session.commit()
-            # await self.session.refresh(instance) 
-            return instance
-        # except Exception as e:
-        #     await self.session.rollback()
-        #     raise e
-    
+        instance = await self.get_by_id(instance_id)
+        for key, value in data.items():
+            setattr(instance, key, value)
+        await self.session.flush()
+        return instance
+
 
     async def soft_delete(self, instance_id: int):
-        # try: 
-            instance = await self.get_by_id(instance_id)
-            instance.is_deleted = True
-            await self.session.flush()
-            # await self.session.commit()
-        # except Exception as e:
-        #         await self.session.rollback()
-        #         raise e
+        instance = await self.get_by_id(instance_id)
+        instance.is_deleted = True
+        await self.session.flush()

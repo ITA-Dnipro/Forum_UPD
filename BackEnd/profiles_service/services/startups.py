@@ -48,7 +48,6 @@ class ProfileStartupService:
 
     async def partial_startup_update(self, profile_id: int, data: StartupOptional):
         profile_dict = data.model_dump(exclude_unset=True, exclude_none=True)
-        print(profile_dict)
         async with self.uow as uow:
             if "banner_id" in profile_dict:
                 profile_dict["status"] = StatusEnum.PENDING 

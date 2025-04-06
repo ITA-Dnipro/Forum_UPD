@@ -42,7 +42,6 @@ class InvestorRepository(ProfileRepository):
         return data
 
     async def add_one(self, profile_dict):
-        print('Im here')
         profile_dict = await self._fetch_related_by_id(profile_dict)
         
         profile = await super().add_one(profile_dict)

@@ -20,7 +20,6 @@ async def consume_new_user_profiles(consumer):
     try:
         async for msg in consumer:
             value = msg.value["company"]
-            print(msg.value)
             async with get_manual_session() as session:
                 if value["is_startup"]:
                     data = {

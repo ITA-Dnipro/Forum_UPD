@@ -31,22 +31,6 @@ app.include_router(investors.router, prefix="/investor_profiles")
 app.include_router(categories.router, prefix="/startup_categories")
 app.include_router(regions.router, prefix="/regions")
 app.include_router(images.router, prefix="/images")
-
-
-
-# @app.on_event("startup")
-# async def startup():
-#     app.state.producer = startup_producer()
-#     consumer = await ConsumerManager.create_consumer(topic="user_role_update")
-#     asyncio.create_task(consume_new_user_profiles(consumer=consumer))
-    
-# @app.on_event("shutdown")
-# async def shutdown():
-#     # await shutdown_producer(BaseProducer)
-#     await app.state.producer.stop()
-#     await ConsumerManager.shutdown_all()
-
-
     
 
 if __name__ == "__main__":
