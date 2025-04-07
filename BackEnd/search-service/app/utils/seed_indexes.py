@@ -28,7 +28,7 @@ async def seed_events():
                 else faker.text(max_nb_chars=200)
             )
             doc = EventDocument(
-                id=f"event_{i}",
+                event_id=f"event_{i}",
                 organizer_id=faker.random_int(min=1, max=100),
                 title=title,
                 content=content,
@@ -173,7 +173,7 @@ async def seed_news_articles():
                 else faker.text(max_nb_chars=400)
             )
             doc = NewsArticleDocument(
-                id=f"news_{i}",
+                article_id=f"news_{i}",
                 title=title,
                 content=content,
                 published_at=datetime.now(),

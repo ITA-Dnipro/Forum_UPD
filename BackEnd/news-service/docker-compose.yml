@@ -23,7 +23,9 @@ services:
 
 
   mongodb:
-    image: mongo:5
+    build:
+      context: .
+      dockerfile: Dockerfile.mongodb
     container_name: mongodb
     restart: always
     ports:
@@ -39,6 +41,21 @@ services:
       timeout: 5s
       retries: 5
       start_period: 10s
+
+  mongo-init-replica:
+    image: mongo:5
+    container_name: mongo-init-replica
+    env_file: .env
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    volumes:
+      - ./app/scripts/init-replica.sh:/init-replica.sh
+    entrypoint: /bin/bash
+    command: -c "chmod +x /init-replica.sh && /init-replica.sh"
+    networks:
+      - app_network
+    restart: "no"
 
   redis:
     image: redis:7

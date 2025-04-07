@@ -10,7 +10,7 @@ from ...config import settings
 
 class NewsArticleDocument(AsyncDocument):
     """Document representing a news article."""
-    id = Keyword()
+    article_id = Keyword()
 
     title = Text(analyzer="standard")
     content = Text(analyzer="standard")

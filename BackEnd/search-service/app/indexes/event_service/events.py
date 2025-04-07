@@ -19,7 +19,7 @@ class Category(InnerDoc):
 
 class EventDocument(AsyncDocument):
     """Document representing an event."""
-    id = Keyword()
+    event_id = Keyword()
     organizer_id = Integer()
 
     title = Text(analyzer="standard")

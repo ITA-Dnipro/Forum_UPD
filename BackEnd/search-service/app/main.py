@@ -9,6 +9,7 @@ from slowapi.util import get_remote_address
 
 from .config import settings, logger
 from .consumers.event_consumer import run_event_consumer
+from .consumers.news_consumer import run_news_consumer
 from .es.es_client import elasticsearch_init
 from .indexes.event_service.events import EventDocument
 from .indexes.forum_service.blog_posts import BlogPostDocument
@@ -69,8 +70,10 @@ async def lifespan(app: FastAPI):
     try:
         loop = asyncio.get_running_loop()
         event_thread = run_event_consumer(loop)
+        news_thread = run_news_consumer(loop)
         app.state.consumers = {
             "event": event_thread,
+            "news": news_thread,
         }
         logger.info("Consumer threads started successfully.")
     except Exception as e:

@@ -12,9 +12,10 @@ until curl -s http://localhost:8083/connectors > /dev/null; do
 done
 echo "Debezium Connect API is available."
 
-
+# Create event service debezium connector if not exists
 if curl -s -o /dev/null -w "%{http_code}" http://localhost:8083/connectors/event-connector | grep -q "404"; then
-  echo "Connector not found. Creating connector..."
+  sleep 5
+  echo "Connector event-connector not found. Creating connector..."
   curl -X POST -H "Content-Type: application/json" --data '{
     "name": "event-connector",
     "config": {
@@ -35,9 +36,36 @@ if curl -s -o /dev/null -w "%{http_code}" http://localhost:8083/connectors/event
       "value.converter.schema.registry.url": "http://schema-registry:8081"
     }
   }' http://localhost:8083/connectors
-  echo "Connector created."
+  echo "Connector event-connector created."
 else
-  echo "Connector already exists. Skipping creation."
+  echo "Connector event-connector already exists. Skipping creation."
+fi
+
+# Create news service debezium connector if not exists
+if curl -s -o /dev/null -w "%{http_code}" http://localhost:8083/connectors/news-connector | grep -q "404"; then
+  echo "Connector news-connector not found. Creating connector..."
+  curl -X POST -H "Content-Type: application/json" --data '{
+    "name": "news-connector",
+    "config": {
+      "connector.class": "io.debezium.connector.mongodb.MongoDbConnector",
+      "tasks.max": "1",
+      "mongodb.name": "news-connector",
+      "mongodb.hosts": "'"${MONGODB_HOSTS}"'",
+      "mongodb.user": "'"${MONGODB_USER}"'",
+      "mongodb.password": "'"${MONGODB_PASSWORD}"'",
+      "mongodb.authSource": "'"${MONGODB_AUTH_SOURCE}"'",
+      "database.include.list": "news",
+      "collection.include.list": "news.NewsModel",
+      "snapshot.mode": "initial",
+      "key.converter": "io.confluent.connect.avro.AvroConverter",
+      "key.converter.schema.registry.url": "http://schema-registry:8081",
+      "value.converter": "io.confluent.connect.avro.AvroConverter",
+      "value.converter.schema.registry.url": "http://schema-registry:8081"
+    }
+  }' http://localhost:8083/connectors
+  echo "Connector news-connector created."
+else
+  echo "Connector news-connector already exists. Skipping creation."
 fi
 
 wait
