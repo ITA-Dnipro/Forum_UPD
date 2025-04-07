@@ -18,6 +18,8 @@ from drf_spectacular.utils import(
     OpenApiExample,
     OpenApiResponse,
 )
+from drf_yasg import openapi
+
 from django_ratelimit.decorators import ratelimit
 from django.utils.decorators import method_decorator
 from rest_framework.views import APIView
@@ -38,7 +40,8 @@ from .serializers import (
     PasswordResetRequestSerializer,
     PasswordResetConfirmSerializer,
     PasswordChangeSerializer,
-    signer
+    signer,
+    EmptySerializer
 )
 from .validate_password import (
     validate_password_long,
@@ -46,6 +49,8 @@ from .validate_password import (
     validate_password_strength
 )
 from .models import Role, UserRole
+
+from .jwt_utils import validate_jwt, get_user_role_from_payload
 
 logger = logging.getLogger(__name__)
 
@@ -528,3 +533,59 @@ class PasswordChangeView(APIView):
             logout(request)
             return Response({"message": "Password was updated successfully."}, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class ValidateJWTView(APIView):
+    """
+    Endpoind for token validation
+    Returns:
+        - status 200 and information about  the iser, if the token is valid
+        - status 401 and information about the token if the token is invalid
+    """
+    serializer_class = EmptySerializer
+
+    @extend_schema(
+        description="Validate the JWT token passed in the Authorization header.",
+        responses={
+            200: OpenApiResponse(
+                description="JWT token is valid and user role retrieved.",
+                examples={
+                    "application/json": {
+                        "valid": True,
+                        "role": "admin"
+                    }
+                }
+            ),
+            401: OpenApiResponse(
+                description="Invalid or missing token.",
+                examples={
+                    "application/json": {
+                        "error": "Missing token or invalid token."
+                    }
+                }
+            ),
+        },
+        parameters=[
+            openapi.Parameter(
+                name='Authorization',
+                in_=openapi.IN_HEADER,
+                description="JWT Token (use 'Bearer <token>')",
+                type=openapi.TYPE_STRING,
+                required=True,
+            )
+        ]
+    )
+    def get(self, request):
+        token = request.headers.get('Authorization')
+        if not token:
+            return Response({'error': 'Missing token'}, status=status.HTTP_401_UNAUTHORIZED)
+
+        if token.startswith('Bearer '):
+            token = token[7:]
+
+        payload, error = validate_jwt(token)
+        if error:
+            return Response({'error': error}, status=status.HTTP_401_UNAUTHORIZED)
+
+        role = get_user_role_from_payload(payload)
+        return Response({'valid': True, 'role': role}, status=status.HTTP_200_OK)
