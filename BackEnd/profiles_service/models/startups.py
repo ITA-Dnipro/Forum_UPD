@@ -1,10 +1,16 @@
-from sqlalchemy import DateTime, Numeric, String, Text, func
+from enum import Enum
+from sqlalchemy import DateTime, ForeignKey, Numeric, String, Text, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from models import Model
-from schemas.profiles import StatusEnum
+from models.base import Model
 from datetime import datetime
 
 
+class StatusEnum(Enum):
+  UNDEFINED = "Undefined"
+  PENDING = "Pending"
+  BLOCKED = "Blocked"
+  APPROVED = "Approved"
+  AUTOAPPROVED = "Autopproved"
 
 class StartupProfileOrm(Model):
     __tablename__ = "startup_profiles"
@@ -18,20 +24,30 @@ class StartupProfileOrm(Model):
     is_deleted: Mapped[bool] = mapped_column(default=False, server_default="FALSE", nullable=False)
     profile_categories: Mapped[list["StartupCategoryOrm"]] = relationship( # type: ignore
         back_populates="startup_category_profiles", 
-        secondary="startup_profile_category"
+        secondary="startup_profile_category",
+        lazy="selectin"
         )
     profile_regions: Mapped[list["RegionOrm"]] = relationship( # type: ignore
         back_populates="region_profiles", 
-        secondary="profile_region"
+        secondary="profile_region",
+        lazy="selectin"
         )
     phone: Mapped[str] = mapped_column(String(15), default=None, nullable=True)
-    edrpou: Mapped[str] = mapped_column(String(8), default=None, unique=True, nullable=True)
-    rnokpp: Mapped[str] = mapped_column(String(10), default=None, unique=True, nullable=True)
+    edrpou: Mapped[str] = mapped_column(String(8), default=None, nullable=True)
+    rnokpp: Mapped[str] = mapped_column(String(10), default=None, nullable=True)
     founded: Mapped[int] = mapped_column(nullable=True)
     startup_idea: Mapped[str] = mapped_column(Text, default=None, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=func.now())
-    updated_at: Mapped[datetime] = mapped_column(DateTime, nullable=True, onupdate=func.now()) 
+    updated_at: Mapped[datetime] = mapped_column(DateTime, nullable=True, onupdate=func.now())
 
+    banner_id: Mapped[int] = mapped_column(
+    ForeignKey("profile_images.id"), 
+    nullable=True)
+
+    banner: Mapped["ProfileImage"] = relationship( # type: ignore
+        back_populates="profile_banner", 
+        foreign_keys=[banner_id],
+        uselist=False)
 
 
 class InvestorProfileOrm(Model):
@@ -50,5 +66,6 @@ class InvestorProfileOrm(Model):
     updated_at: Mapped[datetime] = mapped_column(DateTime, nullable=True, onupdate=func.now())
     investment_categories: Mapped[list["StartupCategoryOrm"]] = relationship( # type: ignore
         back_populates="investor_startup_categories", 
-        secondary="investor_startup_categories"
+        secondary="investor_startup_categories",
+        lazy="selectin"
         )

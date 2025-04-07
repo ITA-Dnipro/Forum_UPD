@@ -1,5 +1,5 @@
-from exceptions import UniqueConstraintViolationError
-from utils.repositories import BaseRepository
+from core.exceptions import UniqueConstraintViolationError
+from repositories.base import BaseRepository
 from schemas.categories import Category
 
 class CategoryService:
@@ -11,7 +11,7 @@ class CategoryService:
     async def add_one(self, data: Category):
         category_dict = data.model_dump()
         category_name = category_dict["name"]
-        if self.repository.get_all(name=category_name):
+        if await self.repository.get_all(name=category_name):
             raise UniqueConstraintViolationError
         category = await self.repository.add_one(category_dict)
         return category
@@ -38,7 +38,7 @@ class CategoryService:
     async def update(self, category_id: int, data: Category):
         category_dict = data.model_dump()
         category_name = category_dict["name"]
-        if self.repository.get_all(name=category_name):
+        if await self.repository.get_all(name=category_name):
             raise UniqueConstraintViolationError
         category = await self.repository.update(category_id, category_dict)
         return category

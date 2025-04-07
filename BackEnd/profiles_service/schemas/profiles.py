@@ -2,7 +2,10 @@ from datetime import datetime
 from typing import Annotated, Optional, Union
 from pydantic import BaseModel, conlist, constr, field_validator, model_validator
 from enum import Enum
+from models.startups import StatusEnum
 from pydantic_extra_types.phone_numbers import PhoneNumberValidator, PhoneNumber
+from schemas.categories import CategoryResponse
+from schemas.regions import RegionResponse
 from utils.create_optional_model import create_optional_model
 
 
@@ -14,16 +17,9 @@ MyNumberType = Annotated[
   )
 ]
 
-class StatusEnum(Enum):
-  UNDEFINED = "Undefined"
-  PENDING = "Pending"
-  BLOCKED = "Blocked"
-  APPROVED = "Approved"
-  AUTOAPPROVED = "Autopproved"
 
 class Profile(BaseModel):
   name: constr(max_length=45)
-  status: StatusEnum
   phone: Optional[MyNumberType] = None
   edrpou: Optional[str] = None
   rnokpp: Optional[str] = None
@@ -36,6 +32,7 @@ class Profile(BaseModel):
       return value
     if not value.isdigit() or len(value) != 8:
       raise ValueError("EDRPOU must be exactly 8 digits.")
+    return value
   
 
   @field_validator('rnokpp', mode='after')
@@ -45,6 +42,7 @@ class Profile(BaseModel):
       return value
     if not value.isdigit() or len(value) != 10:
       raise ValueError("RNOKPP must be exactly 10 digits.")
+    return value
 
 
 class Startup(Profile):
@@ -55,6 +53,7 @@ class Startup(Profile):
   founded: Optional[int] = None
   profile_categories: Optional[conlist(int, min_length=1)] = None
   profile_regions: Optional[conlist(int, min_length=1)] = None
+  banner_id: Optional[int] = None
 
 
   @field_validator("founded", mode="after")
@@ -65,6 +64,7 @@ class Startup(Profile):
     current_year = datetime.now().year
     if value < 1800 or value > current_year:
         raise ValueError(f"Foundation year must be between 1800 and {current_year}.")
+    return value
     
 
   @model_validator(mode='after')
@@ -82,11 +82,65 @@ class Investor(Profile):
 
   @model_validator(mode='after')
   def validate_fop_and_identifiers(self):
-    if self.is_legal_entity and self.edrpou is not None:
-      raise ValueError("For the EDRPOU field filled out, is_legal_entity  must be set to False")
-    if self.rnokpp and not self.is_legal_entity:
-      raise ValueError("For the RNOKPP field filled out, is_legal_entity must be set to True")
+    if self.is_legal_entity and self.rnokpp is not None: 
+      raise ValueError("For the RNOKPP  field filled out, is_legal_entity must be set to False")
+    if not self.is_legal_entity and self.edrpou:
+      raise ValueError("For the field EDRPOU filled out, is_legal_entity must be set to True")
 
 
 InvestorOptional = create_optional_model(Investor)
 StartupOptional = create_optional_model(Startup)
+
+class ProfileModerationEnum(Enum):
+  APPROVED = "Approved"
+  REJECTED = "Rejected"
+
+class ModerationFeedback(BaseModel):
+  moderation_status: ProfileModerationEnum
+
+
+class ProfileImageResponse(BaseModel):
+  id: int
+  is_approved: bool
+  created_at: datetime
+  approved_image_path: str
+  class Config:
+      orm_mode = True 
+
+
+
+class StartupResponse(BaseModel):
+  id: int
+  name: str
+  status: StatusEnum
+  phone: Optional[MyNumberType]
+  edrpou: Optional[str]
+  rnokpp: Optional[str]
+  is_registered: bool
+  is_startup: bool
+  is_fop: bool
+  startup_idea: Optional[str]
+  founded: Optional[int]
+  banner_id: Optional[int]
+
+  profile_categories: Optional[list[CategoryResponse]]
+  profile_regions: Optional[list[RegionResponse]]
+  banner: Optional[ProfileImageResponse]
+
+  class Config:
+      from_attributes = True
+
+
+class InvestorResponse(BaseModel):
+  id: int
+  name: str
+  status: StatusEnum
+  phone: Optional[MyNumberType]
+  edrpou: Optional[str]
+  rnokpp: Optional[str]
+  is_legal_entity: bool
+  available_funds: Optional[float]
+  investment_categories: Optional[list[CategoryResponse]]
+
+  class Config:
+      from_attributes = True

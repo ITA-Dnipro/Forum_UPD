@@ -1,6 +1,7 @@
-from utils.repositories import BaseRepository
+from repositories.base import BaseRepository
+from repositories.profiles import ProfileRepository
 from schemas.regions import Region
-from exceptions import UniqueConstraintViolationError
+from core.exceptions import UniqueConstraintViolationError
 
 class RegionService:
 
@@ -11,7 +12,7 @@ class RegionService:
     async def add_one(self, data: Region):
         region_dict = data.model_dump()
         region_name = region_dict["name"]
-        if self.repository.get_all(name=region_name):
+        if await self.repository.get_all(name=region_name):
             raise UniqueConstraintViolationError
         region = await self.repository.add_one(region_dict)
         return region
@@ -38,7 +39,7 @@ class RegionService:
     async def update(self, region_id: int, data: Region):
         region_dict = data.model_dump()
         region_name = region_dict["name"]
-        if self.repository.get_all(name=region_name):
+        if await self.repository.get_all(name=region_name):
             raise UniqueConstraintViolationError
         region = await self.repository.update(region_id, region_dict)
         return region

@@ -1,22 +1,24 @@
 from fastapi import Body, Depends, HTTPException
 from pydantic import ValidationError
 from sqlalchemy.ext.asyncio import AsyncSession
-from models.profiles import StartupProfileOrm, InvestorProfileOrm
+from models.startups import StartupProfileOrm, InvestorProfileOrm
 from models.categories import StartupCategoryOrm
 from models.regions import RegionOrm
-from utils.repositories import BaseRepository, ProfileRepository
-from schemas.profiles import StatusEnum, Startup, StartupOptional, Investor, InvestorOptional
+from models.images import ProfileImage 
+from services.images import ImageService
+from repositories.base import BaseRepository
+from repositories.profiles import ProfileRepository
+from schemas.profiles import Startup, StartupOptional, Investor, InvestorOptional
 from typing import List
-from database import new_session
+from core.database import new_session
 from services.categories import CategoryService
-from services.profiles import ProfileStartupService
+from services.startups import ProfileStartupService
 from services.investors import InvestorsService 
 from services.regions import RegionService
 
 
 def startup_create_dependency(
     name: str = Body(...),
-    status: StatusEnum = Body(...),
     is_registered: bool = Body(False),
     is_startup: bool = Body(False),
     is_fop: bool = Body(False),
@@ -27,11 +29,11 @@ def startup_create_dependency(
     founded: int = Body(None),
     profile_categories: List[int] = Body(None),
     profile_regions: List[int] = Body(None), 
+    banner_id: int = Body(None) 
 ) -> Startup:
     try:
         profile = Startup(
             name=name,
-            status=status,
             is_registered=is_registered,
             is_startup=is_startup,
             is_fop=is_fop,
@@ -42,6 +44,7 @@ def startup_create_dependency(
             rnokpp=rnokpp,
             founded=founded,
             startup_idea=startup_idea,
+            banner_id=banner_id
         )
     except ValidationError as e:
         error_messages = [error['msg'] for error in e.errors()]
@@ -51,7 +54,6 @@ def startup_create_dependency(
 
 def startup_optional_create_dependency(
     name: str = Body(None),
-    status: StatusEnum = Body(None),
     is_registered: bool = Body(False),
     is_startup: bool = Body(False),
     is_fop: bool = Body(False),
@@ -61,12 +63,13 @@ def startup_optional_create_dependency(
     startup_idea: str = Body(None),
     founded: int = Body(None),
     profile_categories: List[int] = Body(None),
-    profile_regions: List[int] = Body(None), 
+    profile_regions: List[int] = Body(None),
+    banner_id: int = Body(None) 
+    
 ) -> StartupOptional:
     try:
         profile = StartupOptional(
             name=name,
-            status=status,
             is_registered=is_registered,
             is_startup=is_startup,
             is_fop=is_fop,
@@ -77,6 +80,7 @@ def startup_optional_create_dependency(
             rnokpp=rnokpp,
             founded=founded,
             startup_idea=startup_idea,
+            banner_id=banner_id
         )
     except ValidationError as e:
         error_messages = [error['msg'] for error in e.errors()]
@@ -86,7 +90,6 @@ def startup_optional_create_dependency(
 
 def investor_create_dependency(
     name: str = Body(...),
-    status: StatusEnum = Body(...),
     is_legal_entity: bool = Body(False),
     phone: str = Body(None),
     edrpou: str = Body(None),
@@ -96,7 +99,6 @@ def investor_create_dependency(
     try:
         profile = Investor(
             name=name,
-            status=status,
             is_legal_entity=is_legal_entity, 
             phone=phone,
             edrpou=edrpou,
@@ -111,7 +113,6 @@ def investor_create_dependency(
 
 def investor_optional_create_dependency(
     name: str = Body(None),
-    status: StatusEnum = Body(None),
     is_legal_entity=Body(False),
     phone: str = Body(None),
     edrpou: str = Body(None),
@@ -121,7 +122,6 @@ def investor_optional_create_dependency(
     try:
         profile = InvestorOptional(
             name=name,
-            status=status,
             is_legal_entity=is_legal_entity, 
             phone=phone,
             edrpou=edrpou,
@@ -141,13 +141,17 @@ async def get_async_session() -> AsyncSession:
 
 
 def get_startup_service(session: AsyncSession = Depends(get_async_session)):
-    repo = ProfileRepository(model=StartupProfileOrm, session=session)
-    return ProfileStartupService(repo)
+    profile_repo = ProfileRepository(model=StartupProfileOrm, session=session)
+    category_repo = BaseRepository(model=StartupCategoryOrm, session=session)
+    region_repo = BaseRepository(model=RegionOrm, session=session)
+    image_repo = BaseRepository(model=ProfileImage, session=session)
+    return ProfileStartupService(repo=profile_repo, category_repo=category_repo, region_repo=region_repo, image_repo=image_repo)
 
 
 def get_investor_service(session: AsyncSession = Depends(get_async_session)):
-    repo = ProfileRepository(model=InvestorProfileOrm, session=session)
-    return InvestorsService(repo)
+    profile_repo = ProfileRepository(model=InvestorProfileOrm, session=session)
+    startup_category_repo = BaseRepository(model=StartupCategoryOrm, session=session)
+    return InvestorsService(profile_repo, startup_category_repo=startup_category_repo)
 
 
 def get_caterory_service(session: AsyncSession = Depends(get_async_session)):
@@ -158,3 +162,7 @@ def get_caterory_service(session: AsyncSession = Depends(get_async_session)):
 def get_region_service(session: AsyncSession = Depends(get_async_session)):
     repo = BaseRepository(model=RegionOrm, session=session)
     return RegionService(repo)
+
+def get_image_service(session: AsyncSession = Depends(get_async_session)):
+    repo = BaseRepository(model=ProfileImage, session=session)
+    return ImageService(repo)
