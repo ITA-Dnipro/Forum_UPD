@@ -12,10 +12,24 @@ ENV PYTHONUNBUFFERED=1
 
 COPY ./requirements.txt .
 
-RUN apk add --no-cache --virtual .build-deps gcc python3-dev musl-dev \
-    && pip install --upgrade pip && pip install --no-cache-dir -r requirements.txt \
+# Install necessary libraries and runtime dependencies
+RUN apk add --no-cache \
+    bash \
+    libstdc++ \
+    openssl-dev \
+    libffi-dev \
+    librdkafka \
+    && apk add --no-cache --virtual .build-deps \
+    gcc \
+    musl-dev \
+    libc-dev \
+    python3-dev \
+    librdkafka-dev \
+    && pip install --upgrade pip \
+    && pip install --no-cache-dir -r requirements.txt \
     && apk del .build-deps \
     && rm -rf /var/cache/apk/*
+
 
 COPY . $APP_HOME/
 
