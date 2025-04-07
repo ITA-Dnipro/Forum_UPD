@@ -39,14 +39,14 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
 
     @classmethod
     def get_token(cls, user, login_option):
-        if login_option not in ["Startup", "Investor"]:
+        if login_option not in ["Startup", "Investor"] and not (user.is_staff or user.is_superuser):
             raise serializers.ValidationError("Invalid login option")
 
         token = super().get_token(user)
 
         token['email'] = user.email
-        token['is_staff'] = user.is_staff
-        token['is_superuser'] = user.is_superuser
+        if user.is_staff or user.is_superuser:
+            token['roles'] = "Admin"
 
         if login_option == "Startup":
             startup_role = Role.objects.get(name="Startup")
