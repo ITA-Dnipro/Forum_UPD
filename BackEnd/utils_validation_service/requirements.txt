@@ -1,0 +1,7 @@
+celery
+fastapi
+uvicorn
+selenium
+python-dotenv==1.0.1
+redis
+rabbitmq
