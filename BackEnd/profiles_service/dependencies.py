@@ -160,13 +160,13 @@ def get_startup_service(uow: UOW = Depends(get_async_ouw)):
         model=StartupProfileOrm, 
         session=uow.session, 
         region_repo=region_repo, 
-        category_repo=category_repo)
+        category_repo=category_repo, 
+        validation_repo=validation_repo)
     
     return ProfileStartupService(
         uow=uow,
         repo=profile_repo, 
-        image_repo=image_repo,
-        validation_repo=validation_repo)
+        image_repo=image_repo)
 
 
 def get_investor_service(uow: UOW = Depends(get_async_ouw)):

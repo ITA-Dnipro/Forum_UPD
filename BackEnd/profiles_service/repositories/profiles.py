@@ -43,41 +43,6 @@ class InvestorRepository(ProfileRepository):
 
     async def add_one(self, profile_dict):
         profile_dict = await self._fetch_related_by_id(profile_dict)
-        
-        profile = await super().add_one(profile_dict)
-        
-        return profile
-    
-    async def update(self, instance_id, data):
-        data = await self._fetch_related_by_id(data)
-        return await super().update(instance_id, data)
-
-
-
-class InvestorRepository(ProfileRepository):
-
-    def __init__(
-            self, 
-            model: Model, 
-            session: AsyncSession, 
-            startup_category_repo: BaseRepository=None
-            ):
-        
-        super().__init__(model, session)
-        self.startup_category_repo=startup_category_repo
-
-
-    async def _fetch_related_by_id(self, data: dict):
-        if data.get("investment_categories") is not None:
-            try:
-                data["investment_categories"] = await self.startup_category_repo.get_list_by_ids(data["investment_categories"])
-            except NotFoundError: 
-                raise InvalidRelatedEntityError("One or more categories does not exist")
-        
-        return data
-
-    async def add_one(self, profile_dict):
-        profile_dict = await self._fetch_related_by_id(profile_dict)
         profile = await super().add_one(profile_dict)
         return profile
     
@@ -94,11 +59,13 @@ class StartupRepository(ProfileRepository):
             session: AsyncSession, 
             category_repo: BaseRepository=None, 
             region_repo: BaseRepository=None, 
+            validation_repo: BaseRepository=None
             ):
         
         super().__init__(model, session)
         self.category_repo = category_repo
         self.region_repo = region_repo
+        self.validation_repo= validation_repo
 
 
     async def add_one(self, profile_dict):
@@ -107,7 +74,16 @@ class StartupRepository(ProfileRepository):
     
     async def update(self, instance_id, data):
         data = await self._fetch_related_by_id(data)
-        return await super().update(instance_id, data)
+
+        profile = await super().update(instance_id, data)
+
+        if "edrpou" in data:
+            if profile.validations:
+                await self.validation_repo.update(profile.validations.id, {"profile_id": profile.id})
+            else:
+                await self.validation_repo.add_one({"profile_id": profile.id})
+
+        return profile
     
 
     

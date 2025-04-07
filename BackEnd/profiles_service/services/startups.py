@@ -5,7 +5,6 @@ from repositories.base import BaseRepository
 from repositories.profiles import ProfileRepository
 from task import autoapprove_image
 from utils.producer import send_approval_email, send_valid_profile_message, get_producer
-from utils.time import to_local_time, update_time_to_str
 from utils.profile_validation import validate_startup
 
 
@@ -20,12 +19,10 @@ class ProfileStartupService:
             uow: UOW,
             repo: ProfileRepository, 
             image_repo: BaseRepository,
-            validation_repo: BaseRepository,
             ):
         self.uow = uow
         self.repository = repo
         self.image_repo = image_repo
-        self.validation_repo = validation_repo
 
 
     async def startups_list(self):
@@ -67,14 +64,6 @@ class ProfileStartupService:
             else:
                 profile = await self.repository.update(instance_id=profile_id, data=profile_dict)
                 await uow.session.refresh(profile)
-
-            if "edrpou" in profile_dict:
-
-                if profile.validations:
-                    await self.validation_repo.update(profile.validations.id, {"profile_id": profile.id})
-                else:
-                    await self.validation_repo.add_one({"profile_id": profile.id})
-
 
         if validate_startup(profile):
             await send_valid_profile_message(
