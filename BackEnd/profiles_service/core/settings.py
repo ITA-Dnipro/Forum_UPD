@@ -1,4 +1,3 @@
-from typing import ClassVar
 from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
@@ -24,6 +23,9 @@ class Settings(BaseSettings):
     REDIS_URL: str
 
     IMAGE_MODERATOR_EMAIL: str
+
+    BASE_URL: str 
+    PROFILES_SERVICE_PORT: int
 
     class Config:
         env_file = ".env" 

@@ -27,7 +27,7 @@ services:
       - PROFILES_DB_HOST=${PROFILES_DB_HOST}
       - PROFILES_DB_PORT=${PROFILES_DB_PORT}
     ports:
-      - "8001:8000"
+      - "${PROFILES_SERVICE_PORT}:8000"
     volumes:
       - ./:/app
     networks:
