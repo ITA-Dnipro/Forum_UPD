@@ -6,7 +6,7 @@ from repositories.profiles import ProfileRepository
 from task import autoapprove_image
 from utils.producer import send_approval_email, send_valid_profile_message, get_producer
 from utils.profile_validation import validate_startup
-
+from core.settings import settings
 
 
 MODERATION_HOURS = 0.02
@@ -51,7 +51,7 @@ class ProfileStartupService:
                 autoapprove_image.apply_async(args=(profile_id,), countdown=MODERATION_HOURS*3600)
                 profile = await self.repository.update(instance_id=profile_id, data=profile_dict)
 
-                profile_view_url = f"http://localhost:8000/api/startup_profiles/{profile.id}/images_moderation"
+                profile_view_url = f"{settings.BASE_URL}/api/startup_profiles/{profile.id}/images_moderation"
                 await uow.session.refresh(profile)
                 await send_approval_email(
                 producer = await get_producer(),
