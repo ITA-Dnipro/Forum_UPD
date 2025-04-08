@@ -39,7 +39,7 @@ class ProfileStartupService:
             profile = await self.repository.add_one(profile_dict=profile_dict)
             if "edrpou" in profile_dict:
                 await self.validation_repo.add_one({"profile_id": profile.id})            
-                await uow.session.refresh(profile)
+            await uow.session.refresh(profile)
         return profile
 
 
@@ -95,7 +95,7 @@ class ProfileStartupService:
                 
             elif feedback_dict["moderation_status"] == ProfileModerationEnum.REJECTED:
                 profile_update_fields = {"status": StatusEnum.BLOCKED}
-                await self.repository.soft_delete(profile_id=profile_id)
+                await self.repository.soft_delete(instance_id=profile_id)
                 profile = await self.repository.update(instance_id=profile_id, data=profile_update_fields)
 
                 banner_id = profile.banner_id
