@@ -15,7 +15,8 @@ from .views import (
     UserRegistrationView,
     LogoutView,
     AccountActivationView,
-    LoginView
+    LoginView,
+    ValidateJWTView
 )
 
 router = SimpleRouter(trailing_slash=False)
@@ -42,4 +43,6 @@ urlpatterns = [
     # JWT implementation
     path('auth/jwt/refresh', TokenRefreshView.as_view(), name='jwt_refresh'),
     path('auth/jwt/verify', TokenVerifyView.as_view(), name='jwt_verify'),
+    path('validate/', ValidateJWTView.as_view(), name='validate_jwt'),
+
 ]
