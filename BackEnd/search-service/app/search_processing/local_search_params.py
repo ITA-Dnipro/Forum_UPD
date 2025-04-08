@@ -74,7 +74,7 @@ class QuestionSearchParams(CommonParamsMixin, SortByValidatorMixin):
     created_from: Optional[date] = Field(None, description="Filter questions created after this date (YYYY-MM-DD)")
     sort_by: Optional[str] = Field("views_count", description="Field to sort results by (default: views_count)")
 
-    ALLOWED_SORT_FIELDS: ClassVar[Set[str]] = {"views_count", "likes_count", "created_at"}
+    ALLOWED_SORT_FIELDS: ClassVar[Set[str]] = {"views_count", "likes_count", "saves_count",  "created_at"}
 
 
 class QuestionAnswerSearchParams(CommonParamsMixin, SortByValidatorMixin):

@@ -34,7 +34,7 @@ CREATE TABLE IF NOT EXISTS questions (
     accepted_answer_ids list<uuid>,
     created_at timestamp,
     updated_at timestamp
-);
+) WITH cdc = {'enabled': true};
 
 -- Таблиця для індексації за автором
 CREATE TABLE IF NOT EXISTS questions_by_author (

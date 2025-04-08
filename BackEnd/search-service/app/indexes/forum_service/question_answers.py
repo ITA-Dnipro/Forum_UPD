@@ -3,7 +3,8 @@ from elasticsearch_dsl import (
     Integer,
     Keyword,
     Text,
-    AsyncDocument
+    AsyncDocument,
+    Boolean,
 )
 
 from ...config import settings
@@ -13,12 +14,13 @@ class QuestionAnswerDocument(AsyncDocument):
     """Document representing a question answer."""
     id = Keyword()
     author_id = Keyword()
-    author_name = Text()
+    question_id = Keyword()
 
     content = Text(analyzer='standard')
 
     likes_count = Integer()
     dislikes_count = Integer()
+    is_accepted = Boolean()
 
     created_at = Date()
 

@@ -125,6 +125,7 @@ async def seed_question_answers():
                 content=content,
                 likes_count=faker.random_int(min=0, max=50),
                 dislikes_count=faker.random_int(min=0, max=10),
+                is_accepted=faker.boolean(),
                 created_at=datetime.now(),
             )
             await doc.save(index=QuestionAnswerDocument.get_index_name())
@@ -146,9 +147,10 @@ async def seed_questions():
                 author_id=str(faker.random_int(min=1, max=100)),
                 title=title,
                 content=faker.text(max_nb_chars=300),
-                status=faker.random_element(elements=("open", "closed", "in progress")),
+                status=faker.random_element(elements=("open", "closed", "in_progress")),
                 likes_count=faker.random_int(min=0, max=50),
                 views_count=faker.random_int(min=0, max=1000),
+                saves_count=faker.random_int(min=0, max=30),
                 created_at=datetime.now(),
                 updated_at=datetime.now(),
             )

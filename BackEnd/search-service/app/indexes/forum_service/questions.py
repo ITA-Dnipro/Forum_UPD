@@ -19,7 +19,7 @@ class QuestionDocument(AsyncDocument):
 
     status = Keyword()
     likes_count = Integer()
-    views_count = Integer()
+    saves_count = Integer()
 
     created_at = Date()
     updated_at = Date()

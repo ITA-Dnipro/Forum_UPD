@@ -20,4 +20,4 @@ class EventStatus(str, Enum):
 class QuestionStatus(str, Enum):
     open = "open"
     closed = "closed"
-    resolved = "in progress"
+    resolved = "in_progress"
