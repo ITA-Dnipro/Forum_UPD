@@ -14,17 +14,12 @@ case class ProfileMessage(
   ) {
 
   def validate: List[ValidationUtils.ValidationError] = {
-    val errors = ValidationUtils.validateEmail(email) ++
-      ValidationUtils.validateString(profile_name, "Profile name") ++
-      ValidationUtils.validateString(updated_at, "Updated at") ++
-      ValidationUtils.validateString(moderation_time, "Moderation time") ++
-      ValidationUtils.validateString(image_path, "Image path") ++
-      ValidationUtils.validateString(profile_view_url, "Profile view url")
-
-    if (errors.nonEmpty) Unsafe.unsafe { implicit u =>
-      Runtime.default.unsafe.run(ZIO.logError(s"Validation failed: ${errors.mkString(", ")}"))
-    } 
-    errors
+    ValidationUtils.validateEmail(email) ++
+    ValidationUtils.validateString(profile_name, "Profile name") ++
+    ValidationUtils.validateString(updated_at, "Updated at") ++
+    ValidationUtils.validateString(moderation_time, "Moderation time") ++
+    ValidationUtils.validateString(image_path, "Image path") ++
+    ValidationUtils.validateString(profile_view_url, "Profile view url")
   }
 }
 

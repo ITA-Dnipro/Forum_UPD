@@ -5,7 +5,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as ec
 
 import logging.config
-from settings import LOGGING
+from app.settings import LOGGING
 
 logging.config.dictConfig(LOGGING)
 logger = logging.getLogger('utils_validation_service')

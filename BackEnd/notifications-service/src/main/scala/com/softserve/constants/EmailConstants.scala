@@ -32,7 +32,6 @@ object EmailConstants {
   object EmailTemplates {
     final lazy val TEMPLATES_PATH: String = sys.env.getOrElse("EMAIL_TEMPLATES_PATH", "src/main/scala/com/softserve/email_templates") 
     final lazy val AUTH_CONFIRM: String = "ConfirmEmailTemplate.mustache"
-    final lazy val EVENT_NAME: String = "EventActionTemplate.mustache"
     final lazy val AUTH_RESET: String = "ResetPasswordTemplate.mustache"
     final lazy val PROFILE: String = "ProfileImageChange.mustache"
 
