@@ -1,5 +1,5 @@
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
-from models import Model
+from models.base import Model
 from os import environ
 from dotenv import load_dotenv
 

@@ -18,6 +18,8 @@ from drf_spectacular.utils import(
     OpenApiExample,
     OpenApiResponse,
 )
+from drf_yasg import openapi
+
 from django_ratelimit.decorators import ratelimit
 from django.utils.decorators import method_decorator
 from rest_framework.views import APIView
@@ -38,7 +40,8 @@ from .serializers import (
     PasswordResetRequestSerializer,
     PasswordResetConfirmSerializer,
     PasswordChangeSerializer,
-    signer
+    signer,
+    EmptySerializer
 )
 from .validate_password import (
     validate_password_long,
@@ -46,7 +49,10 @@ from .validate_password import (
     validate_password_strength
 )
 from .models import Role, UserRole
-from .producers import send_message
+from .producers import send_message, send_company_profile
+
+
+from .jwt_utils import validate_jwt, get_user_role_from_payload
 
 logger = logging.getLogger(__name__)
 
@@ -63,7 +69,8 @@ class UserRegistrationView(APIView):
     @extend_schema(
         operation_id="register",
         summary="Register a new user",
-        description="Register as a new user with email, password, name, surname, and company details.",
+        description="Register a new user with email, password, personal details, and one or two companies. "
+                "`company1` is required. `company2` is optional, but must have a different `is_startup` value.",
         request=UserRegistrationSerializer,
         responses={
             201: OpenApiResponse(
@@ -82,13 +89,10 @@ class UserRegistrationView(APIView):
         try:
             serializer = UserRegistrationSerializer(data=request.data)
             if serializer.is_valid():
-                user = serializer.save()
-
-                # Check if user is registering as a startup or investor
-                registration_type = request.data.get("registration_type")  # "Startup" or "Investor"
-                if registration_type not in ["Startup", "Investor"]:
-                    return Response({"error": "Invalid registration type."}, status=status.HTTP_400_BAD_REQUEST)
-
+                user, company_data = serializer.save()
+                for company in company_data:
+                    if company:
+                        send_company_profile(user_id=user.id, company_info=company)
 
                 user_data = UserRegistrationResponseSerializer(user).data
                 logger.info("User created successfully")
@@ -96,11 +100,7 @@ class UserRegistrationView(APIView):
                 signer = TimestampSigner()
                 uid = str(user.pk)
                 signed_token = signer.sign(uid)
-
-                email_subject = "Account Activation"
                 activation_link = f"{settings.FRONTEND_URL}/auth/activate/?token={signed_token}"
-                email_message = f"Please, click on the following link to activate your account {activation_link}"
-
                 send_message(message_type="activation", email=user.email, link=activation_link, name=user.name)
 
 
@@ -526,3 +526,59 @@ class PasswordChangeView(APIView):
             logout(request)
             return Response({"message": "Password was updated successfully."}, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class ValidateJWTView(APIView):
+    """
+    Endpoind for token validation
+    Returns:
+        - status 200 and information about  the iser, if the token is valid
+        - status 401 and information about the token if the token is invalid
+    """
+    serializer_class = EmptySerializer
+
+    @extend_schema(
+        description="Validate the JWT token passed in the Authorization header.",
+        responses={
+            200: OpenApiResponse(
+                description="JWT token is valid and user role retrieved.",
+                examples={
+                    "application/json": {
+                        "valid": True,
+                        "role": "admin"
+                    }
+                }
+            ),
+            401: OpenApiResponse(
+                description="Invalid or missing token.",
+                examples={
+                    "application/json": {
+                        "error": "Missing token or invalid token."
+                    }
+                }
+            ),
+        },
+        parameters=[
+            openapi.Parameter(
+                name='Authorization',
+                in_=openapi.IN_HEADER,
+                description="JWT Token (use 'Bearer <token>')",
+                type=openapi.TYPE_STRING,
+                required=True,
+            )
+        ]
+    )
+    def get(self, request):
+        token = request.headers.get('Authorization')
+        if not token:
+            return Response({'error': 'Missing token'}, status=status.HTTP_401_UNAUTHORIZED)
+
+        if token.startswith('Bearer '):
+            token = token[7:]
+
+        payload, error = validate_jwt(token)
+        if error:
+            return Response({'error': error}, status=status.HTTP_401_UNAUTHORIZED)
+
+        role = get_user_role_from_payload(payload)
+        return Response({'valid': True, 'role': role}, status=status.HTTP_200_OK)

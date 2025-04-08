@@ -1,7 +1,7 @@
-from typing import Annotated
+from typing import Annotated, List
 from fastapi import APIRouter, Depends, Response
-from exceptions import NotFoundError, InvalidRelatedEntityError
-from schemas.profiles import Investor, InvestorOptional
+from core.exceptions import NotFoundError, InvalidRelatedEntityError
+from schemas.profiles import Investor, InvestorOptional, InvestorResponse
 from services.investors import InvestorsService 
 from dependencies import get_investor_service, investor_create_dependency, investor_optional_create_dependency
 from fastapi import HTTPException
@@ -12,7 +12,7 @@ router = APIRouter(
 )
 
 
-@router.get("/", status_code=200)
+@router.get("/", status_code=200, response_model=List[InvestorResponse])
 async def investors_profiles_list(
     service: Annotated[InvestorsService, Depends(dependency=get_investor_service)],
     ):
@@ -20,7 +20,7 @@ async def investors_profiles_list(
     return profiles
 
 
-@router.post("/", status_code=201)
+@router.post("/", status_code=201, response_model=InvestorResponse)
 async def create_investor_profile(
     profile: Annotated[Investor, Depends(dependency=investor_create_dependency)],
     service: Annotated[InvestorsService, Depends(dependency=get_investor_service)]
@@ -34,7 +34,7 @@ async def create_investor_profile(
             )
 
 
-@router.get("/{profile_id}", status_code=200)
+@router.get("/{profile_id}", status_code=200, response_model=InvestorResponse)
 async def investor_profiles_detail(
     profile_id: int, 
     service: Annotated[InvestorsService, Depends(dependency=get_investor_service)]
@@ -48,7 +48,7 @@ async def investor_profiles_detail(
     return profile
 
 
-@router.put("/{profile_id}")
+@router.put("/{profile_id}", response_model=InvestorResponse)
 async def investor_profile_update(
     profile_id: int, 
     profile_data: Annotated[Investor, Depends(dependency=investor_create_dependency)],
@@ -67,7 +67,7 @@ async def investor_profile_update(
     return profile
 
 
-@router.patch("/{profile_id}")
+@router.patch("/{profile_id}", response_model=InvestorResponse)
 async def investor_profile_partial_update(
     profile_id: int, 
     profile_data: Annotated[InvestorOptional, Depends(dependency=investor_optional_create_dependency)],
@@ -86,7 +86,7 @@ async def investor_profile_partial_update(
     return profile
 
 
-@router.delete("/{profile_id}")
+@router.delete("/{profile_id}", response_model=InvestorResponse)
 async def investor_profile_delete(
     profile_id: int,
     service: Annotated[InvestorsService, Depends(dependency=get_investor_service)]

@@ -1,8 +1,8 @@
-from typing import Annotated
+from typing import Annotated, List
 from fastapi import APIRouter, Depends, Response
-from exceptions import NotFoundError, InvalidRelatedEntityError
-from schemas.profiles import StartupOptional, Startup
-from services.profiles import ProfileStartupService
+from core.exceptions import NotFoundError, InvalidRelatedEntityError
+from schemas.profiles import StartupOptional, Startup, ModerationFeedback, StartupResponse
+from services.startups import ProfileStartupService
 from dependencies import get_startup_service, startup_create_dependency, startup_optional_create_dependency
 from fastapi import HTTPException
 
@@ -12,7 +12,7 @@ router = APIRouter(
 )
 
 
-@router.get("/", status_code=200)
+@router.get("/", status_code=200, response_model=List[StartupResponse])
 async def startup_profiles_list(
     service: Annotated[ProfileStartupService, Depends(dependency=get_startup_service)],
     ):
@@ -20,7 +20,7 @@ async def startup_profiles_list(
     return profiles
 
 
-@router.post("/", status_code=201)
+@router.post("/", status_code=201, response_model=StartupResponse)
 async def create_startup_profile(
     profile: Annotated[Startup, Depends(dependency=startup_create_dependency)],
     service: Annotated[ProfileStartupService, Depends(dependency=get_startup_service)]
@@ -34,7 +34,7 @@ async def create_startup_profile(
             )
 
 
-@router.get("/{profile_id}", status_code=200)
+@router.get("/{profile_id}", status_code=200, response_model=StartupResponse)
 async def startup_profiles_detail(
     profile_id: int, 
     service: Annotated[ProfileStartupService, Depends(dependency=get_startup_service)]
@@ -48,7 +48,7 @@ async def startup_profiles_detail(
     return profile
 
 
-@router.put("/{profile_id}")
+@router.put("/{profile_id}", response_model=StartupResponse)
 async def startup_profile_update(
     profile_id: int, 
     profile_data: Annotated[Startup, Depends(dependency=startup_create_dependency)],
@@ -98,3 +98,19 @@ async def startup_profile_delete(
             status_code=404, detail=f"{e}"
             )
     return Response(status_code=204)
+
+
+
+@router.patch("/{profile_id}/images_moderation", response_model=StartupResponse)
+async def startup_images_moderation(
+    profile_id: int, 
+    moderation_feedback: Annotated[ModerationFeedback, Depends()],
+    service: Annotated[ProfileStartupService, Depends(dependency=get_startup_service)]
+    ):
+    try:
+        profile = await service.handle_moderation_feedback(profile_id, feedback=moderation_feedback)
+    except NotFoundError as e:
+        raise HTTPException(
+            status_code=404, detail=f"{e}"
+            )
+    return profile

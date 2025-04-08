@@ -5,11 +5,12 @@ from sqlalchemy import pool
 
 from models.regions import RegionOrm, ProfileRegionORM
 from models.categories import StartupCategoryOrm, StartupProfileCategoryORM, InvestorStartupCategoryOrm
-from models.profiles import StartupProfileOrm, InvestorProfileOrm
-from models import Model
+from models.startups import StartupProfileOrm, InvestorProfileOrm
+from models.images import ProfileImage
+from models.base import Model
 
 from alembic import context
-from database import connect_str
+from core.database import connect_str
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

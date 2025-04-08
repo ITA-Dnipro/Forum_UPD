@@ -1,30 +1,30 @@
+from confluent_kafka import Producer
 import json
 import logging
-from kafka import KafkaProducer
 from django.conf import settings
 
 logger = logging.getLogger(__name__)
 
 KAFKA_BROKER = getattr(settings, "KAFKA_BROKER", "kafka:9092")
 AUTH_TOPIC = "auth"
+NEW_USER_PROFILE_TOPIC = "new_user_profile"
+
+# Kafka producer configuration
+conf = {
+    'bootstrap.servers': settings.KAFKA_BROKER,
+}
 
 if getattr(settings, 'KAFKA_PRODUCER_ENABLED', True):
-    producer = KafkaProducer(
-        bootstrap_servers=settings.KAFKA_BROKER,
-        value_serializer=lambda v: json.dumps(v).encode('utf-8'),
-        key_serializer=lambda k: k.encode('utf-8') if k else None,
-    )
+    auth_producer = Producer(conf)
+    profile_producer = Producer(conf)
+
+def delivery_callback(err, msg):
+    if err:
+        logger.error(f"Delivery failed: {err}")
+    else:
+        logger.info(f"Message delivered to {msg.topic()} [{msg.partition()}]")
 
 def send_message(message_type: str, email: str, link: str, name: str = None):
-    """
-    Sends an activation or password reset message to the Kafka topic.
-
-    Args:
-        email (str): User's email address.
-        link (str): Activation or reset link for email confirmation.
-        name (str): User's name.
-        message_type (str): Type of message, either "activation" or "password-reset".
-    """
     message = {
         "message_type": message_type,
         "email": email,
@@ -33,17 +33,44 @@ def send_message(message_type: str, email: str, link: str, name: str = None):
     }
 
     try:
-        future = producer.send(AUTH_TOPIC, value=message)
-        record_metadata = future.get(timeout=10)
-        logger.info(f"Message sent to {record_metadata.topic} partition {record_metadata.partition} at offset {record_metadata.offset}")
+        auth_producer.produce(
+            AUTH_TOPIC,
+            value=json.dumps(message),
+            callback=delivery_callback
+        )
     except Exception as e:
         logger.error(f"Failed to send message: {e}")
 
-def close_producer():
-    """Closes the Kafka producer gracefully."""
+
+def send_company_profile(user_id: int, company_info: dict):
+    message = {
+        "company": {
+            "user_id": user_id,
+            "is_startup": company_info.get("is_startup"),
+            "is_legal_entity": not company_info.get("is_fop"),
+            "name": company_info.get("name"),
+        }
+    }
+
     try:
-        producer.flush()
-        producer.close()
-        logger.info("Kafka producer closed successfully.")
+        profile_producer.produce(
+            NEW_USER_PROFILE_TOPIC,
+            value=json.dumps(message),
+            callback=delivery_callback
+        )
     except Exception as e:
-        logger.error(f"Error while closing Kafka producer: {e}")
+        logger.error(f"Failed to send message to {NEW_USER_PROFILE_TOPIC}: {e}")
+
+
+def handle_user_registration(user_id: int, company_data: list):
+    """
+    Handles user registration and triggers profile producer for each company.
+
+    Args:
+        user_id (int): The ID of the registered user.
+        company_data (list): A list of companies (1 or 2 companies) registered by the user.
+    """
+    for company in company_data:
+        send_company_profile(user_id, company)
+
+

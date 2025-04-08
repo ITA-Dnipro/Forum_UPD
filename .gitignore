@@ -26,4 +26,5 @@ BackEnd/public/*
 target/
 .scala-build/
 .metals/
+BackEnd/profiles_service/static/media/
 
