@@ -1,9 +1,9 @@
 services:
-  fastapi:
+  utils_validation_service:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: fastapi
+    container_name: utils_validation_service
     restart: always
     ports:
       - "8000:8000"
