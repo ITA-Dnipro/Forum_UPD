@@ -58,3 +58,28 @@ class UserRole(models.Model):
 
     def __str__(self):
         return f"{self.user.email} - {self.role.name} ({self.status})"
+
+
+class KrakendPermission(models.Model):
+    PERMISSION_CHOICES = [
+        ('can_read', 'Can Read'),
+        ('can_edit', 'Can Edit'),
+        ('can_delete', 'Can Delete'),
+    ]
+    name = models.CharField(max_length=100, choices=PERMISSION_CHOICES, unique=True)
+
+    def __str__(self):
+        return self.name
+
+
+class RolePermissionForKrakend(models.Model):
+    ROLE_CHOICES = [
+        ('NotValidated', 'Not Validated'),
+        ('IsStartup', 'Is Startup'),
+        ('IsInvestor', 'Is Investor'),
+    ]
+    name = models.CharField(max_length=50, choices=ROLE_CHOICES, unique=True)
+    permissions = models.ManyToManyField(KrakendPermission, related_name='roles', blank=True)
+
+    def __str__(self):
+        return self.name

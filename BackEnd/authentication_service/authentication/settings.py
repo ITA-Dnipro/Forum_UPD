@@ -220,6 +220,7 @@ EMAIL_HOST_PASSWORD = config("EMAIL_HOST_PASSWORD", default="")
 
 RATE_LIMIT_MAX_CALLS = 10  # Maximum number of calls allowed
 RATE_LIMIT_PERIOD = 600    # Time window in seconds (600 seconds = 10 minutes)
+JWT_SECRET = os.getenv("JWT_SECRET")
 
 def show_toolbar(request):
     return DEBUG

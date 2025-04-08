@@ -18,16 +18,13 @@ if getattr(settings, 'KAFKA_PRODUCER_ENABLED', True):
     auth_producer = Producer(conf)
     profile_producer = Producer(conf)
 
-def send_message(message_type: str, email: str, link: str, name: str = None):
-    """
-    Sends an activation or password reset message to the Kafka topic.
+def delivery_callback(err, msg):
+    if err:
+        logger.error(f"Delivery failed: {err}")
+    else:
+        logger.info(f"Message delivered to {msg.topic()} [{msg.partition()}]")
 
-    Args:
-        email (str): User's email address.
-        link (str): Activation or reset link for email confirmation.
-        name (str): User's name.
-        message_type (str): Type of message, either "activation" or "password-reset".
-    """
+def send_message(message_type: str, email: str, link: str, name: str = None):
     message = {
         "message_type": message_type,
         "email": email,
@@ -36,22 +33,16 @@ def send_message(message_type: str, email: str, link: str, name: str = None):
     }
 
     try:
-        # Produce message to Kafka
-        auth_producer.produce(AUTH_TOPIC, value=json.dumps(message))
-        auth_producer.flush()
-        logger.info(f"Message sent to {AUTH_TOPIC}")
+        auth_producer.produce(
+            AUTH_TOPIC,
+            value=json.dumps(message),
+            callback=delivery_callback
+        )
     except Exception as e:
         logger.error(f"Failed to send message: {e}")
 
 
 def send_company_profile(user_id: int, company_info: dict):
-    """
-    Sends a user profile message to the Kafka topic after successful registration.
-
-    Args:
-        user_id (int): The ID of the newly registered user.
-        company_info (dict): Information about the company to be sent.
-    """
     message = {
         "company": {
             "user_id": user_id,
@@ -62,12 +53,14 @@ def send_company_profile(user_id: int, company_info: dict):
     }
 
     try:
-        # Produce message to Kafka
-        profile_producer.produce(NEW_USER_PROFILE_TOPIC, value=json.dumps(message))
-        profile_producer.flush()
-        logger.info(f"Message sent to {NEW_USER_PROFILE_TOPIC}")
+        profile_producer.produce(
+            NEW_USER_PROFILE_TOPIC,
+            value=json.dumps(message),
+            callback=delivery_callback
+        )
     except Exception as e:
         logger.error(f"Failed to send message to {NEW_USER_PROFILE_TOPIC}: {e}")
+
 
 def handle_user_registration(user_id: int, company_data: list):
     """
