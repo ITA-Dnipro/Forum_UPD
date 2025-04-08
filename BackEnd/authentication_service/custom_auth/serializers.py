@@ -39,14 +39,14 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
 
     @classmethod
     def get_token(cls, user, login_option):
-        if login_option not in ["Startup", "Investor"]:
+        if login_option not in ["Startup", "Investor"] and not (user.is_staff or user.is_superuser):
             raise serializers.ValidationError("Invalid login option")
 
         token = super().get_token(user)
 
         token['email'] = user.email
-        token['is_staff'] = user.is_staff
-        token['is_superuser'] = user.is_superuser
+        if user.is_staff or user.is_superuser:
+            token['roles'] = "Admin"
 
         if login_option == "Startup":
             startup_role = Role.objects.get(name="Startup")
@@ -82,7 +82,8 @@ class UserRegistrationResponseSerializer(serializers.ModelSerializer):
 
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
-    company = CustomProfileSerializer(write_only=True)
+    company1 = CustomProfileSerializer(write_only=True)
+    company2 = CustomProfileSerializer(write_only=True, required=False, allow_null=True)
     email = serializers.EmailField(
         required=True,
         write_only=True,
@@ -94,13 +95,10 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
     captcha = serializers.CharField(
         write_only=True, allow_blank=True, allow_null=True
     )
-    registration_type = serializers.ChoiceField(
-        choices=["Startup", "Investor"], write_only=True, required=True
-    )
 
     class Meta:
         model = User
-        fields = ("email", "password", "re_password", "name", "surname", "company", "captcha", "registration_type")
+        fields = ("email", "password", "re_password", "name", "surname", "company1", "company2", "captcha")
 
     def validate(self, value):
         custom_errors = defaultdict(list)
@@ -109,20 +107,23 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         re_password = value.get("re_password")
         email = value.get("email").lower()
         password = value.get("password")
-        company_data = value.get("company")
-        is_registered = company_data.get("is_registered")
-        is_startup = company_data.get("is_startup")
+        company1 = value.get("company1")
+        company2 = value.get("company2")
 
         if User.objects.filter(email=email).exists():
             logger.error(f"Email is already registered {email}")
             custom_errors["email"].append("Email is already registered")
         else:
             value["email"] = email
-        if not is_registered and not is_startup:
-            logger.error("No recipient specified.")
-            custom_errors["comp_status"].append(
-                "Please choose who you represent."
-            )
+        if not company1:
+            custom_errors["company1"].append("At least one company must be provided.")
+
+        if company2:
+            if company1["is_startup"] == company2["is_startup"]:
+                custom_errors["company2"].append("Both companies must have different is_startup values.")
+
+        if not company1.get("is_registered") and not company1.get("is_startup"):
+            custom_errors["company1"].append("Please choose who you represent.")
         try:
             validate_password_long(password)
         except ValidationError as error:
@@ -151,8 +152,8 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         validated_data.pop("re_password", None)
         validated_data.pop("captcha", None)
-        company_data = validated_data.pop("company")
-        registration_type = validated_data.pop("registration_type")
+        company1 = validated_data.pop("company1")
+        company2 = validated_data.pop("company2", None)
 
         user = User.objects.create(
             email=validated_data["email"],
@@ -163,10 +164,16 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         logger.info(f"Saving user {user.email}")
         user.save(update_fields=["password"])
 
-        role = Role.objects.get(name=registration_type)
-        UserRole.objects.create(user=user, role=role, status=UserRole.NOT_VALIDATED)
+        roles = set()
+        for company in [company1, company2]:
+            if company:
+                role_name = "Startup" if company["is_startup"] else "Investor"
+                roles.add(role_name)
+        for role_name in roles:
+            role = Role.objects.get(name=role_name)
+            UserRole.objects.create(user=user, role=role, status=UserRole.NOT_VALIDATED)
 
-        return user
+        return user, [company1, company2]
 
 
 class LoginSerializer(serializers.Serializer):

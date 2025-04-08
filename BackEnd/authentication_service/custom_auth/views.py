@@ -49,7 +49,8 @@ from .validate_password import (
     validate_password_strength
 )
 from .models import Role, UserRole
-from .producers import send_message
+from .producers import send_message, send_company_profile
+
 
 from .jwt_utils import validate_jwt, get_user_role_from_payload
 
@@ -68,7 +69,8 @@ class UserRegistrationView(APIView):
     @extend_schema(
         operation_id="register",
         summary="Register a new user",
-        description="Register as a new user with email, password, name, surname, and company details.",
+        description="Register a new user with email, password, personal details, and one or two companies. "
+                "`company1` is required. `company2` is optional, but must have a different `is_startup` value.",
         request=UserRegistrationSerializer,
         responses={
             201: OpenApiResponse(
@@ -87,13 +89,10 @@ class UserRegistrationView(APIView):
         try:
             serializer = UserRegistrationSerializer(data=request.data)
             if serializer.is_valid():
-                user = serializer.save()
-
-                # Check if user is registering as a startup or investor
-                registration_type = request.data.get("registration_type")  # "Startup" or "Investor"
-                if registration_type not in ["Startup", "Investor"]:
-                    return Response({"error": "Invalid registration type."}, status=status.HTTP_400_BAD_REQUEST)
-
+                user, company_data = serializer.save()
+                for company in company_data:
+                    if company:
+                        send_company_profile(user_id=user.id, company_info=company)
 
                 user_data = UserRegistrationResponseSerializer(user).data
                 logger.info("User created successfully")
@@ -101,11 +100,7 @@ class UserRegistrationView(APIView):
                 signer = TimestampSigner()
                 uid = str(user.pk)
                 signed_token = signer.sign(uid)
-
-                email_subject = "Account Activation"
                 activation_link = f"{settings.FRONTEND_URL}/auth/activate/?token={signed_token}"
-                email_message = f"Please, click on the following link to activate your account {activation_link}"
-
                 send_message(message_type="activation", email=user.email, link=activation_link, name=user.name)
 
 
