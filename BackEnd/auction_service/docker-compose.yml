@@ -9,7 +9,7 @@ services:
     ports:
       - "5432:5432"
   go-api:
-    build: ./backend
+    build: ./auction
     ports:
       - "${PORT}:8081" # Використовуємо змінну PORT із .env
     depends_on:
