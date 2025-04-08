@@ -14,11 +14,3 @@ class UOW:
             await self.session.rollback()
         return False
 
-    async def commit(self):
-        await self.session.commit()
-
-    async def rollback(self):
-        await self.session.rollback()
-
-    def __rep__(self):
-        return self.__aenter__
