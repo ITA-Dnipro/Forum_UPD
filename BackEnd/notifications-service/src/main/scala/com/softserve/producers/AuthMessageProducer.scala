@@ -31,7 +31,7 @@ object MessageProducer {
 
     val retryStrategy = Schedule.exponential(500.milliseconds) >>> Schedule.recurs(5)
 
-    ZIO.scoped {
+    val scopedProduce = ZIO.scoped {
       for {
         producer <- Producer.make(producerSettings)
           .mapError(e => new RuntimeException("Failed to create Kafka producer", e))
@@ -42,11 +42,12 @@ object MessageProducer {
           message,
           keySerde,
           valueSerde
-        ).retry(retryStrategy)
+        )
       } yield ()
-    }.mapError { e =>
-      Console.printLine(s"Error producing message to Kafka: ${e.getMessage}")
-      e
     }
+    .catchAll { err =>
+      Console.printLine(s"Error producing message to Kafka: ${err.getMessage}") *> ZIO.unit
+    }
+    scopedProduce.retry(retryStrategy)
   }
 }
