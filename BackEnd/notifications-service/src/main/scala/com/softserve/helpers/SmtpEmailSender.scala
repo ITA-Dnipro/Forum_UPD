@@ -29,7 +29,8 @@ def sendEmail(receivers: Seq[String], subject: String, body: String): ZIO[EmailC
     _ = message.setContent(body, "text/html; charset=UTF-8")
     _ = message.setReplyTo(Array(new InternetAddress(config.EMAIL_HOST_USER)))
     
-    result <- ZIO.attempt(Transport.send(message)) // Attempt to send email
+    result <- ZIO.attempt(Transport.send(message)) 
+    _ = ZIO.debug("Email sent successfully") 
   } yield "Email sent successfully" 
 }
 }

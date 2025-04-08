@@ -6,15 +6,10 @@ import com.softserve.validations._
 
 case class AuthMessage(email: String, message_type: String, name: String, link: String) {
   def validate: List[ValidationUtils.ValidationError] = {
-    val errors = ValidationUtils.validateEmail(email) ++
+    ValidationUtils.validateEmail(email) ++
       ValidationUtils.validateString(message_type, "Message type") ++
       ValidationUtils.validateString(name, "Name") ++
       ValidationUtils.validateString(link, "Link")
-
-    if (errors.nonEmpty) Unsafe.unsafe { implicit u =>
-      Runtime.default.unsafe.run(ZIO.logError(s"Validation failed: ${errors.mkString(", ")}"))
-    }
-    errors
   }
 }
 
