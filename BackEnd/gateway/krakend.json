@@ -1,0 +1,87 @@
+{
+  "$schema": "https://www.krakend.io/schema/v3.json",
+  "version": 3,
+  "name": "Forum Krakend API Gateway",
+  "timeout": "3000ms",
+  "cache_ttl": "300s",
+  "output_encoding": "no-op",
+  "extra_config": {
+    "github_com/devopsfaith/krakend-gologging": {
+      "level": "DEBUG",
+      "prefix": "[KRAKEND]",
+      "syslog": false,
+      "stdout": true,
+      "format": "json"
+    }
+  },
+  "http-error": {
+      "400": {
+        "status_code": 400,
+        "message": "Bad Request",
+        "content_type": "application/json"
+      }
+  },
+  "endpoints": [
+    {
+      "endpoint": "/api/auth/login/",
+      "method": "POST",
+      "output_encoding": "no-op",
+      "input_headers": ["Content-Type", "Authorization"],
+      "backend": [
+        {
+          "url_pattern": "/api/auth/login/",
+          "method": "POST",
+          "host": [
+            "http://authentication-service:8000"
+          ],
+          "input_headers": ["Content-Type", "Authorization"]
+        }
+      ]
+    },
+    {
+      "endpoint": "/api/auth/register/",
+      "method": "POST",
+      "input_headers": ["Content-Type", "Authorization"],
+      "output_encoding": "no-op",
+      "extra_config": {
+         "modifier/req-resp": {
+           "request": {
+             "headers": {
+              "Content-Type": "application/json",
+               "Host": "localhost"
+             }
+           }
+         }
+      },
+      "backend": [
+        {
+          "host": ["http://authentication-service:8000"],
+          "url_pattern": "/api/auth/register/",
+          "input_headers": ["Content-Type", "Authorization"]
+        }
+      ]
+    },
+    {
+      "endpoint": "/validate",
+      "method": "GET",
+      "extra_config": {
+        "auth/validator": {
+          "cache": false,
+          "alg": "HS256",
+          "jwk_url": "http://authentication-service:8000/.well-known/jwks.json",
+          "disable_jwk_security": true
+        }
+      },
+      "backend": [
+        {
+          "host": [
+            "http://authentication-service:8000"
+          ],
+          "url_pattern": "/validate"
+        }
+      ]
+    }
+  ]
+}
+
+

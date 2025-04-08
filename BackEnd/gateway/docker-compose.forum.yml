@@ -1,0 +1,87 @@
+version: '3.9'
+
+services:
+  gateway:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: krakend_gateway
+    ports:
+      - "8080:8080"
+    command: ["run", "-c", "krakend.json"]
+    networks:
+      - forum_network
+
+  postgres:
+    image: postgres:15
+    container_name: postgres
+    restart: always
+    env_file:
+      - .env
+    ports:
+      - "5433:5432"
+    volumes:
+      - auth_postgres_data:/var/lib/postgresql/data
+    networks:
+      - forum_network
+
+  authentication-service:
+    build:
+      context: ../authentication_service
+      dockerfile: ../authentication_service/Dockerfile
+    container_name: authentication-service
+    depends_on:
+      - postgres
+    env_file:
+      - .env
+    ports:
+      - "8000:8000"
+    volumes:
+      - ../authentication_service:/home/authentication/app
+    command: >
+      sh -c "python manage.py makemigrations &&
+             python manage.py migrate &&
+             python manage.py runserver 0.0.0.0:8000"
+    networks:
+      - forum_network
+
+  db:
+      image: postgres:14
+      container_name: profiles_db
+      restart: always
+      environment:
+        - POSTGRES_PASSWORD=${PROFILES_DB_PASSWORD}
+        - POSTGRES_DB=${PROFILES_DB_NAME}
+        - POSTGRES_USER=${PROFILES_DB_USER}
+      ports:
+        - "5434:5432"
+      volumes:
+        - profiles_data:/var/lib/postgresql/data
+      networks:
+        - forum_network
+
+  profiles:
+    build: ../profiles_service
+    depends_on:
+      - db
+    restart: on-failure
+    environment:
+      - PROFILES_DB_PASSWORD=${PROFILES_DB_PASSWORD}
+      - PROFILES_DB_NAME=${PROFILES_DB_NAME}
+      - PROFILES_DB_USER=${PROFILES_DB_USER}
+      - PROFILES_DB_HOST=${PROFILES_DB_HOST}
+      - PROFILES_DB_PORT=${PROFILES_DB_PORT}
+    ports:
+      - "8001:8001"
+    volumes:
+      - ../profiles_service:/app
+    networks:
+      - forum_network
+
+volumes:
+  auth_postgres_data:
+  profiles_data:
+
+networks:
+  forum_network:
+    driver: bridge

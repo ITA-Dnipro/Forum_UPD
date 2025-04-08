@@ -1,47 +1,17 @@
 version: '3.9'
 
 services:
-  db:
-    image: postgres:14
-    container_name: auth_db
-    restart: always
-    environment:
-      - POSTGRES_DB=${POSTGRES_DB}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-      - POSTGRES_USER=${POSTGRES_USER}
-    ports:
-      - "5432:5432"
-    volumes:
-        - auth_data:/var/lib/postgresql/data
-
-  auth:
-    build:
-      context: ./auth
-      dockerfile: Dockerfile
-    container_name: auth_service
-    depends_on:
-      - db
-    restart: on-failure
-    environment:
-      - DB_PASSWORD=${DB_PASSWORD}
-      - DB_NAME=${DB_NAME}
-      - DB_USER=${DB_USER}
-      - DB_HOST=${DB_HOST}
-      - DB_PORT=${DB_PORT}
-    ports:
-      - "8080:8080"
-
-
   gateway:
     build:
-      context: ./krakend
+      context: .
       dockerfile: Dockerfile
     container_name: krakend_gateway
     ports:
-      - "8081:8081"
-    depends_on:
-      - auth
-    entrypoint: ["sh", "./bash.sh"]
+      - "8080:8080"
+    command: [ "run", "-c", "krakend.json" ]
+    networks:
+      - forum_network
 
-volumes:
-  auth_data:
+networks:
+  forum_network:
+    driver: bridge
