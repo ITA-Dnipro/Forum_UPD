@@ -55,7 +55,7 @@ async def investor_profile_update(
     service: Annotated[InvestorsService, Depends(dependency=get_investor_service)]
     ):
     try:
-        profile = await service.partial_investor_update(profile_id, profile_data)
+        profile = await service.investor_update(profile_id, profile_data)
     except NotFoundError as e:
         raise HTTPException(
             status_code=404, detail=f"{e}"
@@ -74,7 +74,7 @@ async def investor_profile_partial_update(
     service: Annotated[InvestorsService, Depends(dependency=get_investor_service)]
     ):
     try:
-        profile = await service.partial_investor_update(profile_id, data=profile_data)
+        profile = await service.investor_update(profile_id, data=profile_data)
     except NotFoundError as e:
         raise HTTPException(
             status_code=404, detail=f"{e}"

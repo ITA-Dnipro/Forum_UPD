@@ -7,6 +7,7 @@ from models.regions import RegionOrm, ProfileRegionORM
 from models.categories import StartupCategoryOrm, StartupProfileCategoryORM, InvestorStartupCategoryOrm
 from models.startups import StartupProfileOrm, InvestorProfileOrm
 from models.images import ProfileImage
+from models.validation import ProfileValidationOrm
 from models.base import Model
 
 from alembic import context

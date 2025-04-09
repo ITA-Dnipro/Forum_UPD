@@ -17,6 +17,7 @@ class StartupProfileOrm(Model):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(45), nullable=False)
+    user_id: Mapped[int] = mapped_column(nullable=False, autoincrement=True, default=1)
     status: Mapped[StatusEnum]
     is_registered: Mapped[bool]
     is_startup: Mapped[bool]
@@ -47,8 +48,19 @@ class StartupProfileOrm(Model):
     banner: Mapped["ProfileImage"] = relationship( # type: ignore
         back_populates="profile_banner", 
         foreign_keys=[banner_id],
-        uselist=False)
+        uselist=False,
+        lazy='joined')
+    
+    validations: Mapped["ProfileValidationOrm"] = relationship( # type: ignore
+        back_populates="profile",
+        uselist=False,
+        cascade="all, delete-orphan",
+        lazy='joined'
+    )
 
+    def __repr__(self):
+        attrs = ", ".join(f"{key}={value!r}" for key, value in vars(self).items())
+        return f"{self.__class__.__name__}({attrs})"
 
 class InvestorProfileOrm(Model):
     __tablename__ = "investor_profiles"
@@ -56,6 +68,7 @@ class InvestorProfileOrm(Model):
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(45), nullable=False)
     status: Mapped[StatusEnum]
+    user_id: Mapped[int] = mapped_column(nullable=False, autoincrement=True, default=1)
     is_legal_entity: Mapped[bool]
     is_deleted: Mapped[bool] = mapped_column(default=False, server_default="FALSE", nullable=False)
     phone: Mapped[str] = mapped_column(String(15), default=None, nullable=True)

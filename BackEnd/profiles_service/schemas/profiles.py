@@ -6,7 +6,6 @@ from models.startups import StatusEnum
 from pydantic_extra_types.phone_numbers import PhoneNumberValidator, PhoneNumber
 from schemas.categories import CategoryResponse
 from schemas.regions import RegionResponse
-from utils.create_optional_model import create_optional_model
 
 
 MyNumberType = Annotated[
@@ -23,6 +22,7 @@ class Profile(BaseModel):
   phone: Optional[MyNumberType] = None
   edrpou: Optional[str] = None
   rnokpp: Optional[str] = None
+  user_id: Optional[int] = None
   
 
   @field_validator('edrpou', mode='after')
@@ -73,6 +73,7 @@ class Startup(Profile):
       raise ValueError("For the EDRPOU field filled out, FOP must be set to False")
     if self.rnokpp and not self.is_fop:
       raise ValueError("For the RNOKPP field filled out, FOP must be set to True")
+    return self
 
 
 class Investor(Profile):
@@ -86,10 +87,20 @@ class Investor(Profile):
       raise ValueError("For the RNOKPP  field filled out, is_legal_entity must be set to False")
     if not self.is_legal_entity and self.edrpou:
       raise ValueError("For the field EDRPOU filled out, is_legal_entity must be set to True")
+    return self
 
 
-InvestorOptional = create_optional_model(Investor)
-StartupOptional = create_optional_model(Startup)
+class StartupOptional(Startup):
+  name: Optional[constr(max_length=45)] = None
+  is_registered: bool = None
+  is_startup: bool = None
+  is_fop: bool = None
+
+
+class InvestorOptional(Investor):
+  name: Optional[constr(max_length=45)] = None
+  is_legal_entity: bool = None
+
 
 class ProfileModerationEnum(Enum):
   APPROVED = "Approved"
@@ -98,15 +109,22 @@ class ProfileModerationEnum(Enum):
 class ModerationFeedback(BaseModel):
   moderation_status: ProfileModerationEnum
 
-
 class ProfileImageResponse(BaseModel):
   id: int
   is_approved: bool
   created_at: datetime
   approved_image_path: str
   class Config:
-      orm_mode = True 
+      from_attributes = True 
 
+
+class ProfileImageUnverifiedResponse(BaseModel):
+  id: int
+  is_approved: bool
+  created_at: datetime
+  image_path: str
+  class Config:
+      from_attributes = True 
 
 
 class StartupResponse(BaseModel):
@@ -129,6 +147,9 @@ class StartupResponse(BaseModel):
 
   class Config:
       from_attributes = True
+
+class StartupResponseUnverified(StartupResponse):
+  banner: Optional[ProfileImageUnverifiedResponse]
 
 
 class InvestorResponse(BaseModel):

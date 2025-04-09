@@ -1,13 +1,16 @@
 from fastapi import Body, Depends, HTTPException
 from pydantic import ValidationError
 from sqlalchemy.ext.asyncio import AsyncSession
+from utils.uow import UOW
 from models.startups import StartupProfileOrm, InvestorProfileOrm
 from models.categories import StartupCategoryOrm
 from models.regions import RegionOrm
 from models.images import ProfileImage 
+from models.validation import ProfileValidationOrm
 from services.images import ImageService
 from repositories.base import BaseRepository
-from repositories.profiles import ProfileRepository
+from repositories.profiles import InvestorRepository, StartupRepository
+from repositories.validation import ValidationRepository
 from schemas.profiles import Startup, StartupOptional, Investor, InvestorOptional
 from typing import List
 from core.database import new_session
@@ -15,6 +18,7 @@ from services.categories import CategoryService
 from services.startups import ProfileStartupService
 from services.investors import InvestorsService 
 from services.regions import RegionService
+
 
 
 def startup_create_dependency(
@@ -94,6 +98,7 @@ def investor_create_dependency(
     phone: str = Body(None),
     edrpou: str = Body(None),
     rnokpp: str = Body(None),
+    available_funds: float = Body(None),
     investment_categories: List[int] = Body(None),
 ) -> Investor:
     try:
@@ -103,6 +108,7 @@ def investor_create_dependency(
             phone=phone,
             edrpou=edrpou,
             rnokpp=rnokpp,
+            available_funds=available_funds,
             investment_categories=investment_categories,
         )
     except ValidationError as e:
@@ -117,6 +123,7 @@ def investor_optional_create_dependency(
     phone: str = Body(None),
     edrpou: str = Body(None),
     rnokpp: str = Body(None),
+    available_funds: float = Body(None),
     investment_categories: List[int] = Body(None),
 ) -> InvestorOptional:
     try:
@@ -126,6 +133,7 @@ def investor_optional_create_dependency(
             phone=phone,
             edrpou=edrpou,
             rnokpp=rnokpp,
+            available_funds=available_funds,
             investment_categories=investment_categories,
         )
     except ValidationError as e:
@@ -138,31 +146,45 @@ async def get_async_session() -> AsyncSession:
     async with new_session() as session:
         yield session
 
+def get_async_ouw(session: AsyncSession = Depends(get_async_session)) -> UOW:
+    return UOW(session=session)
 
 
-def get_startup_service(session: AsyncSession = Depends(get_async_session)):
-    profile_repo = ProfileRepository(model=StartupProfileOrm, session=session)
-    category_repo = BaseRepository(model=StartupCategoryOrm, session=session)
-    region_repo = BaseRepository(model=RegionOrm, session=session)
-    image_repo = BaseRepository(model=ProfileImage, session=session)
-    return ProfileStartupService(repo=profile_repo, category_repo=category_repo, region_repo=region_repo, image_repo=image_repo)
+def get_startup_service(uow: UOW = Depends(get_async_ouw)):
+
+    region_repo = BaseRepository(model=RegionOrm, session=uow.session)
+    image_repo = BaseRepository(model=ProfileImage, session=uow.session)
+    category_repo = BaseRepository(model=StartupCategoryOrm, session=uow.session)
+    validation_repo = ValidationRepository(model=ProfileValidationOrm, session=uow.session)
+    profile_repo = StartupRepository(
+        model=StartupProfileOrm, 
+        session=uow.session, 
+        region_repo=region_repo, 
+        category_repo=category_repo, 
+        validation_repo=validation_repo)
+    
+    return ProfileStartupService(
+        uow=uow,
+        repo=profile_repo, 
+        image_repo=image_repo)
 
 
-def get_investor_service(session: AsyncSession = Depends(get_async_session)):
-    profile_repo = ProfileRepository(model=InvestorProfileOrm, session=session)
-    startup_category_repo = BaseRepository(model=StartupCategoryOrm, session=session)
-    return InvestorsService(profile_repo, startup_category_repo=startup_category_repo)
+def get_investor_service(uow: UOW = Depends(get_async_ouw)):
+    startup_category_repo = BaseRepository(model=StartupCategoryOrm, session=uow.session)
+    profile_repo = InvestorRepository(model=InvestorProfileOrm, session=uow.session, startup_category_repo=startup_category_repo)
+    return InvestorsService(uow=uow, repo=profile_repo)
 
 
-def get_caterory_service(session: AsyncSession = Depends(get_async_session)):
-    repo = BaseRepository(model=StartupCategoryOrm, session=session)
-    return CategoryService(repo)
+def get_caterory_service(uow: UOW = Depends(get_async_ouw)):
+    repo = BaseRepository(model=StartupCategoryOrm, session=uow.session)
+    return CategoryService(uow, repo)
 
 
-def get_region_service(session: AsyncSession = Depends(get_async_session)):
-    repo = BaseRepository(model=RegionOrm, session=session)
-    return RegionService(repo)
+def get_region_service(uow: UOW = Depends(get_async_ouw)):
+    repo = BaseRepository(model=RegionOrm, session=uow.session)
+    return RegionService(uow, repo)
 
-def get_image_service(session: AsyncSession = Depends(get_async_session)):
-    repo = BaseRepository(model=ProfileImage, session=session)
-    return ImageService(repo)
+
+def get_image_service(uow: UOW = Depends(get_async_ouw)):
+    repo = BaseRepository(model=ProfileImage, session=uow.session)
+    return ImageService(uow, repo)
