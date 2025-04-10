@@ -10,10 +10,11 @@ from slowapi.util import get_remote_address
 from .config import settings, logger
 from .consumers.event_consumer import run_event_consumer
 from .consumers.forum_qa_consumer import run_forum_qa_consumer
+from .consumers.forum_sn_consumer import run_forum_sn_consumer
 from .consumers.news_consumer import run_news_consumer
 from .es.es_client import elasticsearch_init
 from .indexes.event_service.events import EventDocument
-from .indexes.forum_service.blog_posts import BlogPostDocument
+from .indexes.forum_service.blog_posts import BlogPostDocument, CategoryDocument, TagDocument
 from .indexes.forum_service.post_comments import PostCommentDocument
 from .indexes.forum_service.question_answers import QuestionAnswerDocument
 from .indexes.forum_service.questions import QuestionDocument
@@ -46,7 +47,7 @@ async def lifespan(app: FastAPI):
 
     index_classes = [
         BlogPostDocument, PostCommentDocument, QuestionDocument, QuestionAnswerDocument,
-        NewsArticleDocument, EventDocument
+        NewsArticleDocument, EventDocument, CategoryDocument, TagDocument
     ]
 
     try:
@@ -73,6 +74,7 @@ async def lifespan(app: FastAPI):
         run_event_consumer(loop)
         run_news_consumer(loop)
         run_forum_qa_consumer(loop)
+        run_forum_sn_consumer(loop)
         logger.info("Consumer threads started successfully.")
     except Exception:
         logger.exception("Failed to start consumer threads.")

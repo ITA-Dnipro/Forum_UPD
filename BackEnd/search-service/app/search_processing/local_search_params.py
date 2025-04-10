@@ -55,7 +55,7 @@ class BlogPostSearchParams(CommonParamsMixin, SortByValidatorMixin):
     created_from: Optional[date] = Field(None, description="Filter blog posts created after this date (YYYY-MM-DD)")
     sort_by: Optional[str] = Field("likes_count", description="Field to sort results by (default: likes_count)")
 
-    ALLOWED_SORT_FIELDS: ClassVar[Set[str]] = {"likes_count", "created_at"}
+    ALLOWED_SORT_FIELDS: ClassVar[Set[str]] = {"likes_count", "saves_count", "created_at"}
 
 
 class BlogCommentSearchParams(CommonParamsMixin, SortByValidatorMixin):

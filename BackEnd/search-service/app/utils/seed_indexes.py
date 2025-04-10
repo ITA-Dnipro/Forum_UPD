@@ -68,6 +68,7 @@ async def seed_blog_posts():
                 title=title,
                 content=content,
                 likes_count=faker.random_int(min=0, max=100),
+                saves_count=faker.random_int(min=0, max=50),
                 categories=[{"category_id": faker.random_int(min=1, max=10), "name": faker.word()}],
                 tags=[{"tag_id": faker.random_int(min=1, max=10), "name": faker.word()}],
                 images=[faker.image_url()],

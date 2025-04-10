@@ -37,6 +37,9 @@ class Settings(BaseSettings):
     FORUM_QUESTION_ANSWERS_INDEX: str = Field(question_answers)
     NEWS_ARTICLES_INDEX: str = Field(news_articles)
 
+    FORUM_CATEGORIES_INDEX: str = Field("forum_categories")
+    FORUM_TAGS_INDEX: str = Field("forum_tags")
+
     SEARCH_BY_TITLE_AND_CONTENT: List[str] = Field(["title^2", "content"])
     SEARCH_BY_CONTENT: List[str] = Field(["content"])
 

@@ -13,13 +13,13 @@ from ...config import settings
 
 class Category(InnerDoc):
     """Document representing a category."""
-    category_id = Integer()
+    category_id = Keyword()
     name = Keyword()
 
 
 class Tag(InnerDoc):
     """Document representing a tag."""
-    tag_id = Integer()
+    tag_id = Keyword()
     name = Keyword()
 
 
@@ -32,6 +32,7 @@ class BlogPostDocument(AsyncDocument):
     content = Text(analyzer="standard")
 
     likes_count = Integer()
+    saves_count = Integer()
     categories = Nested(Category)
     tags = Nested(Tag)
 
@@ -41,6 +42,40 @@ class BlogPostDocument(AsyncDocument):
 
     class Index:
         name = settings.FORUM_BLOG_POSTS_INDEX
+        settings = {
+            "number_of_shards": 1,
+            "number_of_replicas": 1
+        }
+
+    @classmethod
+    def get_index_name(cls):
+        return cls.Index.name
+
+
+class CategoryDocument(AsyncDocument):
+    """Document representing a post category."""
+    category_id = Keyword()
+    name = Keyword()
+
+    class Index:
+        name = settings.FORUM_CATEGORIES_INDEX
+        settings = {
+            "number_of_shards": 1,
+            "number_of_replicas": 1
+        }
+
+    @classmethod
+    def get_index_name(cls):
+        return cls.Index.name
+
+
+class TagDocument(AsyncDocument):
+    """Document representing a post tag."""
+    tag_id = Keyword()
+    name = Keyword()
+
+    class Index:
+        name = settings.FORUM_TAGS_INDEX
         settings = {
             "number_of_shards": 1,
             "number_of_replicas": 1
