@@ -1,4 +1,3 @@
-import datetime
 import os
 import time
 import json
@@ -11,6 +10,7 @@ from dotenv import load_dotenv
 
 from app.indexes.news_service.news_article import NewsArticleDocument
 from app.config import logger
+from app.consumers.utils.process_published_at_field import process_timestamp_field
 
 load_dotenv()
 
@@ -68,9 +68,7 @@ async def process_news_record(record):
                 raise ValueError("Document missing _id for news upsert event")
 
             published_at = after_data.get("published_at")
-            if isinstance(published_at, dict) and "$date" in published_at:
-                timestamp_sec = published_at["$date"] / 1000.0
-                published_at = datetime.datetime.fromtimestamp(timestamp_sec, tz=datetime.timezone.utc)
+            published_at = process_timestamp_field(published_at, key="$date")
 
             if after_data.get("deleted"):
                 await es_client.delete(index=NewsArticleDocument.Index.name, id=doc_id, ignore=[404])

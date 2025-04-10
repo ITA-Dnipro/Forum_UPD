@@ -92,7 +92,9 @@ async def process_blog_post_record(payload):
             saves_count = after.get("saves_count", {}).get("value", 0)
             images = after.get("images", {}).get("value", [])
             created_at = after.get("created_at", {}).get("value")
-            updated_at = after.get("updated_at", {}).get("value")
+            updated_at = after.get("updated_at", {})
+            if updated_at:
+                updated_at = updated_at.get("value")
 
             tag_ids = after.get("tags", {}).get("value", [])
             category_ids = after.get("categories", {}).get("value", [])
@@ -306,7 +308,6 @@ def start_consumer(loop: asyncio.AbstractEventLoop):
                 logger.error(f"Consumer error: {message.error()}")
                 continue
             record = json.loads(message.value().decode("utf-8"))
-            logger.info(f"Received record: {record}")
             asyncio.run_coroutine_threadsafe(process_record(record), loop)
             time.sleep(0.1)
         except Exception as e:

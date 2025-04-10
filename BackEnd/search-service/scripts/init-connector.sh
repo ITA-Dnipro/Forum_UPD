@@ -68,4 +68,26 @@ else
   echo "Connector news-connector already exists. Skipping creation."
 fi
 
+if curl -s -o /dev/null -w "%{http_code}" http://localhost:8083/connectors/forum-qa-connector | grep -q "404"; then
+  echo "Connector forum-qa-connector not found. Creating connector..."
+  curl -X POST -H "Content-Type: application/json" --data '{
+    "name": "forum-qa-connector",
+    "config": {
+      "connector.class": "com.scylladb.cdc.debezium.connector.ScyllaConnector",
+      "tasks.max": "1",
+      "scylla.name": "ForumQACluster",
+      "scylla.cluster.ip.addresses": "scylladb:9042",
+      "scylla.table.names": "qa_forum.questions",
+      "key.converter": "io.confluent.connect.avro.AvroConverter",
+      "key.converter.schema.registry.url": "http://schema-registry:8081",
+      "value.converter": "io.confluent.connect.avro.AvroConverter",
+      "value.converter.schema.registry.url": "http://schema-registry:8081",
+      "auto.create.topics.enable": "true"
+    }
+  }' http://localhost:8083/connectors
+  echo "Connector forum-qa-connector created."
+else
+  echo "Connector forum-qa-connector already exists. Skipping creation."
+fi
+
 wait

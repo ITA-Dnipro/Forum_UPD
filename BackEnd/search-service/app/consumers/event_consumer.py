@@ -7,6 +7,8 @@ from confluent_kafka.avro import AvroConsumer
 from confluent_kafka.avro.serializer import SerializerError
 from dotenv import load_dotenv
 
+from app.consumers.utils.convert_event_date import convert_date
+from app.consumers.utils.convert_event_time import convert_time
 from app.indexes.event_service.events import EventDocument
 from app.config import logger
 
@@ -52,6 +54,9 @@ async def process_event_record(record):
                     logger.exception("Article was not found in the index.")
 
             else:
+                date = convert_date(after["date"])
+                starting_time = convert_time(after["starting_time"]).isoformat()
+
                 new_doc = EventDocument(
                     meta={"id": doc_id},
                     event_id=doc_id,
@@ -65,8 +70,8 @@ async def process_event_record(record):
                     image=after["image"],
                     available_slots=after["available_slots"],
                     capacity=after["capacity"],
-                    date=after["date"],
-                    starting_time=after["starting_time"],
+                    date=date,
+                    starting_time=starting_time,
                 )
                 await new_doc.save(using=es_client)
                 logger.info(f"Upserted event article {doc_id} into index '{EventDocument.Index.name}'.")
