@@ -1,0 +1,23 @@
+version: "3"
+services:
+  postgres:
+    build: ./database
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "5432:5432"
+  go-api:
+    build: ./auction
+    ports:
+      - "${PORT}:8081" # Використовуємо змінну PORT із .env
+    depends_on:
+      - postgres
+    environment:
+      DB_HOST: ${DB_HOST}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+    links:
+      - postgres
