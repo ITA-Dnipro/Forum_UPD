@@ -1,10 +1,12 @@
+from utils.uow import UOW
 from core.exceptions import UniqueConstraintViolationError
 from repositories.base import BaseRepository
 from schemas.categories import Category
 
 class CategoryService:
 
-    def __init__(self, repo: BaseRepository):
+    def __init__(self, uow: UOW, repo: BaseRepository):
+        self.uow = uow
         self.repository = repo
 
 
@@ -13,8 +15,8 @@ class CategoryService:
         category_name = category_dict["name"]
         if await self.repository.get_all(name=category_name):
             raise UniqueConstraintViolationError
-        category = await self.repository.add_one(category_dict)
-        return category
+        async with self.uow:
+            return await self.repository.add_one(category_dict)
 
 
     async def get_all(self):
@@ -40,8 +42,8 @@ class CategoryService:
         category_name = category_dict["name"]
         if await self.repository.get_all(name=category_name):
             raise UniqueConstraintViolationError
-        category = await self.repository.update(category_id, category_dict)
-        return category
+        async with self.uow:
+            return await self.repository.update(category_id, category_dict)
     
 
             

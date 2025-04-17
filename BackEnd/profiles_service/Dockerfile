@@ -6,6 +6,8 @@ COPY . .
 
 ENV PYTHONPATH=/app
 
-RUN pip install -r requirements.txt
+RUN pip install --upgrade pip setuptools wheel && \
+    apk add --no-cache g++ librdkafka-dev && \
+    pip install -r requirements.txt
 
 CMD ["python", "main.py" ]

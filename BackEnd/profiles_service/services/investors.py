@@ -1,6 +1,6 @@
+from utils.uow import UOW
 from models.startups import StatusEnum
 from schemas.profiles import Investor, InvestorOptional
-from core.exceptions import InvalidRelatedEntityError, NotFoundError
 from repositories.base import BaseRepository
 from repositories.profiles import ProfileRepository
 
@@ -8,9 +8,9 @@ from repositories.profiles import ProfileRepository
 
 class InvestorsService:
 
-    def __init__(self, repo: ProfileRepository, startup_category_repo: BaseRepository):
+    def __init__(self, uow: UOW, repo: ProfileRepository):
+        self.uow=uow
         self.repository = repo
-        self.startup_category_repo = startup_category_repo
 
 
     async def investors_list(self):
@@ -23,33 +23,19 @@ class InvestorsService:
     async def add_investor(self, data: Investor):
         profile_dict = data.model_dump(exclude_unset=True, exclude_none=True)
         profile_dict["status"] = StatusEnum.UNDEFINED
-        profile_dict = await self._fetch_related_by_id(profile_dict)
-        return await self.repository.add_one(profile_dict=profile_dict)
+        async with self.uow as uow:
+            return await self.repository.add_one(profile_dict=profile_dict)
     
 
-    async def partial_investor_update(self, profile_id: int, data: InvestorOptional):
+    async def investor_update(self, profile_id: int, data: InvestorOptional):
         profile_dict = data.model_dump(exclude_unset=True, exclude_none=True)
-        profile_dict = await self._fetch_related_by_id(data=profile_dict)
-        return await self.repository.update(instance_id=profile_id, data=profile_dict)
-
-
-    async def investor_update(self, profile_id: int, data: Investor):
-        profile_dict = data.model_dump(exclude_unset=True, exclude_none=True)
-        self._fetch_related_by_id(profile_dict)
+        async with self.uow as uow:
+            return  await self.repository.update(instance_id=profile_id, data=profile_dict)
         
-        return await self.repository.update(instance_id=profile_id, profile_dict=profile_dict)
 
 
     async def investor_delete(self, profile_id: int):
-        await self.repository.soft_delete(profile_id)
+        async with self.uow as uow:
+            return await self.repository.soft_delete(profile_id)
 
-    
-    async def _fetch_related_by_id(self, data: dict):
-        if data.get("investment_categories") is not None:
-            try:
-                data["investment_categories"] = await self.startup_category_repo.get_list_by_ids(data["investment_categories"])
-            except NotFoundError: 
-                raise InvalidRelatedEntityError("One or more categories does not exist")
-        
-        return data
 

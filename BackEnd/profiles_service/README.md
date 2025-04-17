@@ -27,7 +27,7 @@ REDIS_URL=sample filling => "redis://redis_container:6379/0"
 ```shell
 $ docker docker-compose.profiles.yaml build
 $ docker docker-compose.profiles.yaml up
-$ docker exec -it container-name-example alembic upgrade head
+$ docker exec -it profiles_service alembic upgrade head
 ```
 
 > Stop Docker comands
@@ -38,5 +38,5 @@ $ docker stop $(docker ps -q)
 
 > To make migrations:
 ```shell
-$ docker exec -it container-name-example alembic revision --autogenerate
+$ docker exec -it profiles_service alembic revision --autogenerate
 ```
